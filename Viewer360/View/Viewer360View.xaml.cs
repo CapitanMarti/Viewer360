@@ -157,13 +157,13 @@ namespace Viewer360.View
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             base.OnRenderSizeChanged(sizeInfo);
-
             // Scalo anche il mirino
-            m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
+             //m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
 
-            m_ViewSize = sizeInfo.NewSize;
-            RaisePropertyChanged("Hfov");
-            RaisePropertyChanged("Vfov");
+               m_ViewSize = sizeInfo.NewSize;
+
+               RaisePropertyChanged("Hfov");
+               RaisePropertyChanged("Vfov");
         }
 
         private void vp_MouseRightButtonDown(object sender, MouseEventArgs e)

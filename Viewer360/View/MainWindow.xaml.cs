@@ -232,6 +232,7 @@ namespace Viewer360.View
             }
 
             vViewfinderCentre = vNewCentre;
+            
         }
 
         public void Polygon_MouseUp(object sender, MouseButtonEventArgs e)
