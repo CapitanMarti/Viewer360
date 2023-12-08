@@ -3,6 +3,7 @@
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using PointCloudUtility;
 
 
 namespace Viewer360
@@ -13,6 +14,7 @@ namespace Viewer360
     public partial class App : Application
     {
         //++++++++++++++++++++++++
+        CCatalogManager oCM = new CCatalogManager();
         View.MainWindow m_Window;
         //++++++++++++++++++++++++
         private async void Application_Startup(object sender, StartupEventArgs e)
