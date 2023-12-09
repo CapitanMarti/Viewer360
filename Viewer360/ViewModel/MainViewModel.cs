@@ -79,7 +79,7 @@ namespace Viewer360.ViewModel
         public MainViewModel()
         {
             OpenCommand = new RelayCommand(a => Open());
-            OpenWithFilenameCommand = new RelayCommand(a => Open((string)a,"","","","", "", "", ""));
+            OpenWithFilenameCommand = new RelayCommand(a => Open((string)a,"","","","", "", "", "",""));
             ExitCommand = new RelayCommand(a => Exit());
             FullscreenCommand = new RelayCommand(a => FullScreen());
             ControlsCommand = new RelayCommand(a => Controls());
@@ -103,17 +103,18 @@ namespace Viewer360.ViewModel
             ofd.Filter = "Images (*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png";
             if (ofd.ShowDialog() == true)
             {
-                await Open(ofd.FileName,"","","","", "", "", "");
+                await Open(ofd.FileName,"","","","", "", "", "", "");
             }
         }
 
         // Open image by file name
-        public async Task Open(string sImageFile, string sNewPath, string sX, string sY, string sZ,string sRotX, string sRotY, string sRotZ)
+        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath, string sX, string sY, string sZ,string sRotX, string sRotY, string sRotZ)
         {
 
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
             SharingHelper.SetCameraPos(sX,sY,sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+            SharingHelper.LoadCatalogManager(sObjCatalogFile);
 
             Image = null; RaisePropertyChanged("Image");
             IsLoading = true; RaisePropertyChanged("IsLoading");

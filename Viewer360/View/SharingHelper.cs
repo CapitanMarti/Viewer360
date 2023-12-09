@@ -6,11 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
+using PointCloudUtility;
+
 
 namespace Viewer360.View
 {
     public static class SharingHelper
     {
+        private static CCatalogManager m_oCM;
+
         private static string m_sFullFileName;
         private static string m_sNewPath;
         private static Vector3D m_vCameraPos;
@@ -21,6 +25,13 @@ namespace Viewer360.View
             m_sNewPath=sNewPath;
         }
 
+        public static void LoadCatalogManager(string sCatalogName)
+        {
+            m_oCM = new CCatalogManager();
+            m_oCM.LoadCatalogObjForm(sCatalogName);
+            List<List<CCatalogManager.CObjInfo>> oLList=m_oCM.GetAllLabelGroupedByCategory();
+
+        }
         public static void SetCameraPos(string sX, string sY, string sZ)
         {
             double dX=double.Parse(sX, CultureInfo.InvariantCulture);
