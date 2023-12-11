@@ -5,6 +5,10 @@ using System.Windows;
 using System.Windows.Shapes;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Collections.Generic;
+using PointCloudUtility;
+using System;
+using System.IO;
 
 namespace Viewer360.View
 {
@@ -48,6 +52,69 @@ namespace Viewer360.View
                 }
             });
 
+        }
+
+        public void InitUI()
+        {
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+
+            for (int iCat = 1; iCat < oLList.Count; iCat++)
+                oCategoryCombo.Items.Add(oLList[iCat][0].sCategory);
+
+            oCategoryCombo.SelectedIndex = 2;  // Wall
+
+        }
+
+        private void CategorySelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+
+            oItemCombo.Items.Clear();
+            int iSelectedCat = oCategoryCombo.SelectedIndex+1; // Ho escluso la categoria 0 
+
+            for (int iItem = 0; iItem < oLList[iSelectedCat].Count; iItem++)
+                oItemCombo.Items.Add(oLList[iSelectedCat][iItem].sUI_CategoryInfo);
+
+            oItemCombo.SelectedIndex = 0;
+            oElementName.Text = oCategoryCombo.SelectedItem.ToString();
+
+        }
+        private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
+
+        public void SaveJason(string sNewFileName, Size ViewSize)
+        {
+            // Creo file manager per file attuale
+            CFileLabelManager oLabelManager= new CFileLabelManager();
+            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width*1.5), Convert.ToInt32(ViewSize.Height*1.5));
+
+            // Creo e inizializzo LabelInfo
+            CFileLabelManager.SLabelInfo oLabelInfo=new CFileLabelManager.SLabelInfo();
+
+            oLabelInfo.sImageFileName = sNewFileName;
+            oLabelInfo.sLabelName = oElementName.Text;
+
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+            int iSelectedCat = oCategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
+            int iSelectedItem = oItemCombo.SelectedIndex;
+
+            oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
+
+            oLabelInfo.aPolyPointX = new List<float>();
+            oLabelInfo.aPolyPointY = new List<float>();
+            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+            {
+                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X*1.5));
+                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y*1.5));
+            }
+
+            // Aggiungo LabelInfo a LabelManager
+            oLabelManager.Add(oLabelInfo);
+
+            // Salvo file .json
+            oLabelManager.SaveToJsonFile(sNewFileName);
         }
 
         public void Polygon_MouseDown(object sender, MouseButtonEventArgs e)
@@ -239,5 +306,6 @@ namespace Viewer360.View
         {
             isDragging = false;
         }
+
     }
 }

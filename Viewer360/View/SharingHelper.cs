@@ -19,6 +19,8 @@ namespace Viewer360.View
         private static string m_sNewPath;
         private static Vector3D m_vCameraPos;
         private static Vector3D m_vCameraRot;
+        private static List<List<CCatalogManager.CObjInfo>> m_oCatalogGroupedElem;
+
         public static void SetFileAndFolderNames(string sFileName, string sNewPath)
         {
             m_sFullFileName = sFileName;
@@ -29,9 +31,11 @@ namespace Viewer360.View
         {
             m_oCM = new CCatalogManager();
             m_oCM.LoadCatalogObjForm(sCatalogName);
-            List<List<CCatalogManager.CObjInfo>> oLList=m_oCM.GetAllLabelGroupedByCategory();
-
+            m_oCatalogGroupedElem = m_oCM.GetAllLabelGroupedByCategory();
         }
+
+        public static List<List<CCatalogManager.CObjInfo>> GetAllLabelGroupedByCategory() { return m_oCatalogGroupedElem; }
+
         public static void SetCameraPos(string sX, string sY, string sZ)
         {
             double dX=double.Parse(sX, CultureInfo.InvariantCulture);

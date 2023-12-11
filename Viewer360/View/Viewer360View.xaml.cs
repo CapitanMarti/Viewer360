@@ -158,7 +158,7 @@ namespace Viewer360.View
         {
             base.OnRenderSizeChanged(sizeInfo);
             // Scalo anche il mirino
-             //m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
+            m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
 
                m_ViewSize = sizeInfo.NewSize;
 
@@ -189,6 +189,9 @@ namespace Viewer360.View
             string sNewFileName = SharingHelper.GetNewFileName();
             bitmap.Save(sNewFileName);
             SaveCameraInfo(sNewFileName);
+
+            // Scrittura file .json
+            m_Window.SaveJason(sNewFileName, m_ViewSize);
         }
 
         public void SaveCameraInfo(string CameraInfoFileName)

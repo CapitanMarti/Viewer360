@@ -22,7 +22,10 @@ namespace Viewer360
             m_Window = new View.MainWindow();
             m_Window.viewer360_View.m_Window = m_Window;
             m_Window.Show();
-            if (e.Args.Length == 9) await (m_Window.DataContext as ViewModel.MainViewModel).Open(e.Args[0], e.Args[1], e.Args[2], e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
+            if (e.Args.Length == 9) 
+                await (m_Window.DataContext as ViewModel.MainViewModel).Open(e.Args[0], e.Args[1], e.Args[2], e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
+
+            m_Window.InitUI();
         }
     }
 }

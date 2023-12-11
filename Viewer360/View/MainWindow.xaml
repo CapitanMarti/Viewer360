@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:my="clr-namespace:Viewer360.View"
         xmlns:conv="clr-namespace:Viewer360.Converters"
-        Title="Scan2Bin 360° Viewer" Height="600" Width="800" WindowState="Normal"
+        Title="Scan2Bim 360° Viewer" Height="600" Width="800" WindowState="Normal"
         Icon="/Viewer360;component/Resources/icon_16.png">
     <Window.Resources>
         <conv:FullscreenToVisibilityConverter x:Key="fullscreenToVisibilityConverter"/>
@@ -14,39 +14,71 @@
         <Binding Path="IsFullscreen" Converter="{StaticResource fullscreenToWindowStyleConverter}"/>
     </Window.WindowStyle>
 
+    <!--
     <Window.InputBindings>
         <KeyBinding Key="F" Command="{Binding FullscreenCommand}"/>
-        <KeyBinding Key="O" Command="{Binding OpenCommand}"/>
+        <KeyBinding Key="O" Command="{Binding OpenCommand}"/>  
         <KeyBinding Key="X" Command="{Binding ExitCommand}"/>
     </Window.InputBindings>
+    -->
+
+
+
     <Grid>
+
+
         <Grid.ColumnDefinitions>
-       	    <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-	    
-<!--        <ColumnDefinition Width="58*"/>
-            <ColumnDefinition Width="17*"/>
+            <ColumnDefinition Width="12*"/>
+            <ColumnDefinition Width="98*"/>
+            <ColumnDefinition Width="23*"/>
+            <ColumnDefinition Width="67*"/>
+            <ColumnDefinition Width="135*"/>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="55*"/>
+            <ColumnDefinition Width="200*"/>
+            <ColumnDefinition Width="200*"/>
+
+            <!--        <ColumnDefinition Width="58*"/>
+            <ColumnDefinition Width="10*"/>
             <ColumnDefinition Width="11*"/>
             <ColumnDefinition Width="74*"/> -->
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" MinHeight="19"/>
+            <RowDefinition Height="Auto" MinHeight="24"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Menu Visibility="{Binding IsFullscreen,Converter={StaticResource fullscreenToVisibilityConverter}}" Height="18" VerticalAlignment="Center" Grid.ColumnSpan="4">
+        <Menu Visibility="{Binding IsFullscreen, Converter={StaticResource fullscreenToVisibilityConverter}}" Height="22" VerticalAlignment="Center" Grid.ColumnSpan="9">
+            <TextBlock Text="  Category: " />
+            <ComboBox Name="oCategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110">
+                <!-- Elementi della ComboBox -->
+            </ComboBox>
+            <TextBlock Text="    Item: " />
+            <ComboBox x:Name="oItemCombo" SelectionChanged="ItemSelectionChanged" Width="110">
+                <!-- Elementi della ComboBox -->
+            </ComboBox>
+            <TextBlock Text="    Name: " />
+            <TextBox Name="oElementName" Width="95" />
         </Menu>
-
-        <Grid Grid.Row="1" Grid.ColumnSpan="4">
+        <Grid Grid.Row="1" Grid.ColumnSpan="9">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="24*"/>
+                <RowDefinition Height="89*"/>
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="9*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="20*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="46*"/>
             </Grid.ColumnDefinitions>
             <!--<Image Source="{Binding Image}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
-            <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Margin="0,-1,0,0" Grid.ColumnSpan="2"/>
+            <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.RowSpan="2" Grid.ColumnSpan="5"/>
+
+
 
 
             <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="White"
-                    Visibility="{Binding ElementName=menuStatusBar,Path=IsChecked,Converter={StaticResource booleanToVisibilityConverter}}" Grid.Column="1" Height="25" Width="270" >
+                    Visibility="{Binding ElementName=menuStatusBar,Path=IsChecked,Converter={StaticResource booleanToVisibilityConverter}}" Height="25" Width="270" Grid.Row="1" Grid.Column="4" >
                 <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Theta,StringFormat='Theta: {0:0.0}°'}" Margin="4 4 4 4"/>
                 <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Phi,StringFormat='Phi: {0:0.0}°'}" Margin="0 4 4 4"/>
                 <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Hfov,StringFormat='HFOV: {0:0.0}°'}" Margin="0 4 4 4"/>
@@ -69,7 +101,7 @@
                 </ProgressBar.RenderTransform>
             </ProgressBar> -->
 
-            <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2"/>
+            <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="5"/>
 
 
         </Grid>
