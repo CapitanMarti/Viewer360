@@ -154,6 +154,51 @@ namespace Viewer360.ViewModel
             RaisePropertyChanged("Image");
         }
 
+        public void LoadNewImage(string sImageFile, string sX, string sY, string sZ, string sRotX, string sRotY, string sRotZ)
+        {
+
+            SharingHelper.SetCameraPos(sX, sY, sZ);
+            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+
+            Image = null; RaisePropertyChanged("Image");
+            IsLoading = true; RaisePropertyChanged("IsLoading");
+
+//            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    Image = new BitmapImage();
+                    Image.BeginInit();
+                    Image.CacheOption = BitmapCacheOption.OnLoad;
+                    Image.UriSource = new Uri(sImageFile);
+                    Image.EndInit();
+                    Image.Freeze();
+                }
+                catch (System.IO.DirectoryNotFoundException)
+                {
+                    ErrorMessage("Error", "Image not found.");
+                    Image = null;
+                }
+                catch (Exception ex)
+                {
+                    ErrorMessage("Error", "Unknown error while loading image: " + ex.GetType().ToString() + ". Please report.");
+                    Image = null;
+                }
+            };
+
+            if (Image != null)
+            {
+                if (Math.Abs(Image.Width / Image.Height - 2) > 0.001)
+                    WarningMessage("Warning", "The opened image is not equirectangular (2:1)! Rendering may be improper.");
+
+//                RecentImageManager.AddAndSave(sImageFile);
+            }
+
+            IsLoading = false; RaisePropertyChanged("IsLoading");
+            RaisePropertyChanged("Image");
+        }
+
+
         // Exit application
         private void Exit()
         {
