@@ -15,6 +15,8 @@ namespace Viewer360.ViewModel
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
+        public View.MainWindow m_Window;
+
         // Commands
         #region commands
 
@@ -114,6 +116,8 @@ namespace Viewer360.ViewModel
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
             SharingHelper.SetCameraPos(sX,sY,sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+            m_Window.viewer360_View.ComputeCameraRTMatrix();
+
             SharingHelper.LoadCatalogManager(sObjCatalogFile);
 
             Image = null; RaisePropertyChanged("Image");
@@ -159,6 +163,8 @@ namespace Viewer360.ViewModel
 
             SharingHelper.SetCameraPos(sX, sY, sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+            m_Window.viewer360_View.ComputeCameraRTMatrix();
+            SharingHelper.m_bCameraAtHasChanged = true;
 
             Image = null; RaisePropertyChanged("Image");
             IsLoading = true; RaisePropertyChanged("IsLoading");

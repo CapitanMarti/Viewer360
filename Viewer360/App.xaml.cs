@@ -7,6 +7,7 @@ using PointCloudUtility;
 using System.IO.Pipes;
 using System.IO;
 using System.Windows.Interop;
+using Viewer360.View;
 
 
 namespace Viewer360
@@ -30,22 +31,26 @@ namespace Viewer360
             // View.MainWindow mainWindow = new View.MainWindow();
             m_Window = new View.MainWindow();
             m_Window.viewer360_View.m_Window = m_Window;
+            (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
+
             m_Window.Show();
             if (e.Args.Length == 9) 
                 await (m_Window.DataContext as ViewModel.MainViewModel).Open(e.Args[0], e.Args[1], e.Args[2], e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
 
-            //+++++++++++++++++++++
+            // Inizializzo la messaggistica col server
             m_oMsgManager = new CMessageManager(CMessageManager.PipeType.Client);
             m_oMsgManager.CreateConnection();
 
             // Attendo che la il Server si connetta
             m_oMsgManager.WaitForConnection();
 
-            // Attivo thread di ricezione; GESTIRE LA CHIUSURA!!!!
+            // Attivo thread di ricezione; si dovrebbe chiudere da solo all'uscita della finestra.
             CMessageManager.StartListener(m_oMsgManager);
-            //+++++++++++++++++++++
 
             m_Window.InitUI();
+
+            // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
+            m_Window.viewer360_View.ComputeGlobalRotMatrix();
         }
 
 
@@ -66,10 +71,10 @@ namespace Viewer360
             if(m_oMsgManager!=null && m_oMsgManager.PendingMsg())
             {
                 //++++++++++++++++++++++++++
-                Console.WriteLine("Da ListenForMessages stop1 Type=" + m_oMsgManager.GetMsgType());
+                // Console.WriteLine("Da ListenForMessages stop1 Type=" + m_oMsgManager.GetMsgType());
                 //++++++++++++++++++++++++++
 
-                if (m_oMsgManager.GetMsgType()==0)
+                if (m_oMsgManager.GetMsgType()==0)  // Messaggio pending è di tipo CameraInfo
                 {
                     string sCameraName = "";
                     string sX = "";
@@ -85,9 +90,19 @@ namespace Viewer360
 
                     (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName, sX, sY, sZ, Rotx, Roty, Rotz);
                     m_bNewImageLoaded = true;
-
                 }
+            }
 
+            if(SharingHelper.m_bCameraAtHasChanged)
+            {
+                // Comunico la nuova direzione della camera al server
+                double dX=1;
+                double dY=0;
+
+                m_Window.viewer360_View.ComputeCameraAtForServer(ref dX, ref dY);
+                m_oMsgManager.SendCameraAt(dX, dY);
+
+                SharingHelper.m_bCameraAtHasChanged = false;
             }
 
 

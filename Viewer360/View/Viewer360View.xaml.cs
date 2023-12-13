@@ -14,6 +14,7 @@ using Viewer360.View;
 using System.Reflection.Emit;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Windows.Interop;
 
 namespace Viewer360.View
 {
@@ -32,6 +33,11 @@ namespace Viewer360.View
         private double clickX, clickY;            // Coordinates of the mouse press
         private DispatcherTimer timer;            // Timer for animating camera
         private bool isMouseDown = false;         // Is the mouse pressed
+        private Matrix3D m_mRotX;
+        private Matrix3D m_mRotY;
+        private Matrix3D m_mRotZ;
+        private Matrix3D m_mRotXYZ;
+
 
         public System.Windows.Size m_ViewSize;
         public View.MainWindow m_Window;
@@ -73,6 +79,11 @@ namespace Viewer360.View
             timer.Tick += timer_Tick;
 
             m_ViewSize = new System.Windows.Size();
+
+            m_mRotX = new Matrix3D();
+            m_mRotY = new Matrix3D();
+            m_mRotZ = new Matrix3D();
+            m_mRotXYZ = new Matrix3D();
         }
 
         /// <summary>
@@ -114,12 +125,17 @@ namespace Viewer360.View
         // Timer: animate camera
         private void timer_Tick(object sender, EventArgs e)
         {
-            if (!isMouseDown) return;
+            if (!isMouseDown) 
+                return;
+
             camTheta -= camThetaSpeed / 50;
             camPhi -= camPhiSpeed / 50;
+            SharingHelper.m_bCameraAtHasChanged = true;
 
-            if (camTheta < 0) camTheta += 360;
-            else if (camTheta > 360) camTheta -= 360;
+            if (camTheta < 0) 
+                camTheta += 360;
+            else if (camTheta > 360) 
+                camTheta -= 360;
 
 /*
             if (camPhi < 0.01) 
@@ -138,6 +154,8 @@ namespace Viewer360.View
 
             RaisePropertyChanged("Theta");
             RaisePropertyChanged("Phi");
+
+            ComputeGlobalRotMatrix();
         }
 
         // Mouse move: set camera movement speed
@@ -192,6 +210,99 @@ namespace Viewer360.View
 
             // Scrittura file .json
             m_Window.SaveJason(sNewFileName, m_ViewSize);
+        }
+
+        public void ComputeGlobalRotMatrix()
+        {
+            // Recupero rotazioni globali
+            Vector3D vCameraRot = SharingHelper.GetCameraRot();
+
+            // Calcolo matrici rotazione angoli di Eulero XYZ
+            double dRotX = -GeometryHelper.Deg2Rad(vCameraRot.X);
+            m_mRotX.M11 = 1;
+            m_mRotX.M12 = 0;
+            m_mRotX.M13 = 0;
+            m_mRotX.M14 = 0;
+            m_mRotX.M21 = 0;
+            m_mRotX.M22 = Math.Cos(dRotX);
+            m_mRotX.M23 = Math.Sin(dRotX);
+            m_mRotX.M24 = 0;
+            m_mRotX.M31 = 0;
+            m_mRotX.M32 = -Math.Sin(dRotX);
+            m_mRotX.M33 = Math.Cos(dRotX);
+            m_mRotX.M34 = 0;
+            m_mRotX.M44 = 1;
+
+
+            double dRotY = GeometryHelper.Deg2Rad(vCameraRot.Y);
+            m_mRotY.M11 = Math.Cos(dRotY);
+            m_mRotY.M12 = 0;
+            m_mRotY.M13 = Math.Sin(dRotY);
+            m_mRotY.M14 = 0;
+            m_mRotY.M21 = 0;
+            m_mRotY.M22 = 1;
+            m_mRotY.M23 = 0;
+            m_mRotY.M24 = 0;
+            m_mRotY.M31 = -Math.Sin(dRotY);
+            m_mRotY.M32 = 0;
+            m_mRotY.M33 = Math.Cos(dRotY);
+            m_mRotY.M34 = 0;
+            m_mRotY.M44 = 1;
+
+            double dRotZ = -GeometryHelper.Deg2Rad(vCameraRot.Z) + Math.PI / 2;  // OFFSET ANGOLARE PER COMPATIBILITA' TRIMBLE!
+            m_mRotZ.M11 = Math.Cos(dRotZ);
+            m_mRotZ.M12 = Math.Sin(dRotZ);
+            m_mRotZ.M13 = 0;
+            m_mRotZ.M14 = 0;
+            m_mRotZ.M21 = -Math.Sin(dRotZ);
+            m_mRotZ.M22 = Math.Cos(dRotZ);
+            m_mRotZ.M23 = 0;
+            m_mRotZ.M24 = 0;
+            m_mRotZ.M31 = 0;
+            m_mRotZ.M32 = 0;
+            m_mRotZ.M33 = 1;
+            m_mRotZ.M34 = 0;
+            m_mRotZ.M44 = 1;
+
+            m_mRotXYZ = m_mRotX * m_mRotY * m_mRotZ ;
+        }
+
+        public Matrix3D ComputeCameraRTMatrix()
+        {
+            // Calcolo direzioni At,Up di camera locale, tenendo conto che in questo codice risulta sempre Up=[0,0,1]
+            Vector3D vAt = MyCam.LookDirection;
+            vAt.Z = -vAt.Z;  // ATTENZIONE: Z va invertita per compatibilità sistema riferimento adottato da Scan2Bim
+            Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
+            vTmp.Normalize();
+            Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+
+            // Recupero posizione e rotazioni globali
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            Vector3D vCameraRot = SharingHelper.GetCameraRot();
+
+            // Matrice rotazione locale camera: [ Up | Up X At | At] 
+            Matrix3D mCameraRot = new Matrix3D();
+            mCameraRot.M11 = vRealUp.X;
+            mCameraRot.M12 = vTmp.X;
+            mCameraRot.M13 = vAt.X;
+            mCameraRot.M14 = 0;
+            mCameraRot.M21 = vRealUp.Y;
+            mCameraRot.M22 = vTmp.Y;
+            mCameraRot.M23 = vAt.Y;
+            mCameraRot.M24 = 0;
+            mCameraRot.M31 = vRealUp.Z;
+            mCameraRot.M32 = vTmp.Z;
+            mCameraRot.M33 = vAt.Z;
+            mCameraRot.M34 = 0;
+            mCameraRot.M44 = 1;
+
+            mCameraRot = m_mRotXYZ* mCameraRot;
+
+            mCameraRot.M14 = vCameraPos.X;
+            mCameraRot.M24 = vCameraPos.Y;
+            mCameraRot.M34 = vCameraPos.Z;
+
+            return mCameraRot;
         }
 
         public void SaveCameraInfo(string CameraInfoFileName)
@@ -314,7 +425,13 @@ namespace Viewer360.View
                     mCameraRot.M24 = vCameraPos.Y;
                     mCameraRot.M34 = vCameraPos.Z;
 
- 
+                    //+++++++++++++++++++++++++++++++++
+                    Matrix3D mRotTmp = ComputeCameraRTMatrix();
+                    if(mCameraRot!= mRotTmp)
+                    {
+                        int eccheccazzo=1;
+                    }
+                    //++++++++++++++++++++++++++++++++++
 
                     string s1 = mCameraRot.M11.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M12.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M13.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M14.ToString(CultureInfo.InvariantCulture) + " ";
                     string s2 = mCameraRot.M21.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M22.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M23.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M24.ToString(CultureInfo.InvariantCulture) + " ";
@@ -338,7 +455,20 @@ namespace Viewer360.View
                     fs.Dispose();
             }
 
+        }
 
+        public void ComputeCameraAtForServer(ref double dX, ref double dY)
+        {
+            Matrix3D mRotTmp = ComputeCameraRTMatrix();
+            dX = mRotTmp.M13;
+            dY = mRotTmp.M23;
+            //+++++++++++++++++++
+            Console.WriteLine("Da ComputeCameraAtForServer");
+            Console.WriteLine("dX=" + dX.ToString()+"  dY="+ dY.ToString());
+            //+++++++++++++++++++
+            double dLen = Math.Sqrt(dX * dX + dY * dY);
+            dX /= dLen;
+            dY /= dLen;
 
         }
 
@@ -399,8 +529,8 @@ namespace Viewer360.View
             RaisePropertyChanged("Vfov");
         }
 */
-        // Helper function for INPC
-        private void RaisePropertyChanged(string propertyName)
+            // Helper function for INPC
+            private void RaisePropertyChanged(string propertyName)
         {
             if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }

@@ -21,6 +21,8 @@ namespace Viewer360.View
         private static Vector3D m_vCameraRot;
         private static List<List<CCatalogManager.CObjInfo>> m_oCatalogGroupedElem;
 
+        public static bool m_bCameraAtHasChanged = false;
+
         public static void SetFileAndFolderNames(string sFileName, string sNewPath)
         {
             m_sFullFileName = sFileName;
