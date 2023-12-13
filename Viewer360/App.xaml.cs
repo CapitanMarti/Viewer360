@@ -8,6 +8,7 @@ using System.IO.Pipes;
 using System.IO;
 using System.Windows.Interop;
 using Viewer360.View;
+using System.Windows.Media.Media3D;
 
 
 namespace Viewer360
@@ -27,6 +28,7 @@ namespace Viewer360
             ComponentDispatcher.ThreadIdle += OnApplicationIdle;
 
             CompositionTarget.Rendering += CompositionTarget_Rendering;
+
 
             // View.MainWindow mainWindow = new View.MainWindow();
             m_Window = new View.MainWindow();
@@ -51,6 +53,9 @@ namespace Viewer360
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
+
+
+
         }
 
 
@@ -99,7 +104,7 @@ namespace Viewer360
                 double dX=1;
                 double dY=0;
 
-                m_Window.viewer360_View.ComputeCameraAtForServer(ref dX, ref dY);
+                m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
                 m_oMsgManager.SendCameraAt(dX, dY);
 
                 SharingHelper.m_bCameraAtHasChanged = false;

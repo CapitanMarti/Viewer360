@@ -116,7 +116,7 @@ namespace Viewer360.ViewModel
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
             SharingHelper.SetCameraPos(sX,sY,sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
-            m_Window.viewer360_View.ComputeCameraRTMatrix();
+            m_Window.viewer360_View.ComputeGlobalRotMatrix();
 
             SharingHelper.LoadCatalogManager(sObjCatalogFile);
 
@@ -160,11 +160,30 @@ namespace Viewer360.ViewModel
 
         public void LoadNewImage(string sImageFile, string sX, string sY, string sZ, string sRotX, string sRotY, string sRotZ)
         {
+            // Memorizzo la cameraAt attuale in coordinate mondo
+            double dOldAtX = 0;
+            double dOldAtY = 0;
+            double dOldAtZ = 0;
+            m_Window.viewer360_View.Compute3DCameraAt(ref dOldAtX, ref dOldAtY, ref dOldAtZ);
 
+            // Aggiorno il sistema di riferimento
             SharingHelper.SetCameraPos(sX, sY, sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
-            m_Window.viewer360_View.ComputeCameraRTMatrix();
+            m_Window.viewer360_View.ComputeGlobalRotMatrix();
             SharingHelper.m_bCameraAtHasChanged = true;
+
+            // Imposto la nuova CameraAt in modo che sia orientata nel mondo come quella precedente
+            m_Window.viewer360_View.SetNewCameraAt(dOldAtX, dOldAtY, dOldAtZ);
+
+            //++++++++++++++++++++++++++++++++
+            double dNewAtX = 0;
+            double dNewAtY = 0;
+            double dNewAtZ = 0;
+            m_Window.viewer360_View.Compute3DCameraAt(ref dNewAtX, ref dNewAtY, ref dNewAtZ);
+            //++++++++++++++++++++++++++++++++
+            RaisePropertyChanged("Theta");
+            RaisePropertyChanged("Phi");
+
 
             Image = null; RaisePropertyChanged("Image");
             IsLoading = true; RaisePropertyChanged("IsLoading");

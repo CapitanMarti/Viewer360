@@ -267,11 +267,38 @@ namespace Viewer360.View
             m_mRotXYZ = m_mRotX * m_mRotY * m_mRotZ ;
         }
 
-        public Matrix3D ComputeCameraRTMatrix()
+        public void SetNewCameraAt(double dGlobalX, double dGlobalY, double dGlobalZ)  // imposta la nuova camera at in base a quella in coordinate mondo passata in argomento
+        {
+            // Calcolo At in coordinate locali
+            Vector3D vNewAt = new Vector3D(dGlobalX, dGlobalY, dGlobalZ);
+
+            // Devo trasformare vNewAt con l'inverso della rotazione RotXYZ (=A); bisogna però tenere conto che il metodo A.Transform(v) esegue il prodotto v^ * A 
+            // dove v^ è il vettore riga) che è ugiuale a A^ * v; Dato che in una rotazione inversione == trasposizione, nel nostro caso posso utilizzare
+            // direttamente la RotXYZ
+
+            vNewAt = m_mRotXYZ.Transform(vNewAt);  // InvRotXYX * vNewAt == vNewAt*RotXYX
+
+            camPhi = 180.0*Math.Acos(vNewAt.Z)/Math.PI;
+            camTheta=180.0*Math.Acos(vNewAt.Y/Math.Sqrt(1- vNewAt.Z* vNewAt.Z)) / Math.PI;
+            if (vNewAt.X < 0)
+                camTheta = -camTheta;
+
+            MyCam.LookDirection = new Vector3D(vNewAt.X, vNewAt.Y, vNewAt.Z);
+
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            // Verifico che se la riteasformo torno all'originale
+            Vector3D vNewOrigAt = m_mRotXYZ.Transform(vNewAt);
+            //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+        }
+
+        public Matrix3D ComputeCameraRTMatrix(bool bReverseZ)
         {
             // Calcolo direzioni At,Up di camera locale, tenendo conto che in questo codice risulta sempre Up=[0,0,1]
             Vector3D vAt = MyCam.LookDirection;
-            vAt.Z = -vAt.Z;  // ATTENZIONE: Z va invertita per compatibilità sistema riferimento adottato da Scan2Bim
+            if(bReverseZ)
+                vAt.Z = -vAt.Z;  // ATTENZIONE: Z va invertita per compatibilità sistema riferimento adottato da Scan2Bim
             Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
             vTmp.Normalize();
             Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
@@ -297,6 +324,8 @@ namespace Viewer360.View
             mCameraRot.M44 = 1;
 
             mCameraRot = m_mRotXYZ* mCameraRot;
+
+
 
             mCameraRot.M14 = vCameraPos.X;
             mCameraRot.M24 = vCameraPos.Y;
@@ -426,11 +455,11 @@ namespace Viewer360.View
                     mCameraRot.M34 = vCameraPos.Z;
 
                     //+++++++++++++++++++++++++++++++++
-                    Matrix3D mRotTmp = ComputeCameraRTMatrix();
-                    if(mCameraRot!= mRotTmp)
-                    {
-                        int eccheccazzo=1;
-                    }
+                    //Matrix3D mRotTmp = ComputeCameraRTMatrix();
+                    //if(mCameraRot!= mRotTmp)
+                    //{
+                    //    int eccheccazzo=1;
+                    //}
                     //++++++++++++++++++++++++++++++++++
 
                     string s1 = mCameraRot.M11.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M12.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M13.ToString(CultureInfo.InvariantCulture) + " " + mCameraRot.M14.ToString(CultureInfo.InvariantCulture) + " ";
@@ -457,20 +486,32 @@ namespace Viewer360.View
 
         }
 
-        public void ComputeCameraAtForServer(ref double dX, ref double dY)
+        public void ComputePlanarCameraAt(ref double dX, ref double dY)  // Restituisce la cameraAt planare in coordinate mondo
         {
-            Matrix3D mRotTmp = ComputeCameraRTMatrix();
+            Matrix3D mRotTmp = ComputeCameraRTMatrix(true);
             dX = mRotTmp.M13;
             dY = mRotTmp.M23;
             //+++++++++++++++++++
-            Console.WriteLine("Da ComputeCameraAtForServer");
-            Console.WriteLine("dX=" + dX.ToString()+"  dY="+ dY.ToString());
+            //Console.WriteLine("Da ComputeCameraAtForServer");
+            //Console.WriteLine("dX=" + dX.ToString()+"  dY="+ dY.ToString());
             //+++++++++++++++++++
             double dLen = Math.Sqrt(dX * dX + dY * dY);
             dX /= dLen;
             dY /= dLen;
-
         }
+
+        public void Compute3DCameraAt(ref double dX, ref double dY, ref double dZ)  // Restituisce la cameraAt in coordinate mondo
+        {
+            Matrix3D mRotTmp = ComputeCameraRTMatrix(false);
+            dX = mRotTmp.M13;
+            dY = mRotTmp.M23;
+            dZ = mRotTmp.M33;
+            //+++++++++++++++++++
+            //Console.WriteLine("Da ComputeCameraAtForServer");
+            //Console.WriteLine("dX=" + dX.ToString() + "  dY=" + dY.ToString());
+            //+++++++++++++++++++
+        }
+
 
         // Mouse down: start moving camera
         private void vp_MouseDown(object sender, MouseButtonEventArgs e)
