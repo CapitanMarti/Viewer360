@@ -114,6 +114,7 @@ namespace Viewer360.ViewModel
         {
 
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
+            m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
             SharingHelper.SetCameraPos(sX,sY,sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
@@ -167,6 +168,8 @@ namespace Viewer360.ViewModel
             m_Window.viewer360_View.Compute3DCameraAt(ref dOldAtX, ref dOldAtY, ref dOldAtZ);
 
             // Aggiorno il sistema di riferimento
+            SharingHelper.SetFileName(sImageFile);
+            m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
             SharingHelper.SetCameraPos(sX, sY, sZ);
             SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
             m_Window.viewer360_View.ComputeGlobalRotMatrix();

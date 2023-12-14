@@ -15,6 +15,7 @@ using System.Reflection.Emit;
 using System.Xml.Linq;
 using System.Globalization;
 using System.Windows.Interop;
+using System.Diagnostics;
 
 namespace Viewer360.View
 {
@@ -32,6 +33,8 @@ namespace Viewer360.View
         private double camPhiSpeed = 0;           // Camera vertical movement speed
         private double clickX, clickY;            // Coordinates of the mouse press
         private DispatcherTimer timer;            // Timer for animating camera
+        private DispatcherTimer ClickTimer;       // Timer per animazione mirino
+        private Stopwatch ClickTimerWatch;
         private bool isMouseDown = false;         // Is the mouse pressed
         private Matrix3D m_mRotX;
         private Matrix3D m_mRotY;
@@ -78,12 +81,45 @@ namespace Viewer360.View
             timer.Interval = TimeSpan.FromMilliseconds(25);
             timer.Tick += timer_Tick;
 
+            ClickTimer = new DispatcherTimer(); // Initialize timer
+            ClickTimer.Interval = TimeSpan.FromMilliseconds(10);
+            ClickTimer.Tick += ClickTimer_Tick;
+            ClickTimerWatch = new Stopwatch();
+
             m_ViewSize = new System.Windows.Size();
 
             m_mRotX = new Matrix3D();
             m_mRotY = new Matrix3D();
             m_mRotZ = new Matrix3D();
             m_mRotXYZ = new Matrix3D();
+        }
+
+        private void ClickTimer_Tick(object sender, EventArgs e)
+        {
+            if (!ClickTimerWatch.IsRunning)
+            {
+                ClickTimerWatch.Reset();
+                ClickTimerWatch.Start();
+            }
+
+            TimeSpan elapsed = ClickTimerWatch.Elapsed;
+            //++++++++++++++++++++++++++++
+            //Console.WriteLine("Da ClickTimer_Tick elapsed="+ elapsed.Milliseconds.ToString());
+            //++++++++++++++++++++++++++++
+
+            if (elapsed.Milliseconds<100)
+                 m_Window.ViewFinderPolygon.Stroke = System.Windows.Media.Brushes.White;
+            else if(elapsed.Milliseconds<200)
+                m_Window.ViewFinderPolygon.Stroke = System.Windows.Media.Brushes.Red;
+            else if (elapsed.Milliseconds < 400)
+                m_Window.ViewFinderPolygon.Stroke = System.Windows.Media.Brushes.White;
+            else
+            {
+                m_Window.ViewFinderPolygon.Stroke = System.Windows.Media.Brushes.Blue;
+                ClickTimerWatch.Stop();
+                ClickTimer.Stop();
+            }
+//            m_Window.InvalidateVisual();
         }
 
         /// <summary>
@@ -189,6 +225,7 @@ namespace Viewer360.View
         // AM AM AM  Scrittura grab video su file
         //********************************
         {
+
             int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
             int nHeight = Convert.ToInt32(m_ViewSize.Height * 1.5);
             var renderTarget = new RenderTargetBitmap(nWidth, nHeight, 144, 144, PixelFormats.Default);
@@ -210,6 +247,9 @@ namespace Viewer360.View
 
             // Scrittura file .json
             m_Window.SaveJason(sNewFileName, m_ViewSize);
+
+            // Faccio partire il timer per l'ainimazione del mirino
+            ClickTimer.Start();
         }
 
         public void ComputeGlobalRotMatrix()

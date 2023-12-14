@@ -29,6 +29,11 @@ namespace Viewer360.View
             m_sNewPath=sNewPath;
         }
 
+        public static void SetFileName(string sFileName)
+        {
+            m_sFullFileName = sFileName;
+        }
+
         public static void LoadCatalogManager(string sCatalogName)
         {
             m_oCM = new CCatalogManager();
