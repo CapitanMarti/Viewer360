@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using PointCloudUtility;
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Windows.Controls;
 
 namespace Viewer360.View
 {
@@ -19,6 +21,7 @@ namespace Viewer360.View
     {
 
         private bool isDragging;
+        private int  iDraggingPoint;
         private Point offset;
         private Point vViewfinderCentre;
         private Point vVewfinderBBox;
@@ -29,6 +32,13 @@ namespace Viewer360.View
         {
             InitializeComponent();
             DataContext = new MainViewModel();
+            iDraggingPoint = -1;
+
+            // Associare i gestori di eventi per il clic su ciascun cerchio
+            Point1.MouseLeftButtonDown += Cerchio_Click;
+            Point2.MouseLeftButtonDown += Cerchio_Click;
+            Point3.MouseLeftButtonDown += Cerchio_Click;
+            Point4.MouseLeftButtonDown += Cerchio_Click;
 
             // Inizializzo centro mirino
             vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
@@ -54,6 +64,26 @@ namespace Viewer360.View
                 }
             });
 
+        }
+
+        private void Cerchio_Click(object sender, MouseButtonEventArgs e)
+        {
+            // Ottieni il cerchio su cui è stato effettuato il clic
+            Ellipse cerchioCliccato = sender as Ellipse;
+
+            // Esegui qui le azioni desiderate in risposta al clic sul cerchio
+            if (cerchioCliccato != null)
+            {
+                if(cerchioCliccato.Name=="Point1")
+                    iDraggingPoint = 0;
+                else if (cerchioCliccato.Name == "Point2")
+                    iDraggingPoint = 1;
+                else if (cerchioCliccato.Name == "Point3")
+                    iDraggingPoint = 2;
+                else if (cerchioCliccato.Name == "Point4")
+                    iDraggingPoint = 3;
+
+            }
         }
 
         public void InitUI()
@@ -137,46 +167,81 @@ namespace Viewer360.View
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                offset = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y);
+
+                /*
+                // Verifico se ho cliccato su un vertice
+                for (int i = 0; i < 4; i++)
+                {
+                    if (Dist(ViewFinderPolygon.Points[i], offset) < 4)
+                    {
+                        iDraggingPoint = i;
+                        return;
+                    }
+                }
+                iDraggingPoint = -1;
+*/
                 isDragging = true;
-                offset = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y); ;
             }
         }
 
+        static double Dist(Point punto1, Point punto2)
+        {
+            double deltaX = punto2.X - punto1.X;
+            double deltaY = punto2.Y - punto1.Y;
+
+            return Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        }
+
+
         public void Polygon_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed && isDragging)
+            if (e.LeftButton == MouseButtonState.Pressed && (isDragging || iDraggingPoint>=0))
             {
-                // Recupero dimensioni finestra
-                double dSizeX = viewer360_View.m_ViewSize.Width;
-                double dSizeY = viewer360_View.m_ViewSize.Height;
-
                 // Recupero posizione mouse
                 Point newPosition = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y);
 
-                // Calcolo nuove posizioni
-                aPointTmp.Clear();
-                double dX, dY;
-                for ( int i=0; i< ViewFinderPolygon.Points.Count; i++)
+                if (iDraggingPoint >= 0)  // Sto modificando la posizione di un vertice
                 {
-                    dX = ViewFinderPolygon.Points[i].X + newPosition.X - offset.X;
-                    dY = ViewFinderPolygon.Points[i].Y + newPosition.Y - offset.Y;
-                    aPointTmp.Add(new Point(dX,dY));
-                }
+                    ViewFinderPolygon.Points[iDraggingPoint] = newPosition;
 
-                // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
-                if (aPointTmp[0].X >= 0 && aPointTmp[1].X <= dSizeX && aPointTmp[0].Y >= 0 && aPointTmp[2].Y <= dSizeY)
+                    // Aggiorno le posizioni dei pallini
+                    UpdateVertexCircle();
+                }
+                else
                 {
-                    // Aggiorno i vertici
+
+                    // Calcolo nuove posizioni
+                    aPointTmp.Clear();
+                    double dX, dY;
                     for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
-                        ViewFinderPolygon.Points[i] = aPointTmp[i];
+                    {
+                        dX = ViewFinderPolygon.Points[i].X + newPosition.X - offset.X;
+                        dY = ViewFinderPolygon.Points[i].Y + newPosition.Y - offset.Y;
+                        aPointTmp.Add(new Point(dX, dY));
+                    }
 
-                    // Aggiorno centro mirino
-                    vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
-                    vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
+                    // Recupero dimensioni finestra
+                    double dSizeX = viewer360_View.m_ViewSize.Width;
+                    double dSizeY = viewer360_View.m_ViewSize.Height;
+
+                    // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
+                    if (aPointTmp[0].X >= 0 && aPointTmp[1].X <= dSizeX && aPointTmp[0].Y >= 0 && aPointTmp[2].Y <= dSizeY)
+                    {
+                        // Aggiorno i vertici
+                        for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+                            ViewFinderPolygon.Points[i] = aPointTmp[i];
+
+                        // Aggiorno centro mirino
+                        vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
+                        vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
+
+                        // Aggiorno le posizioni dei pallini
+                        UpdateVertexCircle();
+                    }
+
+                    offset = newPosition;
                 }
-
-                offset = newPosition;
-
             }
         }
 
@@ -287,10 +352,27 @@ namespace Viewer360.View
                     // Aggiorno centro mirino
                     vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
                     vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
+
+                    // Aggiorno le posizioni dei pallini
+                    UpdateVertexCircle();
+
                 }
 
             }
         }
+
+        void UpdateVertexCircle()
+        {
+            Point1.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[0].X-4);
+            Point1.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[0].Y - 4);
+            Point2.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[1].X - 4);
+            Point2.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[1].Y - 4);
+            Point3.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[2].X - 4);
+            Point3.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[2].Y - 4);
+            Point4.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[3].X - 4);
+            Point4.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[3] .Y - 4);
+        }
+
 
         public void RescaleViewfinderOnWindowChange(SizeChangedInfo sizeInfo)
         {
@@ -321,6 +403,7 @@ namespace Viewer360.View
         public void Polygon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             isDragging = false;
+            iDraggingPoint = -1;
         }
 
     }

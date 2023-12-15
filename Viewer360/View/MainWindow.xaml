@@ -102,7 +102,16 @@
             </ProgressBar> -->
 
             <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="5"/>
-
+            <Canvas>
+                <!-- Cerchietto per il primo vertice -->
+                <Ellipse Name="Point1" Width="8" Height="8" Fill="Red" Canvas.Left="346" Canvas.Top="206"/>
+                <!-- Cerchietto per il secondo vertice -->
+                <Ellipse Name="Point2" Width="8" Height="8" Fill="Red" Canvas.Left="446" Canvas.Top="206"/>
+                <!-- Cerchietto per il terzo vertice -->
+                <Ellipse Name="Point3" Width="8" Height="8" Fill="Red" Canvas.Left="446" Canvas.Top="306"/>
+                <!-- Cerchietto per il quarto vertice -->
+                <Ellipse Name="Point4" Width="8" Height="8" Fill="Red" Canvas.Left="346" Canvas.Top="306"/>
+            </Canvas>
 
         </Grid>
 
