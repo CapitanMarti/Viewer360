@@ -23,6 +23,7 @@ namespace Viewer360.View
         private Point vViewfinderCentre;
         private Point vVewfinderBBox;
         private PointCollection aPointTmp;
+        private List<int> aItemDefaultEntry;
 
         public MainWindow()
         {
@@ -36,6 +37,7 @@ namespace Viewer360.View
             vVewfinderBBox.Y = (ViewFinderPolygon.Points[2].Y - ViewFinderPolygon.Points[1].Y) / 2;
 
             aPointTmp =new PointCollection();
+            aItemDefaultEntry=new List<int>();
 
 
         // If the window style is set to none when the window is maximized, the taskbar will not
@@ -58,8 +60,22 @@ namespace Viewer360.View
         {
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
 
+            int iDefEntry;
             for (int iCat = 1; iCat < oLList.Count; iCat++)
+            {
                 oCategoryCombo.Items.Add(oLList[iCat][0].sCategory);
+
+                iDefEntry = 0;
+                for (int iItem = 0; iItem< oLList[iCat].Count; iItem++)
+                {
+                    if (oLList[iCat][iItem].bUIDefEntry)
+                    {
+                        iDefEntry = iItem;
+                        break;
+                    }
+                }
+                aItemDefaultEntry.Add(iDefEntry);
+            }
 
             oCategoryCombo.SelectedIndex = 2;  // Wall
 
@@ -75,7 +91,7 @@ namespace Viewer360.View
             for (int iItem = 0; iItem < oLList[iSelectedCat].Count; iItem++)
                 oItemCombo.Items.Add(oLList[iSelectedCat][iItem].sUI_CategoryInfo);
 
-            oItemCombo.SelectedIndex = 0;
+            oItemCombo.SelectedIndex = aItemDefaultEntry[oCategoryCombo.SelectedIndex];
             oElementName.Text = oCategoryCombo.SelectedItem.ToString();
 
         }
@@ -185,9 +201,9 @@ namespace Viewer360.View
                         vP.X = ViewFinderPolygon.Points[i].X;
 
                         if(i<2)
-                            vP.Y = ViewFinderPolygon.Points[i].Y + fIncrease;
-                        else
                             vP.Y = ViewFinderPolygon.Points[i].Y - fIncrease;
+                        else
+                            vP.Y = ViewFinderPolygon.Points[i].Y + fIncrease;
 
                         aPointTmp.Add(vP);
                     }
@@ -206,9 +222,9 @@ namespace Viewer360.View
                     {
                         vP.Y = ViewFinderPolygon.Points[i].Y;
                         if(i==0 || i==3)
-                            vP.X = ViewFinderPolygon.Points[i].X + fIncrease;
-                        else
                             vP.X = ViewFinderPolygon.Points[i].X - fIncrease;
+                        else
+                            vP.X = ViewFinderPolygon.Points[i].X + fIncrease;
 
                         aPointTmp.Add(vP);
                     }
