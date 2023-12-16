@@ -40,6 +40,11 @@ namespace Viewer360.View
             Point3.MouseLeftButtonDown += Cerchio_Click;
             Point4.MouseLeftButtonDown += Cerchio_Click;
 
+            Point1.MouseLeftButtonUp += Cerchio_BottonUp;
+            Point2.MouseLeftButtonUp += Cerchio_BottonUp;
+            Point3.MouseLeftButtonUp += Cerchio_BottonUp;
+            Point4.MouseLeftButtonUp += Cerchio_BottonUp;
+
             // Inizializzo centro mirino
             vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
             vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
@@ -66,8 +71,17 @@ namespace Viewer360.View
 
         }
 
+        private void Cerchio_BottonUp(object sender, MouseButtonEventArgs e)
+        {
+            iDraggingPoint = -1;
+        }
+            
+
         private void Cerchio_Click(object sender, MouseButtonEventArgs e)
         {
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                    return;
+
             // Ottieni il cerchio su cui è stato effettuato il clic
             Ellipse cerchioCliccato = sender as Ellipse;
 
