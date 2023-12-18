@@ -179,10 +179,10 @@ namespace Viewer360.ViewModel
             m_Window.viewer360_View.SetNewCameraAt(dOldAtX, dOldAtY, dOldAtZ);
 
             //++++++++++++++++++++++++++++++++
-            double dNewAtX = 0;
-            double dNewAtY = 0;
-            double dNewAtZ = 0;
-            m_Window.viewer360_View.Compute3DCameraAt(ref dNewAtX, ref dNewAtY, ref dNewAtZ);
+            // double dNewAtX = 0;
+            // double dNewAtY = 0;
+            // double dNewAtZ = 0;
+            // m_Window.viewer360_View.Compute3DCameraAt(ref dNewAtX, ref dNewAtY, ref dNewAtZ);
             //++++++++++++++++++++++++++++++++
             RaisePropertyChanged("Theta");
             RaisePropertyChanged("Phi");

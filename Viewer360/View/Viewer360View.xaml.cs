@@ -225,14 +225,19 @@ namespace Viewer360.View
         // AM AM AM  Scrittura grab video su file
         //********************************
         {
+            if (Keyboard.IsKeyDown(Key.LeftAlt))
+                SaveImageAndJson();
+
+        }
+
+        void SaveImageAndJson()
+        {
 
             int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
             int nHeight = Convert.ToInt32(m_ViewSize.Height * 1.5);
             var renderTarget = new RenderTargetBitmap(nWidth, nHeight, 144, 144, PixelFormats.Default);
-//            var renderTarget = new RenderTargetBitmap(Convert.ToInt32(m_ViewSize.Width * 3), Convert.ToInt32(m_ViewSize.Height * 3), 144, 144, PixelFormats.Pbgra32);
+            //            var renderTarget = new RenderTargetBitmap(Convert.ToInt32(m_ViewSize.Width * 3), Convert.ToInt32(m_ViewSize.Height * 3), 144, 144, PixelFormats.Pbgra32);
             renderTarget.Render(vp);
-    
-            //yield return renderTarget;
 
             MemoryStream stream = new MemoryStream();
             BitmapEncoder encoder = new BmpBitmapEncoder();
@@ -246,9 +251,9 @@ namespace Viewer360.View
             SaveCameraInfo(sNewFileName);
 
             // Scrittura file .json
-            m_Window.SaveJason(sNewFileName, m_ViewSize);
+            m_Window.SaveJason(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
 
-            // Faccio partire il timer per l'ainimazione del mirino
+            // Faccio partire il timer per l'animazione del mirino
             ClickTimer.Start();
         }
 
@@ -327,7 +332,7 @@ namespace Viewer360.View
 
             //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             // Verifico che se la riteasformo torno all'originale
-            Vector3D vNewOrigAt = m_mRotXYZ.Transform(vNewAt);
+            // Vector3D vNewOrigAt = m_mRotXYZ.Transform(vNewAt);
             //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -556,9 +561,13 @@ namespace Viewer360.View
         // Mouse down: start moving camera
         private void vp_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl))
-                m_Window.Polygon_MouseDown(sender, e);
-            else
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))  // Attivazione drag mirino/creazione punti mirino 
+                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
+            else if(Keyboard.IsKeyDown(Key.RightCtrl))  // Eliminazione punti mirino
+            {
+
+            }
+            else  // Spostamento CameraAt
             {
                 isMouseDown = true;
                 this.Cursor = Cursors.SizeAll;

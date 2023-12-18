@@ -54,8 +54,6 @@ namespace Viewer360
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
 
-
-
         }
 
 

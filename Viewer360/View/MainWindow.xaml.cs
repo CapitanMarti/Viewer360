@@ -11,9 +11,17 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows.Controls;
+using System.Windows.Media.Media3D;
+using static PointCloudUtility.CFileLabelManager;
 
 namespace Viewer360.View
 {
+    struct SPointInfo
+    {
+        public int iPointIndex;
+        public Ellipse ellipse;
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -28,25 +36,30 @@ namespace Viewer360.View
         private PointCollection aPointTmp;
         private List<int> aItemDefaultEntry;
 
+        List<Ellipse> m_EllipseList;
+        int m_iEllipseIncrementalNum;
+        Canvas myCanvas;
+
         public MainWindow()
         {
             InitializeComponent();
             DataContext = new MainViewModel();
             iDraggingPoint = -1;
 
-            // Associare i gestori di eventi per il clic su ciascun cerchio
-            Point1.MouseLeftButtonDown += Cerchio_Click;
-            Point2.MouseLeftButtonDown += Cerchio_Click;
-            Point3.MouseLeftButtonDown += Cerchio_Click;
-            Point4.MouseLeftButtonDown += Cerchio_Click;
+            m_iEllipseIncrementalNum = 0;
+            myCanvas = new Canvas();
+            Grid.SetRow(myCanvas, 1);
+            Grid.SetColumnSpan(myCanvas, 5);
+            myGrid.Children.Add(myCanvas);
 
-            Point1.MouseLeftButtonUp += Cerchio_BottonUp;
-            Point2.MouseLeftButtonUp += Cerchio_BottonUp;
-            Point3.MouseLeftButtonUp += Cerchio_BottonUp;
-            Point4.MouseLeftButtonUp += Cerchio_BottonUp;
+            m_EllipseList=new List<Ellipse>();
 
-            // Inizializzo centro mirino
-            vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
+            for (int i=0; i< ViewFinderPolygon.Points.Count; i++)
+                AddEllipse(myCanvas, ViewFinderPolygon.Points[i].X, ViewFinderPolygon.Points[i].Y,i);
+
+
+                // Inizializzo centro mirino
+                vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
             vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
             vVewfinderBBox.X= (ViewFinderPolygon.Points[1].X - ViewFinderPolygon.Points[0].X) / 2;
             vVewfinderBBox.Y = (ViewFinderPolygon.Points[2].Y - ViewFinderPolygon.Points[1].Y) / 2;
@@ -71,6 +84,51 @@ namespace Viewer360.View
 
         }
 
+        int FindEllipseIndex(string sEllipseName)
+        {
+
+
+            for(int i=0; i< m_EllipseList.Count; i++ ) 
+            {
+                if (m_EllipseList[i].Name == sEllipseName)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private void AddEllipse(Canvas canvas, double left, double top, int iPointIndex=-1)
+        {
+
+            Ellipse ellipse = new Ellipse();
+            ellipse.Width = 8;
+            ellipse.Height = 8;
+            ellipse.Fill = Brushes.Red;
+            ellipse.Name = "P" + m_iEllipseIncrementalNum.ToString();
+            m_iEllipseIncrementalNum++;
+
+            ellipse.MouseLeftButtonDown += Cerchio_Click;
+            ellipse.MouseLeftButtonUp += Cerchio_BottonUp;
+            ellipse.MouseRightButtonDown += DeleteCerchio_Click;
+
+            Canvas.SetLeft(ellipse, left-4);
+            Canvas.SetTop(ellipse, top-4);
+
+            canvas.Children.Add(ellipse);
+
+            if(iPointIndex<0) // Append
+                m_EllipseList.Add(ellipse);
+            else
+                m_EllipseList.Insert(iPointIndex, ellipse);
+            /*
+            SPointInfo sPointInfo=new SPointInfo();
+            sPointInfo.ellipse= ellipse;
+            sPointInfo.iPointIndex= iPointIndex;
+            m_aPointinfo.Add(sPointInfo);
+            */
+        }
+
+
         private void Cerchio_BottonUp(object sender, MouseButtonEventArgs e)
         {
             iDraggingPoint = -1;
@@ -88,15 +146,39 @@ namespace Viewer360.View
             // Esegui qui le azioni desiderate in risposta al clic sul cerchio
             if (cerchioCliccato != null)
             {
-                if(cerchioCliccato.Name=="Point1")
-                    iDraggingPoint = 0;
-                else if (cerchioCliccato.Name == "Point2")
-                    iDraggingPoint = 1;
-                else if (cerchioCliccato.Name == "Point3")
-                    iDraggingPoint = 2;
-                else if (cerchioCliccato.Name == "Point4")
-                    iDraggingPoint = 3;
+                iDraggingPoint = FindEllipseIndex(cerchioCliccato.Name);
 
+
+            }
+        }
+
+        private void DeleteCerchio_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+                return;
+
+            if (m_EllipseList.Count == 3)  // Se sono già a 3 vertici smetto di eliminare punti
+                return;
+
+            // Ottieni il cerchio su cui è stato effettuato il clic
+            Ellipse cerchioCliccato = sender as Ellipse;
+
+            // Esegui qui le azioni desiderate in risposta al clic sul cerchio
+            if (cerchioCliccato != null)
+            {
+                int iIndex= FindEllipseIndex(cerchioCliccato.Name);
+
+                if (iIndex >= 0)
+                {
+                    // rimuovo il cerchio dal canvas
+                    myCanvas.Children.Remove(cerchioCliccato);
+
+                    // Rimuovo il cerclio dalla lista
+                    m_EllipseList.Remove(cerchioCliccato);
+
+                    // Rimuovo il punto dall'elenco
+                    ViewFinderPolygon.Points.RemoveAt(iIndex);
+                }
             }
         }
 
@@ -144,24 +226,35 @@ namespace Viewer360.View
 
         }
 
-        public void SaveJason(string sNewFileName, Size ViewSize)
+        public void SaveJason(string sNewFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov,Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
             CFileLabelManager oLabelManager= new CFileLabelManager();
             oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width*1.5), Convert.ToInt32(ViewSize.Height*1.5));
+            oLabelManager.m_dTheta = dTheta;
+            oLabelManager.m_dPhi = dPhi;
+            oLabelManager.m_vLookDirectionX = vLookDirection.X;
+            oLabelManager.m_vLookDirectionY = vLookDirection.Y;
+            oLabelManager.m_vLookDirectionZ = vLookDirection.Z;
+            oLabelManager.m_hFov = dHFov;
+            oLabelManager.m_vFov= dHFov;
 
             // Creo e inizializzo LabelInfo
             CFileLabelManager.SLabelInfo oLabelInfo=new CFileLabelManager.SLabelInfo();
 
+            // Aggiungo nome file .png
             oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = oElementName.Text;
 
+            // Aggiungo la category
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
             int iSelectedCat = oCategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
             int iSelectedItem = oItemCombo.SelectedIndex;
 
+            // Aggiungo il catalogID
             oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
 
+            // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<float>();
             oLabelInfo.aPolyPointY = new List<float>();
             for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
@@ -170,6 +263,8 @@ namespace Viewer360.View
                 oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y*1.5));
             }
 
+            // Aggiungo le info sulla camera 3D usata per scattare la foto
+
             // Aggiungo LabelInfo a LabelManager
             oLabelManager.Add(oLabelInfo);
 
@@ -177,26 +272,86 @@ namespace Viewer360.View
             oLabelManager.SaveToJsonFile(sNewFileName);
         }
 
-        public void Polygon_MouseDown(object sender, MouseButtonEventArgs e)
+        public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
-                offset = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y);
+                Point vPoint = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y);
+                // Verifico se ho cliccato su un segmento
+                int iSegment = CheckSegmentClick(vPoint);
 
-                /*
-                // Verifico se ho cliccato su un vertice
-                for (int i = 0; i < 4; i++)
+                if (iSegment >= 0)
                 {
-                    if (Dist(ViewFinderPolygon.Points[i], offset) < 4)
-                    {
-                        iDraggingPoint = i;
-                        return;
-                    }
+                    CreateNewPoint(iSegment, vPoint);
                 }
-                iDraggingPoint = -1;
-*/
-                isDragging = true;
+                else
+                {
+                    offset = vPoint;
+                    isDragging = true;
+                }
             }
+        }
+
+
+        void CreateNewPoint(int iSegment, Point vPoint)
+        {
+            if (iSegment < ViewFinderPolygon.Points.Count - 1)
+            {
+                ViewFinderPolygon.Points.Insert(iSegment + 1, vPoint);
+                AddEllipse(myCanvas, vPoint.X, vPoint.Y, iSegment + 1);
+            }
+            else
+            {
+                ViewFinderPolygon.Points.Add(vPoint);
+                AddEllipse(myCanvas, vPoint.X, vPoint.Y);
+            }
+
+        }
+
+
+        double Length(Point v)
+        {
+            return Math.Sqrt(v.X * v.X + v.Y * v.Y);
+        }
+        int CheckSegmentClick(Point vPoint)
+        {
+            int iPixelTol = 4;
+
+            Point vSide;
+
+            double fMinDist2 = 1e+30;
+            int iCandidate = -1;
+            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+            {
+                Point v1 = new Point(vPoint.X - ViewFinderPolygon.Points[i].X, vPoint.Y - ViewFinderPolygon.Points[i].Y);
+                double d1Len = Length(v1);
+
+                if (i < ViewFinderPolygon.Points.Count-1)
+                    vSide = new Point(ViewFinderPolygon.Points[i + 1].X - ViewFinderPolygon.Points[i].X, ViewFinderPolygon.Points[i + 1].Y - ViewFinderPolygon.Points[i].Y);
+                else
+                    vSide = new Point(ViewFinderPolygon.Points[0].X - ViewFinderPolygon.Points[ViewFinderPolygon.Points.Count - 1].X, ViewFinderPolygon.Points[0].Y - ViewFinderPolygon.Points[ViewFinderPolygon.Points.Count - 1].Y);
+
+                if (Length(vSide) < 1e-8)
+                    continue;
+
+                double dVSideLen = Length(vSide);
+                vSide.X /= dVSideLen;
+                vSide.Y /= dVSideLen;
+
+                double fProjection = v1.X * vSide.X+ v1.Y * vSide.Y;
+                if (fProjection < 0 || fProjection > dVSideLen)  // Il punto vCenter non cade sul lato corrente
+                    continue;
+
+                double fDist2 = d1Len * d1Len - fProjection * fProjection;
+                if (fDist2 < iPixelTol * iPixelTol && fDist2 < fMinDist2)
+                {
+                    fMinDist2 = fDist2;
+                    iCandidate = i;
+                }
+            }
+
+
+            return iCandidate;
         }
 
         static double Dist(Point punto1, Point punto2)
@@ -315,31 +470,7 @@ namespace Viewer360.View
                         aPointTmp[0] = vP;
                     }
                 }
-                else if (Keyboard.IsKeyDown(Key.Z)) // Deform. Orizzontale
-                {
-                    float fIncrease = (float)(e.Delta) / 25;
-                    for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
-                    {
-                        vP.Y = ViewFinderPolygon.Points[i].Y;
-//                        if (i < 2)
-                        {
-                            double dNewSize = (ViewFinderPolygon.Points[i].X - vViewfinderCentre.X) * fIncrease;
-                            if (i == 0 || i == 2)
-                                vP.X = ViewFinderPolygon.Points[i].X + fIncrease;
-                            else
-                                vP.X = ViewFinderPolygon.Points[i].X - fIncrease;
-                        }
-/*
-                        else
-                        {
-                            double dNewSize = (ViewFinderPolygon.Points[i].X - vViewfinderCentre.X) * fIncrease;
-                            vP.X = vViewfinderCentre.X - (ViewFinderPolygon.Points[i].X - vViewfinderCentre.X) * fIncrease;
-                        }
-*/
-                        aPointTmp.Add(vP);
-                    }
-                }
-                else
+                else  // Resize 
                 {
                     float fIncrease = 1 + (float)(e.Delta) / 1500;
                     for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
@@ -377,14 +508,14 @@ namespace Viewer360.View
 
         void UpdateVertexCircle()
         {
-            Point1.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[0].X-4);
-            Point1.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[0].Y - 4);
-            Point2.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[1].X - 4);
-            Point2.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[1].Y - 4);
-            Point3.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[2].X - 4);
-            Point3.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[2].Y - 4);
-            Point4.SetValue(Canvas.LeftProperty, ViewFinderPolygon.Points[3].X - 4);
-            Point4.SetValue(Canvas.TopProperty, ViewFinderPolygon.Points[3] .Y - 4);
+            for(int i = 0; i< m_EllipseList.Count; i++)
+            {
+                Point point = ViewFinderPolygon.Points[i];
+                m_EllipseList[i].SetValue(Canvas.LeftProperty, point.X - 4);
+                m_EllipseList[i].SetValue(Canvas.TopProperty, point.Y - 4);
+
+            }
+
         }
 
 

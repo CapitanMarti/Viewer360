@@ -14,17 +14,8 @@
         <Binding Path="IsFullscreen" Converter="{StaticResource fullscreenToWindowStyleConverter}"/>
     </Window.WindowStyle>
 
-    <!--
-    <Window.InputBindings>
-        <KeyBinding Key="F" Command="{Binding FullscreenCommand}"/>
-        <KeyBinding Key="O" Command="{Binding OpenCommand}"/>  
-        <KeyBinding Key="X" Command="{Binding ExitCommand}"/>
-    </Window.InputBindings>
-    -->
 
-
-
-    <Grid>
+    <Grid Name="myGrid">
 
 
         <Grid.ColumnDefinitions>
@@ -87,31 +78,7 @@
                 <TextBlock Foreground="Black" Text="{Binding Image.PixelHeight}" Margin="0 4 4 4"/>
             </WrapPanel>
 
-            <!--<ProgressBar Width="200" Height="20" HorizontalAlignment="Left" VerticalAlignment="Center"
-                         Background="Black" Foreground="White" BorderBrush="White" BorderThickness="2"
-                         IsIndeterminate="True"
-                         Visibility="{Binding IsLoading,Converter={StaticResource booleanToVisibilityConverter}}" Margin="10,0,0,0" Grid.Column="1" RenderTransformOrigin="0.5,0.5">
-                <ProgressBar.RenderTransform>
-                    <TransformGroup>
-                        <ScaleTransform/>
-                        <SkewTransform AngleX="-7.957"/>
-                        <RotateTransform/>
-                        <TranslateTransform X="1.398"/>
-                    </TransformGroup>
-                </ProgressBar.RenderTransform>
-            </ProgressBar> -->
-
             <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="5"/>
-            <Canvas>
-                <!-- Cerchietto per il primo vertice -->
-                <Ellipse Name="Point1" Width="8" Height="8" Fill="Red" Canvas.Left="346" Canvas.Top="206"/>
-                <!-- Cerchietto per il secondo vertice -->
-                <Ellipse Name="Point2" Width="8" Height="8" Fill="Red" Canvas.Left="446" Canvas.Top="206"/>
-                <!-- Cerchietto per il terzo vertice -->
-                <Ellipse Name="Point3" Width="8" Height="8" Fill="Red" Canvas.Left="446" Canvas.Top="306"/>
-                <!-- Cerchietto per il quarto vertice -->
-                <Ellipse Name="Point4" Width="8" Height="8" Fill="Red" Canvas.Left="346" Canvas.Top="306"/>
-            </Canvas>
 
         </Grid>
 
