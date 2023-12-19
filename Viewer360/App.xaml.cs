@@ -36,8 +36,16 @@ namespace Viewer360
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
 
             m_Window.Show();
-            if (e.Args.Length == 9) 
-                await (m_Window.DataContext as ViewModel.MainViewModel).Open(e.Args[0], e.Args[1], e.Args[2], e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
+            string sCatalogNameFull="";
+            string sPhoto360NameFull="";
+            string sJasonPath = "";
+            if (e.Args.Length == 9)
+            {
+                sCatalogNameFull = e.Args[0];
+                sPhoto360NameFull= e.Args[1];
+                sJasonPath= e.Args[2];
+                await (m_Window.DataContext as ViewModel.MainViewModel).Open(sCatalogNameFull, sPhoto360NameFull, sJasonPath, e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
+            }
 
             // Inizializzo la messaggistica col server
             m_oMsgManager = new CMessageManager(CMessageManager.PipeType.Client);
@@ -53,6 +61,8 @@ namespace Viewer360
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
+
+            CLabelManager.Init(System.IO.Path.GetFullPath(sPhoto360NameFull), sJasonPath);
 
         }
 

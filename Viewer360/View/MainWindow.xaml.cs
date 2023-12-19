@@ -12,7 +12,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
-using static PointCloudUtility.CFileLabelManager;
+using static PointCloudUtility.CSingleFileLabel;
 
 namespace Viewer360.View
 {
@@ -226,10 +226,11 @@ namespace Viewer360.View
 
         }
 
-        public void SaveJason(string sNewFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov,Vector3D vLookDirection)
+        public void SaveJason(string sNewJpgFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov,Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
-            CFileLabelManager oLabelManager= new CFileLabelManager();
+            CSingleFileLabel oLabelManager = new CSingleFileLabel();
+            oLabelManager.m_sJsonAthor= "ScanToBim-Viewer360";
             oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width*1.5), Convert.ToInt32(ViewSize.Height*1.5));
             oLabelManager.m_dTheta = dTheta;
             oLabelManager.m_dPhi = dPhi;
@@ -240,10 +241,10 @@ namespace Viewer360.View
             oLabelManager.m_vFov= dHFov;
 
             // Creo e inizializzo LabelInfo
-            CFileLabelManager.SLabelInfo oLabelInfo=new CFileLabelManager.SLabelInfo();
+            CSingleFileLabel.SLabelInfo oLabelInfo=new CSingleFileLabel.SLabelInfo();
 
             // Aggiungo nome file .png
-            oLabelInfo.sImageFileName = sNewFileName;
+//            oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = oElementName.Text;
 
             // Aggiungo la category
@@ -255,8 +256,8 @@ namespace Viewer360.View
             oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
 
             // Aggiungo i punti
-            oLabelInfo.aPolyPointX = new List<float>();
-            oLabelInfo.aPolyPointY = new List<float>();
+            oLabelInfo.aPolyPointX = new List<double>();
+            oLabelInfo.aPolyPointY = new List<double>();
             for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
             {
                 oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X*1.5));
@@ -269,7 +270,8 @@ namespace Viewer360.View
             oLabelManager.Add(oLabelInfo);
 
             // Salvo file .json
-            oLabelManager.SaveToJsonFile(sNewFileName);
+            oLabelManager.SaveToJsonFile(sNewJpgFileName);
+
         }
 
         public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
