@@ -62,7 +62,7 @@ namespace Viewer360
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
 
-            CLabelManager.Init(System.IO.Path.GetFullPath(sPhoto360NameFull), sJasonPath);
+            CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
 
         }
 
