@@ -274,6 +274,27 @@ namespace Viewer360.View
 
         }
 
+        private void NextImage_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as ViewModel.MainViewModel).NextImage_Click(sender, e);
+        }
+
+        private void PrevImage_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as ViewModel.MainViewModel).PrevImage_Click(sender, e);
+        }
+
+        private void NextLabel_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void PrevLabel_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+
         public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)

@@ -44,10 +44,10 @@
     <Grid>
         <!-- StackPanel per i pulsanti al di fuori di myGrid -->
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,23,0,0" Width="80" Background="LightGray">
-            <Button Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Width="80" Height="26"/>
-            <Button Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}"/>
-            <Button Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}"/>
-            <Button Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}"/>
+            <Button Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
+            <Button Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
+            <Button Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
+                <Button Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <ToggleButton Content="Edit">
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">

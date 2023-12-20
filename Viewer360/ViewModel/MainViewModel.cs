@@ -113,8 +113,25 @@ namespace Viewer360.ViewModel
             }
         }
 
+        public void NextImage_Click(object sender, RoutedEventArgs e)
+        {
+            m_iCurrentPhotoIndex++;
+            if (m_iCurrentPhotoIndex > CLabelManager.GetPhotoNum())
+                m_iCurrentPhotoIndex = 0;
+
+            LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
+        }
+
+        public void PrevImage_Click(object sender, RoutedEventArgs e)
+        {
+            m_iCurrentPhotoIndex--;
+            if (m_iCurrentPhotoIndex < 0)
+                m_iCurrentPhotoIndex = CLabelManager.GetPhotoNum()-1;
+
+            LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
+        }
+
         // Open image by file name
-//        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath, string sX, string sY, string sZ,string sRotX, string sRotY, string sRotZ)
         public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath)
         {
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
