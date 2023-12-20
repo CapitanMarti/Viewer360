@@ -25,18 +25,22 @@ namespace Viewer360
 
         private async void Application_Startup(object sender, StartupEventArgs e)
         {
+            // Aggiunta callback
             ComponentDispatcher.ThreadIdle += OnApplicationIdle;
-
             CompositionTarget.Rendering += CompositionTarget_Rendering;
 
-
-            // View.MainWindow mainWindow = new View.MainWindow();
+            // Creazione finestra
             m_Window = new View.MainWindow();
             m_Window.viewer360_View.m_Window = m_Window;
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
-
             m_Window.Show();
-            string sCatalogNameFull="";
+
+
+            // Inizializzazione CameraManager (lettura dati da Mapfile creato dal server)
+            CViewerCameraManager.Init();
+
+            // Acquisizione parametri command line e apertura file
+            string sCatalogNameFull ="";
             string sPhoto360NameFull="";
             string sJasonPath = "";
             if (e.Args.Length == 9)
@@ -44,12 +48,16 @@ namespace Viewer360
                 sCatalogNameFull = e.Args[0];
                 sPhoto360NameFull= e.Args[1];
                 sJasonPath= e.Args[2];
-                await (m_Window.DataContext as ViewModel.MainViewModel).Open(sCatalogNameFull, sPhoto360NameFull, sJasonPath, e.Args[3], e.Args[4], e.Args[5], e.Args[6], e.Args[7], e.Args[8]);
+
+                CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
+
+                await (m_Window.DataContext as ViewModel.MainViewModel).Open(sCatalogNameFull, sPhoto360NameFull, sJasonPath);
             }
 
             // Inizializzo la messaggistica col server
             m_oMsgManager = new CMessageManager(CMessageManager.PipeType.Client);
             m_oMsgManager.CreateConnection();
+
 
             // Attendo che la il Server si connetta
             m_oMsgManager.WaitForConnection();
@@ -62,7 +70,6 @@ namespace Viewer360
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
 
-            CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
 
         }
 
@@ -101,7 +108,8 @@ namespace Viewer360
                     string sMsg = m_oMsgManager.GetMsg();
                     m_oMsgManager.GetCameraInfo(sMsg, ref sCameraName, ref sX, ref sY, ref sZ, ref Rotx, ref Roty, ref Rotz);
 
-                    (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName, sX, sY, sZ, Rotx, Roty, Rotz);
+//                    (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName, sX, sY, sZ, Rotx, Roty, Rotz);
+                    (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName);
                     m_bNewImageLoaded = true;
                 }
             }

@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Viewer360.View;
+using PointCloudUtility;
+using static Viewer360.View.CViewerCameraManager;
 
 namespace Viewer360.ViewModel
 {
@@ -16,6 +18,7 @@ namespace Viewer360.ViewModel
     public class MainViewModel : ViewModelBase
     {
         public View.MainWindow m_Window;
+        int m_iCurrentPhotoIndex;
 
         // Commands
         #region commands
@@ -80,19 +83,20 @@ namespace Viewer360.ViewModel
         /// </summary>
         public MainViewModel()
         {
+            /*
             OpenCommand = new RelayCommand(a => Open());
-            OpenWithFilenameCommand = new RelayCommand(a => Open((string)a,"","","","", "", "", "",""));
+            OpenWithFilenameCommand = new RelayCommand(a => Open((string)a,"",""));
             ExitCommand = new RelayCommand(a => Exit());
             FullscreenCommand = new RelayCommand(a => FullScreen());
             ControlsCommand = new RelayCommand(a => Controls());
             AboutCommand = new RelayCommand(a => About());
 
             RecentImageManager = new Model.RecentImageManager(); RaisePropertyChanged("RecentImages");
-            
+            */
             Image = null; RaisePropertyChanged("Image");
             IsFullscreen = false; RaisePropertyChanged("IsFullscreen");
             IsLoading = false; RaisePropertyChanged("IsLoading");
-
+            m_iCurrentPhotoIndex = -1;
         }
 
         // Private methods
@@ -105,18 +109,24 @@ namespace Viewer360.ViewModel
             ofd.Filter = "Images (*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png";
             if (ofd.ShowDialog() == true)
             {
-                await Open(ofd.FileName,"","","","", "", "", "", "");
+                await Open(ofd.FileName,"","");
             }
         }
 
         // Open image by file name
-        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath, string sX, string sY, string sZ,string sRotX, string sRotY, string sRotZ)
+//        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath, string sX, string sY, string sZ,string sRotX, string sRotY, string sRotZ)
+        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath)
         {
-
             SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
             m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
-            SharingHelper.SetCameraPos(sX,sY,sZ);
-            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+
+            //            SharingHelper.SetCameraPos(sX, sY, sZ);
+            //            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+
+            m_iCurrentPhotoIndex = CLabelManager.GetPhotoIndexFromName(System.IO.Path.GetFileName(sImageFile));
+            CViewerCameraManager.CameraInfo oInfo = CViewerCameraManager.GetCameraInfo(m_iCurrentPhotoIndex);
+            SharingHelper.SetCameraPos(oInfo.dPosX, oInfo.dPosY, oInfo.dPosZ);
+            SharingHelper.SetCameraRot(oInfo.dRotX, oInfo.dRotY, oInfo.dRotZ);
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
 
             SharingHelper.LoadCatalogManager(sObjCatalogFile);
@@ -152,14 +162,14 @@ namespace Viewer360.ViewModel
                 if (Math.Abs(Image.Width / Image.Height - 2) > 0.001)
                     WarningMessage("Warning", "The opened image is not equirectangular (2:1)! Rendering may be improper.");
 
-                RecentImageManager.AddAndSave(sImageFile);
+                //RecentImageManager.AddAndSave(sImageFile);
             }
 
             IsLoading = false; RaisePropertyChanged("IsLoading");
             RaisePropertyChanged("Image");
         }
 
-        public void LoadNewImage(string sImageFile, string sX, string sY, string sZ, string sRotX, string sRotY, string sRotZ)
+        public void LoadNewImage(string sImageFile)
         {
             // Memorizzo la cameraAt attuale in coordinate mondo
             double dOldAtX = 0;
@@ -170,8 +180,14 @@ namespace Viewer360.ViewModel
             // Aggiorno il sistema di riferimento
             SharingHelper.SetFileName(sImageFile);
             m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
-            SharingHelper.SetCameraPos(sX, sY, sZ);
-            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
+
+            m_iCurrentPhotoIndex = CLabelManager.GetPhotoIndexFromName(System.IO.Path.GetFileName(sImageFile));
+            CViewerCameraManager.CameraInfo oInfo = CViewerCameraManager.GetCameraInfo(m_iCurrentPhotoIndex);
+            SharingHelper.SetCameraPos(oInfo.dPosX, oInfo.dPosY, oInfo.dPosZ);
+            SharingHelper.SetCameraRot(oInfo.dRotX, oInfo.dRotY, oInfo.dRotZ);
+
+//            SharingHelper.SetCameraPos(sX, sY, sZ);
+//            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
             SharingHelper.m_bCameraAtHasChanged = true;
 

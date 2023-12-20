@@ -76,6 +76,7 @@
     <Compile Include="Model\RecentImageManager.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
+    <Compile Include="View\CViewerCameraManager.cs" />
     <Compile Include="View\SharingHelper.cs" />
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

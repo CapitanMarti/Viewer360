@@ -43,6 +43,15 @@ namespace Viewer360.View
 
         public static List<List<CCatalogManager.CObjInfo>> GetAllLabelGroupedByCategory() { return m_oCatalogGroupedElem; }
 
+        public static void SetCameraPos(double dX, double dY, double dZ)
+        {
+            m_vCameraPos = new Vector3D(dX, dY, dZ);
+        }
+        public static void SetCameraRot(double dX, double dY, double dZ)
+        {
+            m_vCameraRot = new Vector3D(dX, dY, dZ);
+        }
+
         public static void SetCameraPos(string sX, string sY, string sZ)
         {
             double dX=double.Parse(sX, CultureInfo.InvariantCulture);
