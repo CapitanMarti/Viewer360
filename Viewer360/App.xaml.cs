@@ -9,6 +9,7 @@ using System.IO;
 using System.Windows.Interop;
 using Viewer360.View;
 using System.Windows.Media.Media3D;
+using static PointCloudUtility.CMessageManager;
 
 
 namespace Viewer360
@@ -90,40 +91,50 @@ namespace Viewer360
         {
             if(m_oMsgManager!=null && m_oMsgManager.PendingMsg())
             {
-                //++++++++++++++++++++++++++
-                // Console.WriteLine("Da ListenForMessages stop1 Type=" + m_oMsgManager.GetMsgType());
-                //++++++++++++++++++++++++++
-
-                if (m_oMsgManager.GetMsgType()==0)  // Messaggio pending è di tipo CameraInfo
+                CMessageManager.CMessage sMsg = m_oMsgManager.GetMsg();
+                if (sMsg.m_Type == MsgType.CameraSelected)  // Messaggio pending è di tipo CameraSelected
                 {
                     string sCameraName = "";
-                    string sX = "";
-                    string sY = "";
-                    string sZ = "";
-                    string Rotx = "";
-                    string Roty = "";
-                    string Rotz = "";
 
+                    m_oMsgManager.GetCameraSelected(sMsg.m_sMsg, ref sCameraName);
 
-                    string sMsg = m_oMsgManager.GetMsg();
-                    m_oMsgManager.GetCameraInfo(sMsg, ref sCameraName, ref sX, ref sY, ref sZ, ref Rotx, ref Roty, ref Rotz);
-
-//                    (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName, sX, sY, sZ, Rotx, Roty, Rotz);
                     (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName);
                     m_bNewImageLoaded = true;
+
+                    return;
                 }
             }
 
-            if(SharingHelper.m_bCameraAtHasChanged)
+            if(SharingHelper.m_bPhotoHasChanged)
             {
+                //++++++++++++++++++++++++++
+                // Console.WriteLine("Da OnApplicationIdle stop1 Type=1");
+                //++++++++++++++++++++++++++                // Comunico il nuovo indice di Photo
+                int index = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex;
+                double dX = 1;
+                double dY = 0;
+
+                m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
+                m_oMsgManager.SendCameraSelected1(index,dX,dY);
+
+                SharingHelper.m_bPhotoHasChanged = false;
+                return;
+            }
+
+            if (SharingHelper.m_bCameraAtHasChanged)
+            {
+                //++++++++++++++++++++++++++
+                // Console.WriteLine("Da OnApplicationIdle stop1 Type=2");
+                //++++++++++++++++++++++++++                // Comunico il nuovo indice di Photo
                 // Comunico la nuova direzione della camera al server
-                double dX=1;
+                double dX =1;
                 double dY=0;
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraAt(dX, dY);
+                m_oMsgManager.SendCameraInfo(dX, dY);
 
                 SharingHelper.m_bCameraAtHasChanged = false;
+                return;
             }
 
 

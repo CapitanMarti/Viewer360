@@ -18,7 +18,7 @@ namespace Viewer360.ViewModel
     public class MainViewModel : ViewModelBase
     {
         public View.MainWindow m_Window;
-        int m_iCurrentPhotoIndex;
+        public int m_iCurrentPhotoIndex;
 
         // Commands
         #region commands
@@ -116,10 +116,12 @@ namespace Viewer360.ViewModel
         public void NextImage_Click(object sender, RoutedEventArgs e)
         {
             m_iCurrentPhotoIndex++;
-            if (m_iCurrentPhotoIndex > CLabelManager.GetPhotoNum())
+            if (m_iCurrentPhotoIndex >= CLabelManager.GetPhotoNum())
                 m_iCurrentPhotoIndex = 0;
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
+            SharingHelper.m_bPhotoHasChanged = true;
+
         }
 
         public void PrevImage_Click(object sender, RoutedEventArgs e)
@@ -129,6 +131,7 @@ namespace Viewer360.ViewModel
                 m_iCurrentPhotoIndex = CLabelManager.GetPhotoNum()-1;
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
+            SharingHelper.m_bPhotoHasChanged = true;
         }
 
         // Open image by file name
@@ -206,7 +209,7 @@ namespace Viewer360.ViewModel
 //            SharingHelper.SetCameraPos(sX, sY, sZ);
 //            SharingHelper.SetCameraRot(sRotX, sRotY, sRotZ);
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
-            SharingHelper.m_bCameraAtHasChanged = true;
+            // SharingHelper.m_bCameraAtHasChanged = true;
 
             // Imposto la nuova CameraAt in modo che sia orientata nel mondo come quella precedente
             m_Window.viewer360_View.SetNewCameraAt(dOldAtX, dOldAtY, dOldAtZ);

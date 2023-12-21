@@ -22,6 +22,7 @@ namespace Viewer360.View
         private static List<List<CCatalogManager.CObjInfo>> m_oCatalogGroupedElem;
 
         public static bool m_bCameraAtHasChanged = false;
+        public static bool m_bPhotoHasChanged = false;
 
         public static void SetFileAndFolderNames(string sFileName, string sNewPath)
         {
