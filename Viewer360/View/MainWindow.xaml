@@ -43,11 +43,11 @@
 
     <Grid>
         <!-- StackPanel per i pulsanti al di fuori di myGrid -->
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,23,0,0" Width="80" Background="LightGray">
-            <Button Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,30,0,0" Width="80" Background="LightGray">
             <Button Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
+            <Button Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
+            <Button Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <Button Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
-                <Button Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <ToggleButton Content="Edit">
                 <ToggleButton.Style>
                     <Style TargetType="ToggleButton">
@@ -86,7 +86,7 @@
                 <RowDefinition Height="Auto" MinHeight="30"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Menu Visibility="{Binding IsFullscreen, Converter={StaticResource fullscreenToVisibilityConverter}}" Background="LightGray"  Height="23" VerticalAlignment="Top" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
+            <Menu Visibility="{Binding IsFullscreen, Converter={StaticResource fullscreenToVisibilityConverter}}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
                 <TextBlock Text="  Category: " />
                 <ComboBox Name="oCategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="19">
                     <!-- Elementi della ComboBox -->
@@ -98,35 +98,28 @@
                 <TextBlock Text="    Name: " />
                 <TextBox Name="oElementName" Width="95" />
             </Menu>
-            <Grid Grid.ColumnSpan="10" Margin="0,0,60,0" Grid.Row="1">
+            <Grid Grid.ColumnSpan="10" Margin="0,0,00,0" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="0*"/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="5*"/>
-                    <ColumnDefinition Width="69*"/>
-                    <ColumnDefinition Width="25*"/>
-                    <ColumnDefinition Width="50*"/>
-                    <ColumnDefinition Width="115*"/>
-                    <ColumnDefinition Width="350*"/>
-                    <ColumnDefinition Width="46*"/>
+                    <ColumnDefinition Width="6*"/>
+                    <ColumnDefinition Width="83*"/>
+                    <ColumnDefinition Width="56*"/>
+                    <ColumnDefinition Width="35*"/>
+                    <ColumnDefinition Width="139*"/>
+                    <ColumnDefinition Width="481*"/>
+                    <ColumnDefinition Width="0*"/>
+                    <ColumnDefinition Width="0*"/>
+                    <ColumnDefinition Width="0*"/>
+                    <ColumnDefinition Width="0*"/>
                 </Grid.ColumnDefinitions>
                 <!--<Image Source="{Binding Image}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
-                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="7" Margin="0,-7,-60,0" Grid.RowSpan="2"/>
+                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="6" Margin="0,0,0,0" Grid.RowSpan="2" Loaded="viewer360_View_Loaded"/>
 
-                <!--
-            <WrapPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Background="White"
-                    Visibility="{Binding ElementName=menuStatusBar,Path=IsChecked,Converter={StaticResource booleanToVisibilityConverter}}" Height="25" Width="270" Grid.Row="1" Grid.Column="4" >
-                <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Theta,StringFormat='Theta: {0:0.0}°'}" Margin="4 4 4 4"/>
-                <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Phi,StringFormat='Phi: {0:0.0}°'}" Margin="0 4 4 4"/>
-                <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Hfov,StringFormat='HFOV: {0:0.0}°'}" Margin="0 4 4 4"/>
-                <TextBlock Foreground="Black" Text="{Binding ElementName=viewer360_View,Path=Vfov,StringFormat='VFOV: {0:0.0}°'}" Margin="0 4 4 4"/>
-                <TextBlock Foreground="Black" Text="{Binding Image.PixelWidth,StringFormat='Image size: {0}x'}" Margin="0 4 0 4"/>
-                <TextBlock Foreground="Black" Text="{Binding Image.PixelHeight}" Margin="0 4 4 4"/>
-            </WrapPanel>
--->
-                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="7"/>
+
+                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="6"/>
 
             </Grid>
 

@@ -103,7 +103,7 @@ namespace Viewer360.View
             Ellipse ellipse = new Ellipse();
             ellipse.Width = 8;
             ellipse.Height = 8;
-            ellipse.Fill = Brushes.Red;
+            ellipse.Fill = Brushes.Green;
             ellipse.Name = "P" + m_iEllipseIncrementalNum.ToString();
             m_iEllipseIncrementalNum++;
 
@@ -131,6 +131,13 @@ namespace Viewer360.View
 
         private void Cerchio_BottonUp(object sender, MouseButtonEventArgs e)
         {
+            Ellipse cerchioCliccato = sender as Ellipse;
+
+            // Esegui qui le azioni desiderate in risposta al clic sul cerchio
+            if (cerchioCliccato != null)
+            {
+                cerchioCliccato.Fill = Brushes.Green;
+            }
             iDraggingPoint = -1;
         }
             
@@ -146,11 +153,14 @@ namespace Viewer360.View
             // Esegui qui le azioni desiderate in risposta al clic sul cerchio
             if (cerchioCliccato != null)
             {
+                cerchioCliccato.Fill = Brushes.Red;
                 iDraggingPoint = FindEllipseIndex(cerchioCliccato.Name);
 
 
             }
         }
+
+       
 
         private void DeleteCerchio_Click(object sender, MouseButtonEventArgs e)
         {
@@ -301,6 +311,9 @@ namespace Viewer360.View
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 Point vPoint = new Point(Mouse.GetPosition(viewer360_View.vp).X, Mouse.GetPosition(viewer360_View.vp).Y);
+                //+++++++++++++++++++++++++
+                //Console.WriteLine("vPoint=" + vPoint.ToString());
+                //++++++++++++++++++++++
                 // Verifico se ho cliccato su un segmento
                 int iSegment = CheckSegmentClick(vPoint);
 
@@ -367,7 +380,7 @@ namespace Viewer360.View
                     continue;
 
                 double fDist2 = d1Len * d1Len - fProjection * fProjection;
-                if (fDist2 < iPixelTol * iPixelTol && fDist2 < fMinDist2)
+                if (fDist2 <= iPixelTol * iPixelTol && fDist2 < fMinDist2)
                 {
                     fMinDist2 = fDist2;
                     iCandidate = i;
@@ -566,6 +579,7 @@ namespace Viewer360.View
             }
 
             vViewfinderCentre = vNewCentre;
+            UpdateVertexCircle();
             
         }
 
@@ -575,5 +589,9 @@ namespace Viewer360.View
             iDraggingPoint = -1;
         }
 
+        private void viewer360_View_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

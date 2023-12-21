@@ -561,11 +561,15 @@ namespace Viewer360.View
         // Mouse down: start moving camera
         private void vp_MouseDown(object sender, MouseButtonEventArgs e)
         {
+//++++++++++++++++++++++++++++
+            Console.WriteLine("Da vp_MouseDown");
+//++++++++++++++++++++++++++++
             if (Keyboard.IsKeyDown(Key.LeftCtrl))  // Attivazione drag mirino/creazione punti mirino 
-                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
-            else if(Keyboard.IsKeyDown(Key.RightCtrl))  // Eliminazione punti mirino
             {
-
+                //++++++++++++++++++++++++++++
+                Console.WriteLine("Da vp_MouseDown LeftCtrl");
+                //++++++++++++++++++++++++++++
+                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
             }
             else  // Spostamento CameraAt
             {
