@@ -131,7 +131,7 @@ namespace Viewer360
                 double dY=0;
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraInfo(dX, dY);
+                m_oMsgManager.SendCameraInfo(dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov);
 
                 SharingHelper.m_bCameraAtHasChanged = false;
                 return;

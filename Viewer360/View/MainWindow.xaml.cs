@@ -231,7 +231,8 @@ namespace Viewer360.View
             // Creo file manager per file attuale
             CSingleFileLabel oLabelManager = new CSingleFileLabel();
             oLabelManager.m_sJsonAthor= "ScanToBim-Viewer360";
-            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width*1.5), Convert.ToInt32(ViewSize.Height*1.5));
+            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Height*1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
+//            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
             oLabelManager.m_dTheta = dTheta;
             oLabelManager.m_dPhi = dPhi;
             oLabelManager.m_vLookDirectionX = vLookDirection.X;

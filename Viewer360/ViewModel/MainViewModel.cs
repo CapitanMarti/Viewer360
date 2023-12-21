@@ -186,6 +186,7 @@ namespace Viewer360.ViewModel
             }
 
             IsLoading = false; RaisePropertyChanged("IsLoading");
+            SharingHelper.m_bPhotoHasChanged=true;
             RaisePropertyChanged("Image");
         }
 

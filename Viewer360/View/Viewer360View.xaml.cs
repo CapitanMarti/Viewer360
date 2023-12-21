@@ -600,8 +600,13 @@ namespace Viewer360.View
             else
             {
                 MyCam.FieldOfView -= e.Delta / 100;
-                if (MyCam.FieldOfView < 1) MyCam.FieldOfView = 1;
-                else if (MyCam.FieldOfView > 140) MyCam.FieldOfView = 140;
+                if (MyCam.FieldOfView < 1) 
+                    MyCam.FieldOfView = 1;
+                else if (MyCam.FieldOfView > 140) 
+                    MyCam.FieldOfView = 140;
+
+                SharingHelper.m_bCameraAtHasChanged = true;
+
 
                 RaisePropertyChanged("Hfov");
                 RaisePropertyChanged("Vfov");
