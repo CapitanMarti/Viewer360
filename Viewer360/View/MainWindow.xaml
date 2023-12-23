@@ -46,17 +46,26 @@
     -->
 
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="43*"/>
+        </Grid.ColumnDefinitions>
         <!-- StackPanel per i pulsanti al di fuori di myGrid -->
-        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,30,0,0" Width="80" Background="LightGray">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,30,0,0" Width="80" Background="LightGray" Grid.Column="2">
+            <Separator Margin="0" Background="Gray"/>
+            <RadioButton Name ="CreateMode" Content="Photo" Margin="5" Click="ChangeMode_Click"/>
             <Button Name="NextImageButton" Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
             <Button Name="PrevImageButton" Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
+            <Separator Margin="0,3" Background="Gray"/>
+            <RadioButton Name ="EditMode" Content="Label" Margin="5" Click="ChangeMode_Click"/>
             <Button Name="NextLabelButton" Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <Button Name="PrevLabelButton" Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
-            <Button Name="ViewerModeButton" Content="Edit mode" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="ChangeMode_Click"/>
+            <Button Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
+            <Separator Margin="0,3" Background="Gray"/>
+            <Button Name="SaveButton" Content="Save change" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="SaveLabel_Click"/>
             <!-- Aggiungi altri pulsanti se necessario -->
         </StackPanel>
 
-        <Grid Name="myGrid" Margin="0,0,80,0">
+        <Grid Name="myGrid" Margin="0,0,80,0" Grid.ColumnSpan="3">
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="10.985"/>
@@ -80,16 +89,16 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
-                <TextBlock Text="  Category: " />
+                <TextBlock Text="  Category: " IsEnabled= "False" />
                 <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
-                <TextBlock Text="    Item: " />
+                <TextBlock Text="    Item: " IsEnabled= "False" />
                 <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="110" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
-                <TextBlock Text="    Name: " />
-                <TextBox Name="ElementName" Width="95" />
+                <TextBlock Text="    Label name: " IsEnabled= "False" />
+                <TextBox  Name="ElementName" Width="95" />
             </Menu>
             <Grid Grid.ColumnSpan="10" Margin="0,0,00,0" Grid.Row="1">
                 <Grid.RowDefinitions>
@@ -99,20 +108,12 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="6*"/>
                     <ColumnDefinition Width="83*"/>
-                    <ColumnDefinition Width="56*"/>
-                    <ColumnDefinition Width="35*"/>
-                    <ColumnDefinition Width="139*"/>
-                    <ColumnDefinition Width="481*"/>
-                    <ColumnDefinition Width="0*"/>
-                    <ColumnDefinition Width="0*"/>
-                    <ColumnDefinition Width="0*"/>
-                    <ColumnDefinition Width="0*"/>
                 </Grid.ColumnDefinitions>
                 <!--<Image Source="{Binding Image}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
                 <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="6" Margin="0,0,0,0" Grid.RowSpan="2" Loaded="viewer360_View_Loaded"/>
 
 
-                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="2" Grid.ColumnSpan="6"/>
+                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="2" Grid.ColumnSpan="6" RenderTransformOrigin="0.5,0.468"/>
 
             </Grid>
 

@@ -13,7 +13,11 @@ using System.Security.Cryptography;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 using static PointCloudUtility.CSingleFileLabel;
-using System.Reflection.Emit;
+using System.Windows.Forms;
+using static PointCloudUtility.CommonUtil;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Viewer360.View.CUIManager;
+
 
 namespace Viewer360.View
 {
@@ -26,7 +30,7 @@ namespace Viewer360.View
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : System.Windows.Window
     {
 
         private bool isDragging;
@@ -36,6 +40,7 @@ namespace Viewer360.View
         private Point vVewfinderBBox;
         private PointCollection aPointTmp;
         private List<int> aItemDefaultEntry;
+        private Point []  m_aOriginalPolygon;
 
         List<Ellipse> m_EllipseList;
         int m_iEllipseIncrementalNum;
@@ -55,8 +60,14 @@ namespace Viewer360.View
 
             m_EllipseList=new List<Ellipse>();
 
-            for (int i=0; i< ViewFinderPolygon.Points.Count; i++)
-                AddEllipse(myCanvas, ViewFinderPolygon.Points[i].X, ViewFinderPolygon.Points[i].Y,i);
+            m_aOriginalPolygon=new Point[ViewFinderPolygon.Points.Count];
+
+            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+            {
+                m_aOriginalPolygon[i].X = ViewFinderPolygon.Points[i].X;
+                m_aOriginalPolygon[i].Y = ViewFinderPolygon.Points[i].Y;
+                AddEllipse(myCanvas, ViewFinderPolygon.Points[i].X, ViewFinderPolygon.Points[i].Y, i);
+            }
 
 
                 // Inizializzo centro mirino
@@ -72,10 +83,10 @@ namespace Viewer360.View
         // If the window style is set to none when the window is maximized, the taskbar will not
         // be covered. Therefore, the window is restored to normal and maximized again.
         DependencyPropertyDescriptor d = DependencyPropertyDescriptor.FromProperty(
-                Window.WindowStyleProperty,typeof(Window));
+                System.Windows.Window.WindowStyleProperty,typeof(System.Windows.Window));
             d.AddValueChanged(this, (sender, args) =>
             {
-                Window w = (Window)sender;
+                System.Windows.Window w = (System.Windows.Window)sender;
                 if (w.WindowStyle == System.Windows.WindowStyle.None)
                 {
                     w.WindowState = System.Windows.WindowState.Normal;
@@ -253,27 +264,29 @@ namespace Viewer360.View
 
         }
 
-        public void SaveJason(string sNewJpgFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov,Vector3D vLookDirection)
+
+        public CSingleFileLabel BuildSavingLabelCandidate(string sNewJpgFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
             CSingleFileLabel oLabel = new CSingleFileLabel();
-            oLabel.m_sJsonAuthor= "ScanToBim-Viewer360";
-            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Height*1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
-                                                                                                               //            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
+            oLabel.m_sJsonAuthor = "ScanToBim-Viewer360";
+            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Height * 1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
+                                                                                                                    //            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
             oLabel.m_dTheta = dTheta;
             oLabel.m_dPhi = dPhi;
             oLabel.m_vLookDirectionX = vLookDirection.X;
             oLabel.m_vLookDirectionY = vLookDirection.Y;
             oLabel.m_vLookDirectionZ = vLookDirection.Z;
             oLabel.m_hFov = dHFov;
-            oLabel.m_vFov= dVFov;
+            oLabel.m_vFov = dVFov;
 
             // Creo e inizializzo LabelInfo
-            CSingleFileLabel.SLabelInfo oLabelInfo=new CSingleFileLabel.SLabelInfo();
+            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo();
 
             // Aggiungo nome file .png
-//            oLabelInfo.sImageFileName = sNewFileName;
+            //            oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = ElementName.Text;
+            oLabelInfo.sParentLabelName = ""; // TODO il valore va ricevuto dal Server 
 
             // Aggiungo la category
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
@@ -289,20 +302,24 @@ namespace Viewer360.View
             oLabelInfo.aPolyPointY = new List<double>();
             for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
             {
-                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X*1.5));
-                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y*1.5));
+                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * 1.5));
+                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * 1.5));
             }
-
-            // Aggiungo le info sulla camera 3D usata per scattare la foto
 
             // Aggiungo LabelInfo a LabelManager
             oLabel.Add(oLabelInfo);
+
+            return oLabel;
+
+        }
+
+        public void SaveJason(CSingleFileLabel oLabel, string sNewJpgFileName)
+        {
 
             // Salvo file .json
             oLabel.SaveToJsonFile(sNewJpgFileName);
 
             // Aggiorno CLabelManager
-//            CLabelManager.AddLabel(System.IO.Path.ChangeExtension(sNewJpgFileName, ".json"));
             CLabelManager.AddLabel(oLabel);
         }
 
@@ -324,14 +341,59 @@ namespace Viewer360.View
         private void PrevLabel_Click(object sender, RoutedEventArgs e)
         {
             (DataContext as ViewModel.MainViewModel).PrevLabel_Click(sender, e);
-
         }
-
         private void ChangeMode_Click(object sender, RoutedEventArgs e)
         {
-            CUIManager.NextMode();
+            CUIManager.ChangeMode();
         }
-        
+        private void DeleteLabel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult result = ConfirmDialog("La label corrente verrà cancellata; anche le eventuali entità derivate da essa saranno eliminate.\n\n\nConfermi?");
+            if (result == System.Windows.Forms.DialogResult.No)
+                return;
+
+            CSingleFileLabel oCurrentLabel=(DataContext as MainViewModel).m_oCurrentLabel;
+            string sFileName = System.IO.Path.GetFileNameWithoutExtension(oCurrentLabel.m_sJpgFileName);
+
+            // Cancello tutti i file che iniziano con sFileName in MaskImage
+            var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName+"*.*");
+            foreach (string file in files)
+            {
+                System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                System.IO.File.Delete(file);
+            }
+
+            // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
+            files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
+            foreach (string file in files)
+            {
+                System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                System.IO.File.Delete(file);
+
+            }
+
+            // TODO  Mando messaggio di cancellazione a server
+
+            // Elimino la label dalla lista 
+            CLabelManager.RemoveLabel(oCurrentLabel);
+
+            // Cerco nuova label
+            (DataContext as MainViewModel).m_iCurrentLabelIndex = -1;
+            (DataContext as MainViewModel).GetClosestLabel();
+            // Se non esiste alcuna label ripristino la modalità precedente
+            if ((DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex == -1)
+            {
+                CUIManager.SetViewerMode(ViewerMode.Create);
+                return;
+            }
+
+
+        }
+        private void SaveLabel_Click(object sender, RoutedEventArgs e)
+        {
+            viewer360_View.SaveImageAndJson();
+        }
+
 
         public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -372,6 +434,22 @@ namespace Viewer360.View
         }
 
 
+        public void ResetPolygon()
+        {
+
+            DeleteAllEllipse();
+
+            PointCollection NewPoints = new PointCollection();
+            for (int i = 0; i < m_aOriginalPolygon.Length; i++)
+            {
+                Point p = new Point(m_aOriginalPolygon[i].X, m_aOriginalPolygon[i].Y);
+                AddEllipse(myCanvas, p.X, p.Y, i);
+                NewPoints.Add(p);
+            }
+
+            ViewFinderPolygon.Points = NewPoints;
+
+        }
         public void RestorePolygon(SLabelInfo oLabelInfo)
         {
             DeleteAllEllipse();
@@ -442,7 +520,7 @@ namespace Viewer360.View
         }
 
 
-        public void Polygon_MouseMove(object sender, MouseEventArgs e)
+        public void Polygon_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && (isDragging || iDraggingPoint>=0))
             {

@@ -47,15 +47,17 @@ namespace Viewer360
             string sCatalogNameFull ="";
             string sPhoto360NameFull="";
             string sJasonPath = "";
-            if (e.Args.Length >= 3)
+            string sSegmentPath = "";
+
+            if (e.Args.Length == 4)
             {
                 sCatalogNameFull = e.Args[0];
                 sPhoto360NameFull= e.Args[1];
                 sJasonPath= e.Args[2];
-
+                sSegmentPath= e.Args[3];
                 CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
 
-                SharingHelper.SetFileAndFolderNames(sPhoto360NameFull, sJasonPath);
+                SharingHelper.SetFileAndFolderNames(sPhoto360NameFull, sJasonPath, sSegmentPath);
                 SharingHelper.LoadCatalogManager(sCatalogNameFull);
 
                 (m_Window.DataContext as ViewModel.MainViewModel).LoadImage(sPhoto360NameFull);
@@ -74,7 +76,7 @@ namespace Viewer360
 
             // Inizializzo UI
             m_Window.InitUI();
-            UpdateUI(ViewerMode.Create);
+            CUIManager.SetViewerMode(ViewerMode.Create);
             m_Window.Show();
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo

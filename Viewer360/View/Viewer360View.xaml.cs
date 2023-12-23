@@ -17,6 +17,9 @@ using System.Globalization;
 using System.Windows.Interop;
 using System.Diagnostics;
 using static Viewer360.View.CUIManager;
+using System.Windows.Forms;
+using static PointCloudUtility.CommonUtil;
+
 
 namespace Viewer360.View
 {
@@ -24,7 +27,7 @@ namespace Viewer360.View
     /// Class for viewing an equirectangular 360° view by projecting it on the
     /// inner surface of a sphere
     /// </summary>
-    public partial class Viewer360View : UserControl, INotifyPropertyChanged
+    public partial class Viewer360View : System.Windows.Controls.UserControl, INotifyPropertyChanged
     {
         private MeshGeometry3D sphereMesh = null; // Tessellated sphere mesh
         private ImageBrush brush = null;          // Brush containing the 360° view
@@ -196,7 +199,7 @@ namespace Viewer360.View
         }
 
         // Mouse move: set camera movement speed
-        private void vp_MouseMove(object sender, MouseEventArgs e)
+        private void vp_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
 
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
@@ -221,7 +224,7 @@ namespace Viewer360.View
                RaisePropertyChanged("Vfov");
         }
 
-        private void vp_MouseRightButtonDown(object sender, MouseEventArgs e)
+        private void vp_MouseRightButtonDown(object sender, System.Windows.Input.MouseEventArgs e)
         // ********************************
         // AM AM AM  Scrittura grab video su file
         //********************************
@@ -231,8 +234,38 @@ namespace Viewer360.View
 
         }
 
-        void SaveImageAndJson()
+        public void SaveImageAndJson()
         {
+
+            string sNewFileName;
+            if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
+                sNewFileName = SharingHelper.GetNewFileName();
+            else
+                sNewFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
+
+            PointCloudUtility.CSingleFileLabel oLabelCandidate =m_Window.BuildSavingLabelCandidate(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
+
+
+            // Verifico se il nome della label è cambiato
+            if (oOldLabel != null && oLabelCandidate.m_aLabelInfo[0].sLabelName != oOldLabel.m_aLabelInfo[0].sLabelName)
+            {
+                DialogResult result = ConfirmDialog("Il nome della label corrente è stato cambiato; le eventuali entità derivate da essa, con il vecchio nome, saranno eliminate.\n\n\nConfermi?");
+                if (result == System.Windows.Forms.DialogResult.No)
+                    return;
+
+                string sFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJpgFileName); 
+                var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
+                foreach (string file in files)
+                {
+                    System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                    System.IO.File.Delete(file);
+                }
+
+
+                // TODO  Notificare tutto al server
+            }
+
 
             // Genero immagine partendo da render target
             int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
@@ -245,15 +278,8 @@ namespace Viewer360.View
             BitmapEncoder encoder = new BmpBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(renderTarget));
             encoder.Save(stream);
-
             System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(stream);
 
-            string sNewFileName;
-
-            if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
-                sNewFileName = SharingHelper.GetNewFileName();
-            else
-                sNewFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
 
             // Salvo la bitmap
             bitmap.Save(sNewFileName);
@@ -262,9 +288,11 @@ namespace Viewer360.View
             SaveCameraInfo(sNewFileName);
 
             // Scrittura file .json
-            m_Window.SaveJason(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+//            m_Window.SaveJason(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            m_Window.SaveJason(oLabelCandidate, sNewFileName);
 
-
+            // Aggiornare la label corrente
+            (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
 
             // Faccio partire il timer per l'animazione del mirino
             ClickTimer.Start();
@@ -403,7 +431,7 @@ namespace Viewer360.View
 
 
             string sImageName=Path.GetFileName(CameraInfoFileName);
-            string sCIFName = SharingHelper.GetNewPath()+"\\"+ Path.GetFileNameWithoutExtension(CameraInfoFileName)+".cif";
+            string sCIFName = SharingHelper.GetJsonPath()+"\\"+ Path.GetFileNameWithoutExtension(CameraInfoFileName)+".cif";
 
             FileStream fs = null;
             try
@@ -587,7 +615,7 @@ namespace Viewer360.View
             else  // Spostamento CameraAt
             {
                 isMouseDown = true;
-                this.Cursor = Cursors.SizeAll;
+                this.Cursor = System.Windows.Input.Cursors.SizeAll;
                 clickX = Mouse.GetPosition(vp).X;
                 clickY = Mouse.GetPosition(vp).Y;
                 camThetaSpeed = camPhiSpeed = 0;
@@ -604,7 +632,7 @@ namespace Viewer360.View
             else
             {
                 isMouseDown = false;
-                this.Cursor = Cursors.Arrow;
+                this.Cursor = System.Windows.Input.Cursors.Arrow;
                 timer.Stop();
             }
         }

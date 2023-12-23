@@ -22,7 +22,8 @@ namespace Viewer360.ViewModel
         public View.MainWindow m_Window;
         public int m_iCurrentPhotoIndex;
         public int m_iCurrentLabelIndex;
-        public string m_sCurrentLabelFileName;
+        public string m_sCurrentLabelFileName="";
+        public CSingleFileLabel m_oCurrentLabel = null;
 
         // Commands
         #region commands
@@ -104,7 +105,7 @@ namespace Viewer360.ViewModel
             ofd.Filter = "Images (*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png";
             if (ofd.ShowDialog() == true)
             {
-                await Open(ofd.FileName,"","");
+                await Open(ofd.FileName,"","","");
             }
         }
 
@@ -117,6 +118,7 @@ namespace Viewer360.ViewModel
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
             SharingHelper.m_bPhotoHasChanged = true;
 
+            // TODO mandare messaggio server su nuova immagine (camera) selezionata
         }
 
         public void PrevImage_Click(object sender, RoutedEventArgs e)
@@ -127,6 +129,31 @@ namespace Viewer360.ViewModel
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
             SharingHelper.m_bPhotoHasChanged = true;
+
+            // TODO mandare messaggio server su nuova immagine (camera) selezionata
+        }
+
+        void SetupLabelData(CSingleFileLabel oLabel, int iCurrentPhotoIndex, int iCurrentLabelIndex)
+        {
+            string sFileName = CLabelManager.GetPhotoFullName(iCurrentPhotoIndex);
+            if (m_iCurrentPhotoIndex != iCurrentPhotoIndex)
+            {
+                m_iCurrentPhotoIndex = iCurrentPhotoIndex;
+                LoadNewImage(sFileName);
+                SharingHelper.m_bPhotoHasChanged = true;
+
+            }
+            // Save label filename
+            m_sCurrentLabelFileName = SharingHelper.GetJsonPath() + oLabel.m_sJpgFileName;
+            m_oCurrentLabel = oLabel;
+
+
+            // Qui devo impostare i parametri associati alla nuova Label: valori di UI e poligono
+            m_iCurrentLabelIndex = iCurrentLabelIndex;
+            CUIManager.InitUI(oLabel);
+
+            // TODO mandare messaggio server su nuova immagine (camera) e oggetto selezionati
+
         }
 
         public void NextLabel_Click(object sender, RoutedEventArgs e)
@@ -137,27 +164,8 @@ namespace Viewer360.ViewModel
             int iCurrentLabelIndex = m_iCurrentLabelIndex;
             oLabel = CLabelManager.GetNextLabel(ref iCurrentPhotoIndex, ref iCurrentLabelIndex);
 
-            if(oLabel != null)
-            {
-
-                string sFileName = CLabelManager.GetPhotoFullName(iCurrentPhotoIndex);
-                if (m_iCurrentPhotoIndex!= iCurrentPhotoIndex)
-                {
-                    m_iCurrentPhotoIndex = iCurrentPhotoIndex;
-                    LoadNewImage(sFileName);
-                    SharingHelper.m_bPhotoHasChanged = true;
-
-                }
-                // Save label filename
-                m_sCurrentLabelFileName =  SharingHelper.GetNewPath() + oLabel.m_sJpgFileName;
-
-
-                // Qui devo impostare i parametri associati alla nuova Label: valori di UI e poligono
-                m_iCurrentLabelIndex = iCurrentLabelIndex;
-                CUIManager.InitUI(oLabel);
-
-            }
-
+            if (oLabel != null)
+                SetupLabelData(oLabel, iCurrentPhotoIndex, iCurrentLabelIndex);
 
         }
 
@@ -170,23 +178,46 @@ namespace Viewer360.ViewModel
             oLabel = CLabelManager.GetPrevLabel(ref iCurrentPhotoIndex, ref iCurrentLabelIndex);
 
             if (oLabel != null)
-            {
-                string sFileName = CLabelManager.GetPhotoFullName(iCurrentPhotoIndex);
-                if (m_iCurrentPhotoIndex != iCurrentPhotoIndex)
-                {
-                    m_iCurrentPhotoIndex = iCurrentPhotoIndex;
-                    LoadNewImage(sFileName);
-                    SharingHelper.m_bPhotoHasChanged = true;
-
-                }
-                // Save label filename
-                m_sCurrentLabelFileName = SharingHelper.GetNewPath() + oLabel.m_sJpgFileName;
-
-                m_iCurrentLabelIndex = iCurrentLabelIndex;
-                CUIManager.InitUI(oLabel);
-            }
+                SetupLabelData(oLabel, iCurrentPhotoIndex, iCurrentLabelIndex);
 
         }
+
+        public void GetClosestLabel()
+        {
+            CSingleFileLabel oLabel = null;
+            int iCurrentPhotoIndex = m_iCurrentPhotoIndex;
+            int iCurrentLabelIndex = m_iCurrentLabelIndex;
+
+            // Se esiste label associata ad indici correnti la prendo
+            if (iCurrentPhotoIndex >= 0 && iCurrentLabelIndex >= 0)  
+                oLabel = CLabelManager.GetLabel(iCurrentPhotoIndex, iCurrentLabelIndex);
+
+            if(oLabel!=null)
+            {
+                SetupLabelData(oLabel, iCurrentPhotoIndex, iCurrentLabelIndex);
+                return;
+            }
+
+            // Cerco label precedente
+            oLabel = CLabelManager.GetPrevLabel(ref iCurrentPhotoIndex, ref iCurrentLabelIndex);
+            if (oLabel != null)
+            {
+                SetupLabelData(oLabel, iCurrentPhotoIndex, iCurrentLabelIndex);
+                return;
+            }
+
+            // Cerco label successiva
+            oLabel = CLabelManager.GetNextLabel(ref iCurrentPhotoIndex, ref iCurrentLabelIndex);
+            if (oLabel != null)
+            {
+                SetupLabelData(oLabel, iCurrentPhotoIndex, iCurrentLabelIndex);
+                return;
+            }
+
+            return;
+
+        }
+
 
         public void RestoreFovAndPolygons(CSingleFileLabel oLabel)
         {
@@ -245,9 +276,9 @@ namespace Viewer360.ViewModel
         }
 
         // Open image by file name
-        public async Task Open(string sObjCatalogFile, string sImageFile, string sNewPath)
+        public async Task Open(string sObjCatalogFile, string sImageFile, string sJsonPath, string sSegmentPath)
         {
-            SharingHelper.SetFileAndFolderNames(sImageFile, sNewPath);
+            SharingHelper.SetFileAndFolderNames(sImageFile, sJsonPath, sSegmentPath);
             m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
 
             //            SharingHelper.SetCameraPos(sX, sY, sZ);

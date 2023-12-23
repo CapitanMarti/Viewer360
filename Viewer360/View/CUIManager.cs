@@ -2,12 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing.Printing;
 using System.Linq;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace Viewer360.View
 {
@@ -40,9 +44,10 @@ namespace Viewer360.View
             (m_Window.DataContext as ViewModel.MainViewModel).RestoreFovAndPolygons(oLabel);
         }
 
-        static public void UpdateUI(ViewerMode eMode)
+        static public void UpdateUI()
         {
-            if(eMode== ViewerMode.Create)
+
+            if (m_eMode == ViewerMode.Create)
             {
                 m_Window.NextImageButton.IsEnabled = true;
                 m_Window.NextImageButton.BorderBrush = Brushes.Black;
@@ -52,8 +57,6 @@ namespace Viewer360.View
                 m_Window.PrevImageButton.BorderBrush = Brushes.Black;
                 m_Window.PrevImageButton.Foreground = Brushes.Black;
 
-                m_Window.ViewerModeButton.Content = "<< Create >>";
-
                 m_Window.NextLabelButton.IsEnabled = false;
                 m_Window.NextLabelButton.BorderBrush = Brushes.LightGray;
                 m_Window.NextLabelButton.Foreground = Brushes.LightGray;
@@ -61,6 +64,10 @@ namespace Viewer360.View
                 m_Window.PrevLabelButton.IsEnabled = false;
                 m_Window.PrevLabelButton.BorderBrush = Brushes.LightGray;
                 m_Window.PrevLabelButton.Foreground = Brushes.LightGray;
+
+                m_Window.DeleteLabelButton.IsEnabled= false;
+                m_Window.DeleteLabelButton.BorderBrush = Brushes.LightGray;
+                m_Window.DeleteLabelButton.Foreground = Brushes.LightGray;
 
                 m_Window.CategoryCombo.IsEnabled = true;
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
@@ -73,6 +80,9 @@ namespace Viewer360.View
                 m_Window.ElementName.IsEnabled = true;
                 m_Window.ElementName.BorderBrush = Brushes.Black;
                 m_Window.ElementName.Foreground = Brushes.Black;
+
+                m_Window.SaveButton.Content = "Save new";
+
             }
             else  // Edit mode
             {
@@ -86,12 +96,13 @@ namespace Viewer360.View
                 m_Window.PrevImageButton.Foreground = Brushes.LightGray;
 
 
-                m_Window.ViewerModeButton.Content = "<< Edit >>";
-
                 m_Window.NextLabelButton.IsEnabled = true;
                 m_Window.NextLabelButton.BorderBrush = Brushes.Black;
                 m_Window.NextLabelButton.Foreground = Brushes.Black;
 
+                m_Window.DeleteLabelButton.IsEnabled = true;
+                m_Window.DeleteLabelButton.BorderBrush = Brushes.Black;
+                m_Window.DeleteLabelButton.Foreground = Brushes.Black;
 
                 m_Window.PrevLabelButton.IsEnabled = true;
                 m_Window.PrevLabelButton.BorderBrush = Brushes.Black;
@@ -109,19 +120,50 @@ namespace Viewer360.View
                 m_Window.ElementName.BorderBrush = Brushes.Black;
                 m_Window.ElementName.Foreground = Brushes.Black;
 
+                m_Window.SaveButton.Content = "Save change";
             }
 
-            m_eMode =eMode;
+        }
+        static public void SetViewerMode(ViewerMode eMode)
+        {
+            m_eMode = eMode;
+            if (eMode == ViewerMode.Create)
+                m_Window.CreateMode.IsChecked = true;
+            else
+                m_Window.CreateMode.IsChecked = false;
+
+            UpdateUI();
         }
 
-        static public void NextMode()
+        static public void ChangeMode()
         {
-            if(m_eMode== ViewerMode.Create) 
-                m_eMode=ViewerMode.Edit;
-            else
-                m_eMode=ViewerMode.Create;
+            if (m_Window.CreateMode.IsChecked == true)
+            {
 
-            UpdateUI(m_eMode);
+                if (m_eMode != ViewerMode.Create)  // Sto passando da Edit a Create
+                {
+                    m_Window.ResetPolygon();  // Resetto il mirino
+                }
+                m_eMode = ViewerMode.Create;
+            }
+            else
+            {
+                if (m_eMode != ViewerMode.Edit)  // Sto passando da Create a Edit
+                {
+                    (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
+
+                    // Se non esiste alcuna label ripristino la modalità precedente
+                    if ((m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex == -1)
+                    {
+                        SetViewerMode(ViewerMode.Create);
+                        return;
+                    }
+
+                }
+
+                m_eMode = ViewerMode.Edit;
+            }
+            UpdateUI();
         }
     }
 }

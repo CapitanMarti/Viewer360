@@ -16,7 +16,8 @@ namespace Viewer360.View
         private static CCatalogManager m_oCM;
 
         private static string m_sFullFileName;
-        private static string m_sNewPath;
+        private static string m_sJsonPath;
+        private static string m_sSegmentPath;
         private static Vector3D m_vCameraPos;
         private static Vector3D m_vCameraRot;
         private static List<List<CCatalogManager.CObjInfo>> m_oCatalogGroupedElem;
@@ -25,10 +26,11 @@ namespace Viewer360.View
         public static bool m_bPhotoHasChanged = false;
 
         static public CCatalogManager GetCatalogManager() { return m_oCM; } 
-        public static void SetFileAndFolderNames(string sFileName, string sNewPath)
+        public static void SetFileAndFolderNames(string sFileName, string sJsonPath, string sSegmentPath)
         {
             m_sFullFileName = sFileName;
-            m_sNewPath=sNewPath;
+            m_sJsonPath = sJsonPath;
+            m_sSegmentPath = sSegmentPath;
         }
 
         public static void SetFileName(string sFileName)
@@ -78,9 +80,14 @@ namespace Viewer360.View
             return m_vCameraRot;
         }
 
-        public static string GetNewPath()
+        public static string GetJsonPath()
         {
-            return m_sNewPath;
+            return m_sJsonPath;
+        }
+
+        public static string GetSegmentPath()
+        {
+            return m_sSegmentPath;
         }
 
         public static string GetNewFileName()
@@ -91,7 +98,7 @@ namespace Viewer360.View
             int iCount = 0;
             while (bContinue) 
             {
-                sNewFile = m_sNewPath + "\\" + sTmp + "##" + Convert.ToString(iCount)+ Path.GetExtension(m_sFullFileName);
+                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount)+ Path.GetExtension(m_sFullFileName);
                 if(!File.Exists(sNewFile)) 
                 {
                     break;
