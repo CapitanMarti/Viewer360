@@ -6,8 +6,10 @@
         Title="Scan2Bim 360° Viewer" Height="600" Width="880" WindowState="Normal"
         Icon="/Viewer360;component/Resources/icon_16.png">
     <Window.Resources>
+        <!--
         <conv:FullscreenToVisibilityConverter x:Key="fullscreenToVisibilityConverter"/>
         <conv:FullscreenToWindowStyleConverter x:Key="fullscreenToWindowStyleConverter"/>
+        -->
         <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
 
         <!-- Stile di pulsante con animazione di pressione -->
@@ -37,29 +39,20 @@
         </Style>
 
     </Window.Resources>
+    <!--
     <Window.WindowStyle>
         <Binding Path="IsFullscreen" Converter="{StaticResource fullscreenToWindowStyleConverter}"/>
     </Window.WindowStyle>
+    -->
 
     <Grid>
         <!-- StackPanel per i pulsanti al di fuori di myGrid -->
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,30,0,0" Width="80" Background="LightGray">
-            <Button Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
-            <Button Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
-            <Button Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
-            <Button Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
-            <ToggleButton Content="Edit">
-                <ToggleButton.Style>
-                    <Style TargetType="ToggleButton">
-                        <Setter Property="Background" Value="LightGray"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Background" Value="LightGreen"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ToggleButton.Style>
-            </ToggleButton>
+            <Button Name="NextImageButton" Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
+            <Button Name="PrevImageButton" Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
+            <Button Name="NextLabelButton" Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
+            <Button Name="PrevLabelButton" Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
+            <Button Name="ViewerModeButton" Content="Edit mode" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="ChangeMode_Click"/>
             <!-- Aggiungi altri pulsanti se necessario -->
         </StackPanel>
 
@@ -86,17 +79,17 @@
                 <RowDefinition Height="Auto" MinHeight="30"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Menu Visibility="{Binding IsFullscreen, Converter={StaticResource fullscreenToVisibilityConverter}}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
+            <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
                 <TextBlock Text="  Category: " />
-                <ComboBox Name="oCategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="19">
+                <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
                 <TextBlock Text="    Item: " />
-                <ComboBox x:Name="oItemCombo" SelectionChanged="ItemSelectionChanged" Width="110" Height="19">
+                <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="110" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
                 <TextBlock Text="    Name: " />
-                <TextBox Name="oElementName" Width="95" />
+                <TextBox Name="ElementName" Width="95" />
             </Menu>
             <Grid Grid.ColumnSpan="10" Margin="0,0,00,0" Grid.Row="1">
                 <Grid.RowDefinitions>
@@ -119,7 +112,7 @@
                 <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="6" Margin="0,0,0,0" Grid.RowSpan="2" Loaded="viewer360_View_Loaded"/>
 
 
-                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="2" Grid.RowSpan="2" Grid.ColumnSpan="6"/>
+                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="2" Grid.ColumnSpan="6"/>
 
             </Grid>
 

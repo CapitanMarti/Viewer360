@@ -38,7 +38,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <ApplicationIcon>Scan2Bim.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PointCloudUtility, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -76,6 +76,7 @@
     <Compile Include="Model\RecentImageManager.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
+    <Compile Include="View\CUIManager.cs" />
     <Compile Include="View\CViewerCameraManager.cs" />
     <Compile Include="View\SharingHelper.cs" />
     <Page Include="View\MainWindow.xaml">
@@ -128,10 +129,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="icon.ico" />
+    <Resource Include="Resources\icon_16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\icon_16.png" />
+    <Resource Include="Scan2Bim.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

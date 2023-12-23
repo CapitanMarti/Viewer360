@@ -10,6 +10,8 @@ using System.Windows.Interop;
 using Viewer360.View;
 using System.Windows.Media.Media3D;
 using static PointCloudUtility.CMessageManager;
+using static Viewer360.View.CUIManager;
+using System.Xml.Linq;
 
 
 namespace Viewer360
@@ -24,7 +26,7 @@ namespace Viewer360
         bool m_bNewImageLoaded;
 
 
-        private async void Application_Startup(object sender, StartupEventArgs e)
+        private void Application_Startup(object sender, StartupEventArgs e)
         {
             // Aggiunta callback
             ComponentDispatcher.ThreadIdle += OnApplicationIdle;
@@ -34,17 +36,18 @@ namespace Viewer360
             m_Window = new View.MainWindow();
             m_Window.viewer360_View.m_Window = m_Window;
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
-            m_Window.Show();
+            CUIManager.m_Window=m_Window;
+//            m_Window.Show();
 
 
-            // Inizializzazione CameraManager (lettura dati da Mapfile creato dal server)
+            // Inizializzazione CameraManager (lettura dati posizioni/orientamento camere da Mapfile creato dal server)
             CViewerCameraManager.Init();
 
             // Acquisizione parametri command line e apertura file
             string sCatalogNameFull ="";
             string sPhoto360NameFull="";
             string sJasonPath = "";
-            if (e.Args.Length == 9)
+            if (e.Args.Length >= 3)
             {
                 sCatalogNameFull = e.Args[0];
                 sPhoto360NameFull= e.Args[1];
@@ -52,7 +55,10 @@ namespace Viewer360
 
                 CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
 
-                await (m_Window.DataContext as ViewModel.MainViewModel).Open(sCatalogNameFull, sPhoto360NameFull, sJasonPath);
+                SharingHelper.SetFileAndFolderNames(sPhoto360NameFull, sJasonPath);
+                SharingHelper.LoadCatalogManager(sCatalogNameFull);
+
+                (m_Window.DataContext as ViewModel.MainViewModel).LoadImage(sPhoto360NameFull);
             }
 
             // Inizializzo la messaggistica col server
@@ -66,7 +72,10 @@ namespace Viewer360
             // Attivo thread di ricezione; si dovrebbe chiudere da solo all'uscita della finestra.
             CMessageManager.StartListener(m_oMsgManager);
 
+            // Inizializzo UI
             m_Window.InitUI();
+            UpdateUI(ViewerMode.Create);
+            m_Window.Show();
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();

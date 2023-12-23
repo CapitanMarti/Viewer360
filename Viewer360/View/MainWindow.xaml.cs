@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 using static PointCloudUtility.CSingleFileLabel;
+using System.Reflection.Emit;
 
 namespace Viewer360.View
 {
@@ -173,24 +174,40 @@ namespace Viewer360.View
             // Ottieni il cerchio su cui è stato effettuato il clic
             Ellipse cerchioCliccato = sender as Ellipse;
 
-            // Esegui qui le azioni desiderate in risposta al clic sul cerchio
-            if (cerchioCliccato != null)
+            DeleteEllipse(cerchioCliccato);
+        }
+
+        public void DeleteAllEllipse()
+        {
+            foreach (var eEllipse in m_EllipseList)
             {
-                int iIndex= FindEllipseIndex(cerchioCliccato.Name);
+                myCanvas.Children.Remove(eEllipse);
+            }
+            m_EllipseList.Clear();
+        }
+
+        public void DeleteEllipse(Ellipse eEllipse)
+        {
+            // Esegui qui le azioni desiderate in risposta al clic sul cerchio
+            if (eEllipse != null)
+            {
+                int iIndex = FindEllipseIndex(eEllipse.Name);
 
                 if (iIndex >= 0)
                 {
                     // rimuovo il cerchio dal canvas
-                    myCanvas.Children.Remove(cerchioCliccato);
+                    myCanvas.Children.Remove(eEllipse);
 
                     // Rimuovo il cerclio dalla lista
-                    m_EllipseList.Remove(cerchioCliccato);
+                    m_EllipseList.Remove(eEllipse);
 
                     // Rimuovo il punto dall'elenco
                     ViewFinderPolygon.Points.RemoveAt(iIndex);
                 }
             }
         }
+
+
 
         public void InitUI()
         {
@@ -199,7 +216,7 @@ namespace Viewer360.View
             int iDefEntry;
             for (int iCat = 1; iCat < oLList.Count; iCat++)
             {
-                oCategoryCombo.Items.Add(oLList[iCat][0].sCategory);
+                CategoryCombo.Items.Add(oLList[iCat][0].sCategory);
 
                 iDefEntry = 0;
                 for (int iItem = 0; iItem< oLList[iCat].Count; iItem++)
@@ -213,7 +230,7 @@ namespace Viewer360.View
                 aItemDefaultEntry.Add(iDefEntry);
             }
 
-            oCategoryCombo.SelectedIndex = 2;  // Wall
+            CategoryCombo.SelectedIndex = 2;  // Wall
 
         }
 
@@ -221,14 +238,14 @@ namespace Viewer360.View
         {
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
 
-            oItemCombo.Items.Clear();
-            int iSelectedCat = oCategoryCombo.SelectedIndex+1; // Ho escluso la categoria 0 
+            ItemCombo.Items.Clear();
+            int iSelectedCatIndex = CategoryCombo.SelectedIndex+1; // Ho escluso la categoria 0 
 
-            for (int iItem = 0; iItem < oLList[iSelectedCat].Count; iItem++)
-                oItemCombo.Items.Add(oLList[iSelectedCat][iItem].sUI_CategoryInfo);
+            for (int iItem = 0; iItem < oLList[iSelectedCatIndex].Count; iItem++)
+                ItemCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_CategoryInfo);
 
-            oItemCombo.SelectedIndex = aItemDefaultEntry[oCategoryCombo.SelectedIndex];
-            oElementName.Text = oCategoryCombo.SelectedItem.ToString();
+            ItemCombo.SelectedIndex = aItemDefaultEntry[CategoryCombo.SelectedIndex];
+            ElementName.Text = CategoryCombo.SelectedItem.ToString();
 
         }
         private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -239,32 +256,33 @@ namespace Viewer360.View
         public void SaveJason(string sNewJpgFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov,Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
-            CSingleFileLabel oLabelManager = new CSingleFileLabel();
-            oLabelManager.m_sJsonAthor= "ScanToBim-Viewer360";
-            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Height*1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
-//            oLabelManager.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
-            oLabelManager.m_dTheta = dTheta;
-            oLabelManager.m_dPhi = dPhi;
-            oLabelManager.m_vLookDirectionX = vLookDirection.X;
-            oLabelManager.m_vLookDirectionY = vLookDirection.Y;
-            oLabelManager.m_vLookDirectionZ = vLookDirection.Z;
-            oLabelManager.m_hFov = dHFov;
-            oLabelManager.m_vFov= dHFov;
+            CSingleFileLabel oLabel = new CSingleFileLabel();
+            oLabel.m_sJsonAuthor= "ScanToBim-Viewer360";
+            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Height*1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
+                                                                                                               //            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
+            oLabel.m_dTheta = dTheta;
+            oLabel.m_dPhi = dPhi;
+            oLabel.m_vLookDirectionX = vLookDirection.X;
+            oLabel.m_vLookDirectionY = vLookDirection.Y;
+            oLabel.m_vLookDirectionZ = vLookDirection.Z;
+            oLabel.m_hFov = dHFov;
+            oLabel.m_vFov= dVFov;
 
             // Creo e inizializzo LabelInfo
             CSingleFileLabel.SLabelInfo oLabelInfo=new CSingleFileLabel.SLabelInfo();
 
             // Aggiungo nome file .png
 //            oLabelInfo.sImageFileName = sNewFileName;
-            oLabelInfo.sLabelName = oElementName.Text;
+            oLabelInfo.sLabelName = ElementName.Text;
 
             // Aggiungo la category
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
-            int iSelectedCat = oCategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
-            int iSelectedItem = oItemCombo.SelectedIndex;
+            int iSelectedCat = CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
+            int iSelectedItem = ItemCombo.SelectedIndex;
 
             // Aggiungo il catalogID
             oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
+            oLabelInfo.iCategory = SharingHelper.GetCatalogManager().SearchCategoryByID(oLabelInfo.iObjCatalogID);
 
             // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<double>();
@@ -278,11 +296,14 @@ namespace Viewer360.View
             // Aggiungo le info sulla camera 3D usata per scattare la foto
 
             // Aggiungo LabelInfo a LabelManager
-            oLabelManager.Add(oLabelInfo);
+            oLabel.Add(oLabelInfo);
 
             // Salvo file .json
-            oLabelManager.SaveToJsonFile(sNewJpgFileName);
+            oLabel.SaveToJsonFile(sNewJpgFileName);
 
+            // Aggiorno CLabelManager
+//            CLabelManager.AddLabel(System.IO.Path.ChangeExtension(sNewJpgFileName, ".json"));
+            CLabelManager.AddLabel(oLabel);
         }
 
         private void NextImage_Click(object sender, RoutedEventArgs e)
@@ -297,14 +318,20 @@ namespace Viewer360.View
 
         private void NextLabel_Click(object sender, RoutedEventArgs e)
         {
-
+            (DataContext as ViewModel.MainViewModel).NextLabel_Click(sender, e);
         }
 
         private void PrevLabel_Click(object sender, RoutedEventArgs e)
         {
+            (DataContext as ViewModel.MainViewModel).PrevLabel_Click(sender, e);
 
         }
 
+        private void ChangeMode_Click(object sender, RoutedEventArgs e)
+        {
+            CUIManager.NextMode();
+        }
+        
 
         public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -342,7 +369,22 @@ namespace Viewer360.View
                 ViewFinderPolygon.Points.Add(vPoint);
                 AddEllipse(myCanvas, vPoint.X, vPoint.Y);
             }
+        }
 
+
+        public void RestorePolygon(SLabelInfo oLabelInfo)
+        {
+            DeleteAllEllipse();
+
+            PointCollection NewPoints = new PointCollection();
+            for(int i= 0; i < oLabelInfo.aPolyPointX.Count; i++) 
+            {
+                Point p = new Point(oLabelInfo.aPolyPointX[i]/1.5, oLabelInfo.aPolyPointY[i]/1.5);
+                AddEllipse(myCanvas, p.X, p.Y, i);
+                NewPoints.Add(p);
+            }
+
+            ViewFinderPolygon.Points = NewPoints;
         }
 
 

@@ -24,6 +24,7 @@ namespace Viewer360.View
         public static bool m_bCameraAtHasChanged = false;
         public static bool m_bPhotoHasChanged = false;
 
+        static public CCatalogManager GetCatalogManager() { return m_oCM; } 
         public static void SetFileAndFolderNames(string sFileName, string sNewPath)
         {
             m_sFullFileName = sFileName;

@@ -16,6 +16,7 @@ using System.Xml.Linq;
 using System.Globalization;
 using System.Windows.Interop;
 using System.Diagnostics;
+using static Viewer360.View.CUIManager;
 
 namespace Viewer360.View
 {
@@ -233,6 +234,7 @@ namespace Viewer360.View
         void SaveImageAndJson()
         {
 
+            // Genero immagine partendo da render target
             int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
             int nHeight = Convert.ToInt32(m_ViewSize.Height * 1.5);
             var renderTarget = new RenderTargetBitmap(nWidth, nHeight, 144, 144, PixelFormats.Default);
@@ -246,12 +248,23 @@ namespace Viewer360.View
 
             System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(stream);
 
-            string sNewFileName = SharingHelper.GetNewFileName();
+            string sNewFileName;
+
+            if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
+                sNewFileName = SharingHelper.GetNewFileName();
+            else
+                sNewFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
+
+            // Salvo la bitmap
             bitmap.Save(sNewFileName);
+
+            // Salvo il file .CIF
             SaveCameraInfo(sNewFileName);
 
             // Scrittura file .json
             m_Window.SaveJason(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+
+
 
             // Faccio partire il timer per l'animazione del mirino
             ClickTimer.Start();
