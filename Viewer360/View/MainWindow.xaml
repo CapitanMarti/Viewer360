@@ -4,7 +4,7 @@
         xmlns:my="clr-namespace:Viewer360.View"
         xmlns:conv="clr-namespace:Viewer360.Converters"
         Title="Scan2Bim 360° Viewer" Height="600" Width="880" WindowState="Normal"
-        Icon="/Viewer360;component/Resources/icon_16.png">
+        Icon="../Resources/icon_16.png">
     <Window.Resources>
         <!--
         <conv:FullscreenToVisibilityConverter x:Key="fullscreenToVisibilityConverter"/>

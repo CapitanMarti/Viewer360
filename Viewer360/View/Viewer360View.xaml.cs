@@ -258,12 +258,18 @@ namespace Viewer360.View
                 var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
                 foreach (string file in files)
                 {
-                    System.IO.File.SetAttributes(file, FileAttributes.Normal);
-                    System.IO.File.Delete(file);
+                    try
+                    {
+                        System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                        System.IO.File.Delete(file);
+                    }
+                    catch (IOException ex)
+                    {
+                        return;
+                    }
+                                        
+                    // TODO  Notificare tutto al server
                 }
-
-
-                // TODO  Notificare tutto al server
             }
 
 

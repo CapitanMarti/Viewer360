@@ -21,10 +21,10 @@ using static Viewer360.View.CUIManager;
 
 namespace Viewer360.View
 {
-    struct SPointInfo
+    class SPointInfo
     {
-        public int iPointIndex;
-        public Ellipse ellipse;
+        public int iPointIndex=-1;
+        public Ellipse ellipse=null;
     }
 
     /// <summary>

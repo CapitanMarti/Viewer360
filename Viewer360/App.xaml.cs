@@ -116,7 +116,23 @@ namespace Viewer360
                 }
             }
 
-            if(SharingHelper.m_bPhotoHasChanged)
+            
+            if (SharingHelper.m_bLabelHasChanged)
+            {
+                int index = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex;
+                double dX = 1;
+                double dY = 0;
+                string sElementlName = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel.m_sJpgFileName;
+                sElementlName=System.IO.Path.GetFileNameWithoutExtension(sElementlName);
+
+                m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
+                m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, sElementlName);
+
+                SharingHelper.m_bLabelHasChanged = false;
+                return;
+            }
+
+            if (SharingHelper.m_bPhotoHasChanged)
             {
                 //++++++++++++++++++++++++++
                 // Console.WriteLine("Da OnApplicationIdle stop1 Type=1");

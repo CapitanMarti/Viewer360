@@ -116,9 +116,7 @@ namespace Viewer360.ViewModel
                 m_iCurrentPhotoIndex = 0;
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
-            SharingHelper.m_bPhotoHasChanged = true;
-
-            // TODO mandare messaggio server su nuova immagine (camera) selezionata
+            SharingHelper.m_bPhotoHasChanged = true;  // Mandare messaggio server su nuova immagine (camera) selezionata
         }
 
         public void PrevImage_Click(object sender, RoutedEventArgs e)
@@ -128,9 +126,8 @@ namespace Viewer360.ViewModel
                 m_iCurrentPhotoIndex = CLabelManager.GetPhotoNum()-1;
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
-            SharingHelper.m_bPhotoHasChanged = true;
+            SharingHelper.m_bPhotoHasChanged = true; // Mandare messaggio server su nuova immagine (camera) selezionata
 
-            // TODO mandare messaggio server su nuova immagine (camera) selezionata
         }
 
         void SetupLabelData(CSingleFileLabel oLabel, int iCurrentPhotoIndex, int iCurrentLabelIndex)
@@ -140,8 +137,6 @@ namespace Viewer360.ViewModel
             {
                 m_iCurrentPhotoIndex = iCurrentPhotoIndex;
                 LoadNewImage(sFileName);
-                SharingHelper.m_bPhotoHasChanged = true;
-
             }
             // Save label filename
             m_sCurrentLabelFileName = SharingHelper.GetJsonPath() + oLabel.m_sJpgFileName;
@@ -152,7 +147,7 @@ namespace Viewer360.ViewModel
             m_iCurrentLabelIndex = iCurrentLabelIndex;
             CUIManager.InitUI(oLabel);
 
-            // TODO mandare messaggio server su nuova immagine (camera) e oggetto selezionati
+            SharingHelper.m_bLabelHasChanged = true; // Mandare messaggio server su nuova immagine (camera) e label selezionati
 
         }
 
