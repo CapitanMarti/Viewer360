@@ -128,11 +128,17 @@ namespace Viewer360.View
         {
             m_eMode = eMode;
             if (eMode == ViewerMode.Create)
+            {
                 m_Window.CreateMode.IsChecked = true;
+                m_Window.EditMode.IsChecked = false;
+            }
             else
+            {
                 m_Window.CreateMode.IsChecked = false;
+                m_Window.EditMode.IsChecked = true;
+            }
 
-            UpdateUI();
+                UpdateUI();
         }
 
         static public void ChangeMode()
@@ -145,6 +151,7 @@ namespace Viewer360.View
                     m_Window.ResetPolygon();  // Resetto il mirino
                 }
                 m_eMode = ViewerMode.Create;
+  //              m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(Color.FromArgb(0, 255, 0, 0));
             }
             else
             {
@@ -152,7 +159,7 @@ namespace Viewer360.View
                 {
                     (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
 
-                    // Se non esiste alcuna label ripristino la modalità precedente
+                    // Se non esiste alcuna label ripristino la modalità Create
                     if ((m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex == -1)
                     {
                         SetViewerMode(ViewerMode.Create);
@@ -162,6 +169,7 @@ namespace Viewer360.View
                 }
 
                 m_eMode = ViewerMode.Edit;
+//                m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
             }
             UpdateUI();
         }

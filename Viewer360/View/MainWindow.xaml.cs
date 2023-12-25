@@ -356,20 +356,28 @@ namespace Viewer360.View
             string sFileName = System.IO.Path.GetFileNameWithoutExtension(oCurrentLabel.m_sJpgFileName);
 
             // Cancello tutti i file che iniziano con sFileName in MaskImage
-            var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName+"*.*");
-            foreach (string file in files)
+            try
             {
-                System.IO.File.SetAttributes(file, FileAttributes.Normal);
-                System.IO.File.Delete(file);
+                var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
+                foreach (string file in files)
+                {
+                    System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                    System.IO.File.Delete(file);
+                }
+
+                // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
+                files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
+                foreach (string file in files)
+                {
+                    System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                    System.IO.File.Delete(file);
+
+                }
+                SharingHelper.m_bElementDeleted = true;
             }
-
-            // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
-            files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
-            foreach (string file in files)
+            catch (IOException ex)
             {
-                System.IO.File.SetAttributes(file, FileAttributes.Normal);
-                System.IO.File.Delete(file);
-
+                return;
             }
 
             // TODO  Mando messaggio di cancellazione a server

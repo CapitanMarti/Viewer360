@@ -11,6 +11,7 @@ using PointCloudUtility;
 using static Viewer360.View.CViewerCameraManager;
 using System.Windows.Media.Media3D;
 using System.IO;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Viewer360.ViewModel
 {
@@ -130,7 +131,7 @@ namespace Viewer360.ViewModel
 
         }
 
-        void SetupLabelData(CSingleFileLabel oLabel, int iCurrentPhotoIndex, int iCurrentLabelIndex)
+        void SetupLabelData(CSingleFileLabel oLabel, int iCurrentPhotoIndex, int iCurrentLabelIndex, bool bSoppressFlag=false)
         {
             string sFileName = CLabelManager.GetPhotoFullName(iCurrentPhotoIndex);
             if (m_iCurrentPhotoIndex != iCurrentPhotoIndex)
@@ -147,8 +148,22 @@ namespace Viewer360.ViewModel
             m_iCurrentLabelIndex = iCurrentLabelIndex;
             CUIManager.InitUI(oLabel);
 
-            SharingHelper.m_bLabelHasChanged = true; // Mandare messaggio server su nuova immagine (camera) e label selezionati
+            if(!bSoppressFlag)
+                SharingHelper.m_bLabelHasChanged = true; // Mandare messaggio server su nuova immagine (camera) e label selezionati
 
+        }
+
+        public void LoadLabelForSelectedElement(string sElementName)
+        {
+            int iPhotoIndex=-1;
+            int iLabelIndex=-1;
+            bool bOK = CLabelManager.GetPhotoAndLabelIndexFromElementName(sElementName, ref iPhotoIndex, ref iLabelIndex);
+            if(bOK)
+            {
+                CSingleFileLabel oLabel = null;
+                oLabel = CLabelManager.GetLabel(iPhotoIndex, iLabelIndex);
+                SetupLabelData(oLabel, iPhotoIndex, iLabelIndex,true);
+            }
         }
 
         public void NextLabel_Click(object sender, RoutedEventArgs e)
@@ -218,6 +233,9 @@ namespace Viewer360.ViewModel
         {
             m_Window.viewer360_View.MyCam.FieldOfView = oLabel.m_hFov;
             m_Window.viewer360_View.MyCam.LookDirection = new Vector3D(oLabel.m_vLookDirectionX, oLabel.m_vLookDirectionY, oLabel.m_vLookDirectionZ);
+
+            m_Window.viewer360_View.UpdateThetaAndPhi(m_Window.viewer360_View.MyCam.LookDirection);
+
             SharingHelper.m_bCameraAtHasChanged = true;
             m_Window.RestorePolygon(oLabel.m_aLabelInfo[0]);
 

@@ -247,31 +247,39 @@ namespace Viewer360.View
             PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
 
 
-            // Verifico se il nome della label è cambiato
-            if (oOldLabel != null && oLabelCandidate.m_aLabelInfo[0].sLabelName != oOldLabel.m_aLabelInfo[0].sLabelName)
+            // Verifico se il nome della label è cambiato e sono in modalità Create
+            if (CUIManager.GetMode() != ViewerMode.Create && oOldLabel != null && oLabelCandidate.m_aLabelInfo[0].sLabelName != oOldLabel.m_aLabelInfo[0].sLabelName)
             {
                 DialogResult result = ConfirmDialog("Il nome della label corrente è stato cambiato; le eventuali entità derivate da essa, con il vecchio nome, saranno eliminate.\n\n\nConfermi?");
                 if (result == System.Windows.Forms.DialogResult.No)
                     return;
 
-                string sFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJpgFileName); 
-                var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
-                foreach (string file in files)
+                string sFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJpgFileName);
+                try
                 {
-                    try
+                    var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
+                    foreach (string file in files)
                     {
                         System.IO.File.SetAttributes(file, FileAttributes.Normal);
                         System.IO.File.Delete(file);
+
                     }
-                    catch (IOException ex)
+
+                    // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
+                    files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
+                    foreach (string file in files)
                     {
-                        return;
+                        System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                        System.IO.File.Delete(file);
+
                     }
-                                        
-                    // TODO  Notificare tutto al server
+                    SharingHelper.m_bElementDeleted = true;
+                }
+                catch (IOException ex)
+                {
+                    return;
                 }
             }
-
 
             // Genero immagine partendo da render target
             int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
@@ -370,11 +378,13 @@ namespace Viewer360.View
 
             vNewAt = m_mRotXYZ.Transform(vNewAt);  // InvRotXYX * vNewAt == vNewAt*RotXYX
 
+            /*
             camPhi = 180.0*Math.Acos(vNewAt.Z)/Math.PI;
             camTheta=180.0*Math.Acos(vNewAt.Y/Math.Sqrt(1- vNewAt.Z* vNewAt.Z)) / Math.PI;
             if (vNewAt.X < 0)
                 camTheta = -camTheta;
-
+            */
+            UpdateThetaAndPhi(vNewAt);
             MyCam.LookDirection = new Vector3D(vNewAt.X, vNewAt.Y, vNewAt.Z);
 
             //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -383,6 +393,17 @@ namespace Viewer360.View
             //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+        }
+
+        public void UpdateThetaAndPhi(Vector3D vCameraAt)
+        {
+            camPhi = 180.0 * Math.Acos(vCameraAt.Z) / Math.PI;
+            camTheta = 180.0 * Math.Acos(vCameraAt.Y / Math.Sqrt(1 - vCameraAt.Z * vCameraAt.Z)) / Math.PI;
+            if (vCameraAt.X < 0)
+                camTheta = -camTheta;
+
+            RaisePropertyChanged("Theta");
+            RaisePropertyChanged("Phi");
         }
 
         public Matrix3D ComputeCameraRTMatrix(bool bReverseZ)
