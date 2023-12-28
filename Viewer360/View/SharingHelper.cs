@@ -27,7 +27,9 @@ namespace Viewer360.View
         public static bool m_bLabelHasChanged = false;
         public static bool m_bElementDeleted = false;
         public static bool m_bParentWallRequested = false;
-        
+        public static double m_dConvFactor;
+        public static double m_dPlanarZoomFactor = 1;
+
 
 
 
@@ -38,6 +40,8 @@ namespace Viewer360.View
             m_sJsonPath = sJsonPath;
             m_sSegmentPath = sSegmentPath;
         }
+
+        public static string GetFullJpegFileName() { return m_sFullFileName; }
 
         public static void SetFileName(string sFileName)
         {
@@ -96,7 +100,7 @@ namespace Viewer360.View
             return m_sSegmentPath;
         }
 
-        public static string GetNewFileName()
+        public static string GetNewJsonFileName()
         {
             string sTmp=Path.GetFileNameWithoutExtension(m_sFullFileName);
             bool bContinue = true;
@@ -104,8 +108,9 @@ namespace Viewer360.View
             int iCount = 0;
             while (bContinue) 
             {
-                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount)+ Path.GetExtension(m_sFullFileName);
-                if(!File.Exists(sNewFile)) 
+                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount)+ ".json";
+//                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount) + Path.GetExtension(m_sFullFileName);
+                if (!File.Exists(sNewFile)) 
                 {
                     break;
                 }

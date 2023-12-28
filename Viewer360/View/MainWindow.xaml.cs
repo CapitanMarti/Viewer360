@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using static PointCloudUtility.CommonUtil;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static Viewer360.View.CUIManager;
+using System.Globalization;
 
 
 namespace Viewer360.View
@@ -264,21 +265,91 @@ namespace Viewer360.View
 
         }
 
+        public CSingleFileLabel BuildSavingLabelCandidatePlanar(string sNewJsonFileName, Size ViewSize, Size ImageSize)
+        {
+            // Creo file manager per file attuale
+            CSingleFileLabel oLabel = new CSingleFileLabel();
+            oLabel.m_sJsonAuthor = "ScanToBim-Viewer360_Planar";
+//            oLabel.SetImageSize((int)(ImageSize.Height), (int)(ImageSize.Width));// INVERTO PER COMPATIBILITA' CON SCISSOR!!!!  VERIFICARE
+            oLabel.SetImageSize((int)(ImageSize.Width), (int)(ImageSize.Height));
+            oLabel.m_dTheta = 0;
+            oLabel.m_dPhi = 0;
+            oLabel.m_vLocalAtX = 2;
+            oLabel.m_vLocalAtY = 2;
+            oLabel.m_vLocalAtZ = 2;
+            oLabel.m_hFov = -1;
+            oLabel.m_vFov = -1;
+            oLabel.m_sJsonFileName = System.IO.Path.GetFileName(sNewJsonFileName);
 
-        public CSingleFileLabel BuildSavingLabelCandidate(string sNewJpgFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection)
+            // Creo e inizializzo LabelInfo
+            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo();
+
+            // Aggiungo nome file .png
+            //            oLabelInfo.sImageFileName = sNewFileName;
+            oLabelInfo.sLabelName = ElementName.Text;
+            oLabelInfo.sParentLabelName = ""; // TODO il valore va ricevuto dal Server 
+
+            // Aggiungo la category
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+            int iSelectedCat = CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
+            int iSelectedItem = ItemCombo.SelectedIndex;
+
+            // Aggiungo il catalogID
+            oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
+            oLabelInfo.iCategory = SharingHelper.GetCatalogManager().SearchCategoryByID(oLabelInfo.iObjCatalogID);
+
+            // Aggiungo i punti
+            oLabelInfo.aPolyPointX = new List<double>();
+            oLabelInfo.aPolyPointY = new List<double>();
+            double dConvFactorX = ImageSize.Width / ViewSize.Width;
+            double dConvFactorY = ImageSize.Height / ViewSize.Height;
+            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+            {
+                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * dConvFactorX));
+                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * dConvFactorY));
+            }
+
+            // Aggiungo LabelInfo a LabelManager
+            oLabel.Add(oLabelInfo);
+
+            return oLabel;
+
+        }
+
+
+
+        public CSingleFileLabel BuildSavingLabelCandidate(string sNewJsonFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
             CSingleFileLabel oLabel = new CSingleFileLabel();
             oLabel.m_sJsonAuthor = "ScanToBim-Viewer360";
-            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Height * 1.5), Convert.ToInt32(ViewSize.Width * 1.5));  // INVERTO PER COMPATIBILITA' CON SCISSOR!!!!
-                                                                                                                    //            oLabel.SetImageSize(Convert.ToInt32(ViewSize.Width * 1.5), Convert.ToInt32(ViewSize.Height * 1.5));
+            oLabel.SetImageSize((int)(ViewSize.Width* SharingHelper.m_dConvFactor), (int)(ViewSize.Height * SharingHelper.m_dConvFactor));  
             oLabel.m_dTheta = dTheta;
             oLabel.m_dPhi = dPhi;
-            oLabel.m_vLookDirectionX = vLookDirection.X;
-            oLabel.m_vLookDirectionY = vLookDirection.Y;
-            oLabel.m_vLookDirectionZ = vLookDirection.Z;
+            oLabel.m_vLocalAtX = vLookDirection.X;
+            oLabel.m_vLocalAtY = vLookDirection.Y;
+            oLabel.m_vLocalAtZ = vLookDirection.Z;
             oLabel.m_hFov = dHFov;
             oLabel.m_vFov = dVFov;
+            oLabel.m_sJsonFileName = System.IO.Path.GetFileName(sNewJsonFileName);
+            Matrix3D mTmp=viewer360_View.ComputeCameraRTMatrix(true);
+            oLabel.m_MatrixRT[0] = mTmp.M11;
+            oLabel.m_MatrixRT[1] = mTmp.M12;
+            oLabel.m_MatrixRT[2] = mTmp.M13;
+            oLabel.m_MatrixRT[3] = mTmp.M14;
+            oLabel.m_MatrixRT[4] = mTmp.M21;
+            oLabel.m_MatrixRT[5] = mTmp.M22;
+            oLabel.m_MatrixRT[6] = mTmp.M23;
+            oLabel.m_MatrixRT[7] = mTmp.M24;
+            oLabel.m_MatrixRT[8] = mTmp.M31;
+            oLabel.m_MatrixRT[9] = mTmp.M22;
+            oLabel.m_MatrixRT[10] = mTmp.M33;
+            oLabel.m_MatrixRT[11] = mTmp.M34;
+            oLabel.m_MatrixRT[12] = mTmp.OffsetX;
+            oLabel.m_MatrixRT[13] = mTmp.OffsetY;
+            oLabel.m_MatrixRT[14] = mTmp.OffsetZ;
+            oLabel.m_MatrixRT[15] = mTmp.M44;
+
 
             // Creo e inizializzo LabelInfo
             CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo();
@@ -302,8 +373,8 @@ namespace Viewer360.View
             oLabelInfo.aPolyPointY = new List<double>();
             for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
             {
-                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * 1.5));
-                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * 1.5));
+                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * SharingHelper.m_dConvFactor));
+                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * SharingHelper.m_dConvFactor));
             }
 
             // Aggiungo LabelInfo a LabelManager
@@ -313,11 +384,12 @@ namespace Viewer360.View
 
         }
 
-        public void SaveJason(CSingleFileLabel oLabel, string sNewJpgFileName)
+        public void SaveJason(CSingleFileLabel oLabel, string sNewJsonFileName)
         {
 
             // Salvo file .json
-            oLabel.SaveToJsonFile(sNewJpgFileName);
+            string sJpegFileName = System.IO.Path.GetFileName(SharingHelper.GetFullJpegFileName());
+            oLabel.SaveToJsonFile(sNewJsonFileName, sJpegFileName);
 
             // Aggiorno CLabelManager
             CLabelManager.AddLabel(oLabel);
@@ -353,20 +425,20 @@ namespace Viewer360.View
                 return;
 
             CSingleFileLabel oCurrentLabel=(DataContext as MainViewModel).m_oCurrentLabel;
-            string sFileName = System.IO.Path.GetFileNameWithoutExtension(oCurrentLabel.m_sJpgFileName);
+            string sJsonFileName = System.IO.Path.GetFileNameWithoutExtension(oCurrentLabel.m_sJsonFileName);
 
-            // Cancello tutti i file che iniziano con sFileName in MaskImage
             try
             {
-                var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
+                // Cancello i file  che iniziano con sJsonFileName in JsonPath  (.jSon e .Cif)
+                var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sJsonFileName + "*.*");
                 foreach (string file in files)
                 {
                     System.IO.File.SetAttributes(file, FileAttributes.Normal);
                     System.IO.File.Delete(file);
                 }
 
-                // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
-                files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
+                // Cancello tutti i file che contengono XXXXXXXX##YY in SegmentedPC (.pcd, .wif, .ply e .lbi)
+                files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sJsonFileName + "*.*");
                 foreach (string file in files)
                 {
                     System.IO.File.SetAttributes(file, FileAttributes.Normal);
@@ -458,14 +530,27 @@ namespace Viewer360.View
             ViewFinderPolygon.Points = NewPoints;
 
         }
-        public void RestorePolygon(SLabelInfo oLabelInfo)
+        public void RestorePolygon(CSingleFileLabel oLabel)
         {
             DeleteAllEllipse();
 
             PointCollection NewPoints = new PointCollection();
-            for(int i= 0; i < oLabelInfo.aPolyPointX.Count; i++) 
+            double dScaleX;
+            double dScaleY;
+            if (viewer360_View.GetProjection() == Viewer360View.ViewerProjection.Spheric)
             {
-                Point p = new Point(oLabelInfo.aPolyPointX[i]/1.5, oLabelInfo.aPolyPointY[i]/1.5);
+                dScaleX = 1 / SharingHelper.m_dConvFactor;
+                dScaleY = 1 / SharingHelper.m_dConvFactor;
+            }
+            else
+            {
+                dScaleX = viewer360_View.RenderSize.Width / oLabel.m_ImageWidth;
+                dScaleY = viewer360_View.RenderSize.Height / oLabel.m_ImageHeight;
+            }
+
+            for (int i= 0; i < oLabel.m_aLabelInfo[0].aPolyPointX.Count; i++) 
+            {
+                Point p = new Point(oLabel.m_aLabelInfo[0].aPolyPointX[i]*dScaleX, oLabel.m_aLabelInfo[0].aPolyPointY[i] * dScaleY);
                 AddEllipse(myCanvas, p.X, p.Y, i);
                 NewPoints.Add(p);
             }
@@ -538,6 +623,16 @@ namespace Viewer360.View
                 if (iDraggingPoint >= 0)  // Sto modificando la posizione di un vertice
                 {
                     ViewFinderPolygon.Points[iDraggingPoint] = newPosition;
+                    //++++++++++++++++++++++++++++++++++++++++++
+                    /*
+                    int nSizeCorrected = (int)(viewer360_View.vp.RenderSize.Width * viewer360_View.Image.Height / viewer360_View.Image.Width);
+                    int nOffset = (int)(viewer360_View.vp.RenderSize.Height - nSizeCorrected) / 2;
+                    int nMaxY = nSizeCorrected- nOffset;
+                    Console.WriteLine("Pos=" + newPosition.ToString() + "   WinSize=" + m_Window.Width.ToString() + "," + m_Window.Height.ToString() + " " + m_Window.Width / m_Window.Height
+                        + "   vp.Size=" + viewer360_View.vp.RenderSize.Width.ToString() + "," + viewer360_View.vp.RenderSize.Height.ToString() 
+                        + " vp.SizeY corretto="+ nSizeCorrected + " maxY="+ nMaxY + "  nOffset="+ nOffset);
+                    */
+                    //++++++++++++++++++++++++++++++++++++++++++
 
                     // Aggiorno le posizioni dei pallini
                     UpdateVertexCircle();
@@ -560,7 +655,7 @@ namespace Viewer360.View
                     double dSizeY = viewer360_View.m_ViewSize.Height;
 
                     // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
-                    if (aPointTmp[0].X >= 0 && aPointTmp[1].X <= dSizeX && aPointTmp[0].Y >= 0 && aPointTmp[2].Y <= dSizeY)
+                    if (ArePointInsideView(aPointTmp, dSizeX, dSizeY)) // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
                     {
                         // Aggiorno i vertici
                         for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
@@ -652,9 +747,8 @@ namespace Viewer360.View
 
                 }
 
-                // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
-                if (aPointTmp[0].X >= 0 && aPointTmp[1].X <= dSizeX && aPointTmp[0].Y >= 0 && aPointTmp[2].Y <= dSizeY)
-                {
+                if(ArePointInsideView(aPointTmp,dSizeX,dSizeY)) // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
+                { 
                     // Aggiorno i vertici
                     for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
                         ViewFinderPolygon.Points[i] = aPointTmp[i];
@@ -670,6 +764,20 @@ namespace Viewer360.View
 
             }
         }
+
+        bool ArePointInsideView(PointCollection aPointTmp, double dSizeX, double dSizeY)
+        {
+            // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
+
+            foreach(var point in aPointTmp)
+            {
+                if (point.X < 0 || point.X > dSizeX || point.Y < 0 || point.Y > dSizeY)
+                    return false;
+            }
+
+            return true;
+        }
+
 
         void UpdateVertexCircle()
         {

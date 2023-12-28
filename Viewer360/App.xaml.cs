@@ -45,22 +45,28 @@ namespace Viewer360
 
             // Acquisizione parametri command line e apertura file
             string sCatalogNameFull = "";
-            string sPhoto360NameFull = "";
+            string sPhotoFileNameFull = "";
             string sJasonPath = "";
             string sSegmentPath = "";
 
-            if (e.Args.Length == 4)
+            if (e.Args.Length == 5)
             {
-                sCatalogNameFull = e.Args[0];
-                sPhoto360NameFull = e.Args[1];
-                sJasonPath = e.Args[2];
-                sSegmentPath = e.Args[3];
-                CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhoto360NameFull), sJasonPath);
+                if (e.Args[0] == "Planar")
+                    m_Window.viewer360_View.SetProjection(Viewer360View.ViewerProjection.Planar);
+                else
+                    m_Window.viewer360_View.SetProjection(Viewer360View.ViewerProjection.Spheric);
 
-                SharingHelper.SetFileAndFolderNames(sPhoto360NameFull, sJasonPath, sSegmentPath);
+                sCatalogNameFull = e.Args[1];
+                sPhotoFileNameFull = e.Args[2];
+                sJasonPath = e.Args[3];
+                sSegmentPath = e.Args[4];
+                CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhotoFileNameFull), sJasonPath);
+
+                SharingHelper.SetFileAndFolderNames(sPhotoFileNameFull, sJasonPath, sSegmentPath);
                 SharingHelper.LoadCatalogManager(sCatalogNameFull);
 
-                (m_Window.DataContext as ViewModel.MainViewModel).LoadImage(sPhoto360NameFull);
+                m_Window.viewer360_View.InitCamera();
+                (m_Window.DataContext as ViewModel.MainViewModel).LoadImage(sPhotoFileNameFull);
             }
 
             // Inizializzo la messaggistica col server
@@ -81,8 +87,6 @@ namespace Viewer360
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
-
-
         }
 
 

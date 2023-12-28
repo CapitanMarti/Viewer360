@@ -29,7 +29,16 @@ namespace Viewer360.View
     /// </summary>
     public partial class Viewer360View : System.Windows.Controls.UserControl, INotifyPropertyChanged
     {
+        public enum ViewerProjection
+        {
+            Planar,
+            Spheric
+        }
+        //*************************************
+        private ViewerProjection m_Projection= ViewerProjection.Planar;
+        //*************************************
         private MeshGeometry3D sphereMesh = null; // Tessellated sphere mesh
+        private MeshGeometry3D planeMesh = null; // Tessellated sphere mesh
         private ImageBrush brush = null;          // Brush containing the 360° view
         private double camTheta = 180;            // Camera horizontal orientation
         private double camPhi = 90;               // Camera vertical orientation
@@ -44,10 +53,15 @@ namespace Viewer360.View
         private Matrix3D m_mRotY;
         private Matrix3D m_mRotZ;
         private Matrix3D m_mRotXYZ;
+        public PerspectiveCamera MyCam;
+        public OrthographicCamera MyOrthoCam;
 
 
         public System.Windows.Size m_ViewSize;
         public View.MainWindow m_Window;
+
+        public ViewerProjection GetProjection() { return m_Projection; }
+        public void SetProjection(ViewerProjection eProg) {m_Projection= eProg; }
 
         /// <summary>
         /// Camera horizontal FOV
@@ -69,21 +83,55 @@ namespace Viewer360.View
         /// </summary>
         public double Phi { get { return camPhi; } }
 
+        public void InitCamera()
+        {
+            timer = new DispatcherTimer(); // Initialize timer
+            timer.Interval = TimeSpan.FromMilliseconds(25);
+
+            if (m_Projection == ViewerProjection.Planar)
+            {
+                timer.Tick += timerPlane_Tick;
+
+                MyOrthoCam = new OrthographicCamera
+                {
+                    //                    Width = 3,
+                    Position = new Point3D(0, 0, 1),
+                    LookDirection = new Vector3D(0, 0, -1),
+                    UpDirection = new Vector3D(0, 1, 0)
+                };
+                vp.Camera = MyOrthoCam;
+                SharingHelper.m_dConvFactor = 1.5;
+            }
+            else
+            {
+                timer.Tick += timerSpheric_Tick;
+
+                MyCam = new PerspectiveCamera
+                {
+                    Position = new Point3D(0, 0, 0),
+                    LookDirection = new Vector3D(0, -1, 0),
+                    UpDirection = new Vector3D(0, 0, 1),
+                    FieldOfView = 120
+                };
+                vp.Camera = MyCam;
+                SharingHelper.m_dConvFactor = 1.5;
+            }
+
+
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>
         public Viewer360View()
         {
+
+
             InitializeComponent();
-//            sphereMesh = GeometryHelper.CreateSphereMesh(40, 20, 10); // Initialize mesh 
-            sphereMesh = GeometryHelper.CreateSphereMesh(80, 80, 10); // Initialize mesh 
 
             brush = new ImageBrush(); // Initialize brush with no image
             brush.TileMode = TileMode.Tile;
             
-            timer = new DispatcherTimer(); // Initialize timer
-            timer.Interval = TimeSpan.FromMilliseconds(25);
-            timer.Tick += timer_Tick;
 
             ClickTimer = new DispatcherTimer(); // Initialize timer
             ClickTimer.Interval = TimeSpan.FromMilliseconds(10);
@@ -148,22 +196,87 @@ namespace Viewer360.View
             set { SetValue(ImageProperty, value); }
         }
 
+        void SetViewAndWindowSize()
+        {
+            if (Image.Width > Image.Height)  // Foto orizzontale
+            {
+
+                double dWinWidth = 880* SharingHelper.m_dPlanarZoomFactor;
+                double dVpWidth = dWinWidth - 81 - 14;
+                double dVpHeight = dVpWidth * Image.Height / Image.Width;
+                double dWinHeight = dVpHeight + 60 + 7;
+
+                m_Window.Width = dWinWidth;
+                m_Window.Height = dWinHeight;
+                m_Window.viewer360_View.vp.Width = dVpWidth;
+                m_Window.viewer360_View.vp.Height = dVpHeight;
+
+                /*
+                m_Window.Width = 880;
+                m_Window.viewer360_View.vp.Height = (vp.RenderSize.Width * Image.Height / Image.Width); // Imposto l'altezza di viewport in base ad aspect ratio
+                m_Window.Height = m_Window.viewer360_View.vp.Height + 60;  // 60 è lo spessore delle bande in alto
+                */
+            }
+            else
+            {
+                double dWinWidth = Math.Max(800 * Image.Width / Image.Height, 500)* SharingHelper.m_dPlanarZoomFactor;
+                double dVpWidth = dWinWidth - 81 - 14;
+                double dVpHeight = dVpWidth * Image.Height / Image.Width;
+                double dWinHeight = dVpHeight + 60 + 7;
+
+                m_Window.Width = dWinWidth;
+                m_Window.Height = dWinHeight;
+                m_Window.viewer360_View.vp.Width = dVpWidth;
+                m_Window.viewer360_View.vp.Height = dVpHeight;
+
+            }
+        }
+
         // Image changed
         private void ImageChanged()
         {
             MyModel.Children.Clear();
             brush.ImageSource = Image;
 
-            ModelVisual3D sphereModel = new ModelVisual3D();
-            sphereModel.Content = new GeometryModel3D(sphereMesh, new DiffuseMaterial(brush));
-            MyModel.Children.Add(sphereModel);
+
+            if (m_Projection == ViewerProjection.Planar)
+            {
+                double dSizeX = Image.PixelWidth;
+                double dSizeY = Image.PixelHeight;
+
+                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY); // Initialize mesh 
+                sphereMesh = null;
+
+                // Adatta l'aspetto di finestra e view a foto
+                SetViewAndWindowSize();
+            }
+            else
+            {
+                planeMesh = null;
+                sphereMesh = GeometryHelper.CreateSphereMesh(40, 20, 10); // Initialize mesh 
+            }
+
+
+            ModelVisual3D oModel = new ModelVisual3D();
+            if (m_Projection == ViewerProjection.Planar)
+                oModel.Content = new GeometryModel3D(planeMesh, new DiffuseMaterial(brush));
+            else
+                oModel.Content = new GeometryModel3D(sphereMesh, new DiffuseMaterial(brush));
+
+            MyModel.Children.Add(oModel);
             
             RaisePropertyChanged("Hfov");
             RaisePropertyChanged("Vfov");
         }
 
         // Timer: animate camera
-        private void timer_Tick(object sender, EventArgs e)
+
+        private void timerPlane_Tick(object sender, EventArgs e)
+        {
+            // TODO
+        }
+
+        private void timerSpheric_Tick(object sender, EventArgs e)
         {
             if (!isMouseDown) 
                 return;
@@ -177,12 +290,6 @@ namespace Viewer360.View
             else if (camTheta > 360) 
                 camTheta -= 360;
 
-/*
-            if (camPhi < 0.01) 
-                camPhi = 0.01;
-            else if (camPhi > 179.99) 
-                camPhi = 179.99;
-*/
             if (camPhi < 50)
                 camPhi = 50;
             else if (camPhi > 120)
@@ -197,18 +304,50 @@ namespace Viewer360.View
 
             ComputeGlobalRotMatrix();
         }
-
+/*
+        static double newWidth = 2;
+        static double dxOffset = 0;
+        static double dyOffset = 0;
+        static double dScale = 1;
+*/
         // Mouse move: set camera movement speed
         private void vp_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
 
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
                 m_Window.Polygon_MouseMove(sender, e);
-            else
+            else  // Rotazione/traslazione camera
             {
-                if (!isMouseDown) return;
-                camThetaSpeed = Mouse.GetPosition(vp).X - clickX;
-                camPhiSpeed = Mouse.GetPosition(vp).Y - clickY;
+                if (!isMouseDown) 
+                    return;
+
+                if (m_Projection == ViewerProjection.Spheric)  // Caso sferico--> calcolo velocità di rotazione; nel caso planare NON FACCIO NULLA
+                {
+                    camThetaSpeed = Mouse.GetPosition(vp).X - clickX;
+                    camPhiSpeed = Mouse.GetPosition(vp).Y - clickY;
+                }
+                /*
+                else // Caso planare --> Non faccio nulla
+                {
+                    double dNewPosX= Mouse.GetPosition(vp).X;
+                    double dNewPosY = Mouse.GetPosition(vp).Y;
+                    double dShiftX = dNewPosX - clickX;
+                    double dShiftY = dNewPosY - clickY;
+                    //+++++++++++++++++++++++++++
+                    Console.WriteLine("dNewPosX=" + dNewPosX + " dShiftX=" + dShiftX + " dxOffset=" + dxOffset + " dNewPosY=" + dNewPosY  + " dShiftY=" + dShiftY + " dyOffset=" + dyOffset);
+                    //+++++++++++++++++++++++++++
+                    dxOffset -= dShiftX* dScale / Image.PixelWidth;
+                    dyOffset += dShiftY* dScale / Image.PixelHeight;
+
+
+                    MyOrthoCam.Position = new Point3D(dxOffset, dyOffset, 1);
+                    MyOrthoCam.Width = newWidth;
+
+                    clickX = dNewPosX;
+                    clickY = dNewPosY;
+                }
+                */
+
             }
         }
 
@@ -237,13 +376,26 @@ namespace Viewer360.View
         public void SaveImageAndJson()
         {
 
-            string sNewFileName;
+            string sNewJsonFileName;
             if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
-                sNewFileName = SharingHelper.GetNewFileName();
+                sNewJsonFileName = SharingHelper.GetNewJsonFileName();
             else
-                sNewFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
+                sNewJsonFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
 
-            PointCloudUtility.CSingleFileLabel oLabelCandidate =m_Window.BuildSavingLabelCandidate(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            PointCloudUtility.CSingleFileLabel oLabelCandidate;
+            if (m_Projection == ViewerProjection.Spheric)
+                oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            else
+            {
+                /*
+                double dHeight = vp.RenderSize.Width * Image.Height / Image.Width;
+                double dWidth = m_ViewSize.Width ;
+                */
+                System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
+                System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
+
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);
+            }
             PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
 
 
@@ -254,10 +406,10 @@ namespace Viewer360.View
                 if (result == System.Windows.Forms.DialogResult.No)
                     return;
 
-                string sFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJpgFileName);
+                string sJsonFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJsonFileName);
                 try
                 {
-                    var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sFileName + "*.*");
+                    var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sJsonFileName + "*.*");
                     foreach (string file in files)
                     {
                         System.IO.File.SetAttributes(file, FileAttributes.Normal);
@@ -265,8 +417,8 @@ namespace Viewer360.View
 
                     }
 
-                    // Cancello tutti i file che contengono XXXXXXXX##00 in SegmentedPC
-                    files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sFileName + "*.*");
+                    // Cancello tutti i file che contengono XXXXXXXX##YY in SegmentedPC
+                    files = Directory.GetFiles(SharingHelper.GetSegmentPath(), "* -^- " + sJsonFileName + "*.*");
                     foreach (string file in files)
                     {
                         System.IO.File.SetAttributes(file, FileAttributes.Normal);
@@ -281,9 +433,25 @@ namespace Viewer360.View
                 }
             }
 
+            /*  Sospendiamo il salvataggio della immagine associata al json --> NON SERVE PIU'!!
             // Genero immagine partendo da render target
-            int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
-            int nHeight = Convert.ToInt32(m_ViewSize.Height * 1.5);
+            int nWidth;
+            int nHeight;
+            double dOffset = 0;
+            if (m_Projection == ViewerProjection.Spheric)
+            {
+                nWidth = Convert.ToInt32(m_ViewSize.Width * SharingHelper.m_dConvFactor);
+                nHeight = Convert.ToInt32(m_ViewSize.Height * SharingHelper.m_dConvFactor);
+            }
+            else
+            {
+                double dSizeCorrected = vp.RenderSize.Width * Image.Height / Image.Width;
+                dOffset = SharingHelper.m_dConvFactor*(vp.RenderSize.Height - dSizeCorrected) / 2;
+
+//                nHeight =(int)((vp.RenderSize.Width + dSizeCorrected) * Image.Height * SharingHelper.m_dConvFactor / Image.Width);
+                nHeight = (int)((vp.RenderSize.Width + dOffset) * Image.Height * SharingHelper.m_dConvFactor / Image.Width);
+                nWidth = Convert.ToInt32(m_ViewSize.Width * SharingHelper.m_dConvFactor);
+            }
             var renderTarget = new RenderTargetBitmap(nWidth, nHeight, 144, 144, PixelFormats.Default);
             //            var renderTarget = new RenderTargetBitmap(Convert.ToInt32(m_ViewSize.Width * 3), Convert.ToInt32(m_ViewSize.Height * 3), 144, 144, PixelFormats.Pbgra32);
             renderTarget.Render(vp);
@@ -294,16 +462,32 @@ namespace Viewer360.View
             encoder.Save(stream);
             System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(stream);
 
-
             // Salvo la bitmap
-            bitmap.Save(sNewFileName);
+            //bitmap.Save(sNewFileName);
+
+            //++++++++++++++++++++++++++++++++++++++++++++++
+            // Specifica il numero di righe da escludere dall'alto
+            //int righeDaEscludere = (int)(dOffset);
+
+            // Calcola la nuova altezza dell'immagine dopo l'esclusione delle righe
+            //int nuovaAltezza = bitmap.Height - righeDaEscludere;
+
+            // Crea una nuova immagine escludendo le prime n righe dall'alto
+            //System.Drawing.Bitmap nuovaBitmap = bitmap.Clone(new Rectangle(0, righeDaEscludere, bitmap.Width, nuovaAltezza), bitmap.PixelFormat);
+
+            // Ora hai una nuova immagine che esclude le prime n righe dall'alto
+            // Puoi fare ulteriori operazioni o salvarla su file come desiderato
+            //nuovaBitmap.Save(sNewFileName);
+            //+++++++++++++++++++++++++++++++++++++++++++++++
+*/
 
             // Salvo il file .CIF
-            SaveCameraInfo(sNewFileName);
+            if (m_Projection==ViewerProjection.Spheric)
+                SaveCameraInfo(sNewJsonFileName);
 
             // Scrittura file .json
-//            m_Window.SaveJason(sNewFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
-            m_Window.SaveJason(oLabelCandidate, sNewFileName);
+//            m_Window.SaveJason(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            m_Window.SaveJason(oLabelCandidate, sNewJsonFileName);
 
             // Aggiornare la label corrente
             (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
@@ -369,6 +553,9 @@ namespace Viewer360.View
 
         public void SetNewCameraAt(double dGlobalX, double dGlobalY, double dGlobalZ)  // imposta la nuova camera at in base a quella in coordinate mondo passata in argomento
         {
+            if (m_Projection == ViewerProjection.Planar)
+                return;
+
             // Calcolo At in coordinate locali
             Vector3D vNewAt = new Vector3D(dGlobalX, dGlobalY, dGlobalZ);
 
@@ -447,18 +634,22 @@ namespace Viewer360.View
             return mCameraRot;
         }
 
-        public void SaveCameraInfo(string CameraInfoFileName)
+        public void SaveCameraInfo(string sCameraInfoFileName)
         {
-            int nWidth = Convert.ToInt32(m_ViewSize.Width * 1.5);
-            int nHeight = Convert.ToInt32(m_ViewSize.Height * 1.5);
+            int nWidth = Convert.ToInt32(m_ViewSize.Width * SharingHelper.m_dConvFactor);
+            int nHeight = Convert.ToInt32(m_ViewSize.Height * SharingHelper.m_dConvFactor);
             // vp.Camera.Transform
             // vp.Camera.LookDirection
-            double vFov = Vfov;
-            double hFov = Hfov;
+            double vFov = -1;
+            double hFov = -1;
+            if (m_Projection == ViewerProjection.Spheric)
+            {
+                vFov = Vfov;
+                hFov = Hfov;
+            }
 
-
-            string sImageName=Path.GetFileName(CameraInfoFileName);
-            string sCIFName = SharingHelper.GetJsonPath()+"\\"+ Path.GetFileNameWithoutExtension(CameraInfoFileName)+".cif";
+            string sImageName=Path.GetFileName(sCameraInfoFileName);
+            string sCIFName = SharingHelper.GetJsonPath()+"\\"+ Path.GetFileNameWithoutExtension(sCameraInfoFileName) +".cif";
 
             FileStream fs = null;
             try
@@ -473,8 +664,8 @@ namespace Viewer360.View
                     sw.WriteLine("      <property name = \"pixel_width\" value = \"0.004\" />");
                     sw.WriteLine("      <property name = \"pixel_height\" value = \"0.004\" />");
                     sw.WriteLine("      <resolution width = \"" + Convert.ToString(nWidth) + "\" height=\"" + Convert.ToString(nHeight) + "\" />");
-                    sw.WriteLine("      <property name = \"fov_x\" value = \"" + Convert.ToString(Hfov, CultureInfo.InvariantCulture) + "\" />");
-                    sw.WriteLine("      <property name = \"fov_y\" value = \"" + Convert.ToString(Vfov, CultureInfo.InvariantCulture) + "\" />");
+                    sw.WriteLine("      <property name = \"fov_x\" value = \"" + Convert.ToString(hFov, CultureInfo.InvariantCulture) + "\" />");
+                    sw.WriteLine("      <property name = \"fov_y\" value = \"" + Convert.ToString(vFov, CultureInfo.InvariantCulture) + "\" />");
                     sw.WriteLine("  </sensor>");
                     sw.WriteLine("</sensors>");
                     sw.WriteLine("<cameras>");
@@ -601,20 +792,30 @@ namespace Viewer360.View
 
         public void ComputePlanarCameraAt(ref double dX, ref double dY)  // Restituisce la cameraAt planare in coordinate mondo
         {
-            Matrix3D mRotTmp = ComputeCameraRTMatrix(true);
-            dX = mRotTmp.M13;
-            dY = mRotTmp.M23;
-            //+++++++++++++++++++
-            //Console.WriteLine("Da ComputeCameraAtForServer");
-            //Console.WriteLine("dX=" + dX.ToString()+"  dY="+ dY.ToString());
-            //+++++++++++++++++++
-            double dLen = Math.Sqrt(dX * dX + dY * dY);
-            dX /= dLen;
-            dY /= dLen;
+            if (m_Projection == ViewerProjection.Spheric)
+            {
+                Matrix3D mRotTmp = ComputeCameraRTMatrix(true);
+                dX = mRotTmp.M13;
+                dY = mRotTmp.M23;
+                //+++++++++++++++++++
+                //Console.WriteLine("Da ComputeCameraAtForServer");
+                //Console.WriteLine("dX=" + dX.ToString()+"  dY="+ dY.ToString());
+                //+++++++++++++++++++
+                double dLen = Math.Sqrt(dX * dX + dY * dY);
+                dX /= dLen;
+                dY /= dLen;
+            }
+            else
+            {
+                // TODO
+            }
         }
 
         public void Compute3DCameraAt(ref double dX, ref double dY, ref double dZ)  // Restituisce la cameraAt in coordinate mondo
         {
+            if (m_Projection == ViewerProjection.Planar)
+                return;
+
             Matrix3D mRotTmp = ComputeCameraRTMatrix(false);
             dX = mRotTmp.M13;
             dY = mRotTmp.M23;
@@ -671,17 +872,30 @@ namespace Viewer360.View
                 m_Window.Polygon_MouseWheel(sender, e);
             else
             {
-                MyCam.FieldOfView -= e.Delta / 100;
-                if (MyCam.FieldOfView < 1) 
-                    MyCam.FieldOfView = 1;
-                else if (MyCam.FieldOfView > 140) 
-                    MyCam.FieldOfView = 140;
+                if (m_Projection == ViewerProjection.Spheric)
+                {
+                    MyCam.FieldOfView -= e.Delta / 100;
+                    if (MyCam.FieldOfView < 1)
+                        MyCam.FieldOfView = 1;
+                    else if (MyCam.FieldOfView > 140)
+                        MyCam.FieldOfView = 140;
 
-                SharingHelper.m_bCameraAtHasChanged = true;
+                    SharingHelper.m_bCameraAtHasChanged = true;
+                    RaisePropertyChanged("Hfov");
+                    RaisePropertyChanged("Vfov");
+                }
+                else
+                {
+                    if (e.Delta > 0)
+                        SharingHelper.m_dPlanarZoomFactor += 0.05;
+                    else if(e.Delta < 0)
+                        SharingHelper.m_dPlanarZoomFactor -= 0.05;
+
+                    SetViewAndWindowSize();
+
+                }
 
 
-                RaisePropertyChanged("Hfov");
-                RaisePropertyChanged("Vfov");
             }
         }
         

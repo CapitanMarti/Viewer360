@@ -4,6 +4,7 @@
         xmlns:my="clr-namespace:Viewer360.View"
         xmlns:conv="clr-namespace:Viewer360.Converters"
         Title="Scan2Bim 360° Viewer" Height="600" Width="880" WindowState="Normal"
+        ResizeMode="NoResize"
         Icon="../Resources/icon_16.png">
     <Window.Resources>
         <!--
@@ -68,16 +69,18 @@
         <Grid Name="myGrid" Margin="0,0,80,0" Grid.ColumnSpan="3">
 
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="10.985"/>
-                <ColumnDefinition Width="19*"/>
-                <ColumnDefinition Width="69*"/>
+                <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="21*"/>
-                <ColumnDefinition Width="59.917"/>
-                <ColumnDefinition Width="122*"/>
-                <ColumnDefinition Width="9*"/>
-                <ColumnDefinition Width="50*"/>
-                <ColumnDefinition Width="180*"/>
-                <ColumnDefinition Width="180*"/>
+                <ColumnDefinition Width="43*"/>
+                <ColumnDefinition Width="35*"/>
+                <ColumnDefinition Width="24*"/>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="137*"/>
+                <ColumnDefinition Width="10*"/>
+                <ColumnDefinition Width="56*"/>
+                <ColumnDefinition Width="94*"/>
+                <ColumnDefinition Width="108*"/>
+                <ColumnDefinition Width="202*"/>
 
                 <!--        <ColumnDefinition Width="58*"/>
             <ColumnDefinition Width="10*"/>
@@ -88,32 +91,33 @@
                 <RowDefinition Height="Auto" MinHeight="30"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="10" Margin="0,0,-80,0" >
+            <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="12" Margin="0,0,-80,0" >
                 <TextBlock Text="  Category: " IsEnabled= "False" />
-                <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="19">
+                <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="75" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
                 <TextBlock Text="    Item: " IsEnabled= "False" />
-                <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="110" Height="19">
+                <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="55" Height="19">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
                 <TextBlock Text="    Label name: " IsEnabled= "False" />
-                <TextBox  Name="ElementName" Width="95" />
+                <TextBox  Name="ElementName" Width="60" />
             </Menu>
-            <Grid Grid.ColumnSpan="10" Margin="0,0,00,0" Grid.Row="1">
+            <Grid Grid.ColumnSpan="12" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="0*"/>
-                    <RowDefinition/>
+                    <RowDefinition Height="32*"/>
+                    <RowDefinition Height="245*"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="6*"/>
                     <ColumnDefinition Width="83*"/>
                 </Grid.ColumnDefinitions>
                 <!--<Image Source="{Binding Image}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
-                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="6" Margin="0,0,0,0" Grid.RowSpan="2" Loaded="viewer360_View_Loaded"/>
+                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="2" Margin="0,0,0,0" Grid.RowSpan="3" Loaded="viewer360_View_Loaded"/>
 
 
-                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="2" Grid.ColumnSpan="6" RenderTransformOrigin="0.5,0.468"/>
+                <Polygon Points="350,210 450,210 450,310 350,310 " Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="3" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.468"/>
 
             </Grid>
 

@@ -41,7 +41,10 @@ namespace Viewer360.View
 
             m_Window.ElementName.Text = oLabel.m_aLabelInfo[0].sLabelName;
 
-            (m_Window.DataContext as ViewModel.MainViewModel).RestoreFovAndPolygons(oLabel);
+            if(m_Window.viewer360_View.GetProjection()==Viewer360View.ViewerProjection.Spheric)
+                (m_Window.DataContext as ViewModel.MainViewModel).RestoreFovAndPolygons(oLabel);
+            else
+                (m_Window.DataContext as ViewModel.MainViewModel).RestorePolygons(oLabel);
         }
 
         static public void UpdateUI()

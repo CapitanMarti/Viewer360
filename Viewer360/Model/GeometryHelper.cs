@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Viewer360.Model
@@ -111,5 +112,47 @@ namespace Viewer360.Model
             mesh.Freeze();
             return mesh;
         }
+
+        static void ModifyPlaneMeshRatio(int nSizeX, int nSizeY)
+        {
+
+        }
+
+
+        public static MeshGeometry3D CreatePlaneMesh(double dSizeX, double dSizeY)
+        {
+
+            MeshGeometry3D mesh = new MeshGeometry3D();
+
+            double dX = 1;
+            double dY = dSizeY / dSizeX;
+
+            mesh.Positions.Add(new Point3D(-dX, -dY, 0));
+            mesh.Positions.Add(new Point3D(-dX, dY, 0));
+            mesh.Positions.Add(new Point3D(dX, dY, 0));
+            mesh.Positions.Add(new Point3D(dX, -dY, 0));
+
+            mesh.Normals.Add(new Vector3D(0, 0, 1));
+            mesh.Normals.Add(new Vector3D(0, 0, 1));
+            mesh.Normals.Add(new Vector3D(0, 0, 1));
+            mesh.Normals.Add(new Vector3D(0, 0, 1));
+
+            mesh.TextureCoordinates.Add(new Point(0, dSizeY));
+            mesh.TextureCoordinates.Add(new Point(0, 0));
+            mesh.TextureCoordinates.Add(new Point(dSizeX, 0));
+            mesh.TextureCoordinates.Add(new Point(dSizeX, dSizeY));
+
+            mesh.TriangleIndices.Add(0);
+            mesh.TriangleIndices.Add(2);
+            mesh.TriangleIndices.Add(1);
+
+            mesh.TriangleIndices.Add(0);
+            mesh.TriangleIndices.Add(3);
+            mesh.TriangleIndices.Add(2);
+
+            mesh.Freeze();
+            return mesh;
+        }
+
     }
 }

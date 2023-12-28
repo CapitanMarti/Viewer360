@@ -12,6 +12,7 @@ using static Viewer360.View.CViewerCameraManager;
 using System.Windows.Media.Media3D;
 using System.IO;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Viewer360.View.Viewer360View;
 
 namespace Viewer360.ViewModel
 {
@@ -140,7 +141,7 @@ namespace Viewer360.ViewModel
                 LoadNewImage(sFileName);
             }
             // Save label filename
-            m_sCurrentLabelFileName = SharingHelper.GetJsonPath() + oLabel.m_sJpgFileName;
+            m_sCurrentLabelFileName = SharingHelper.GetJsonPath() + oLabel.m_sJsonFileName;
             m_oCurrentLabel = oLabel;
 
 
@@ -229,15 +230,20 @@ namespace Viewer360.ViewModel
         }
 
 
+        public void RestorePolygons(CSingleFileLabel oLabel)
+        {
+            m_Window.RestorePolygon(oLabel);
+        }
+
         public void RestoreFovAndPolygons(CSingleFileLabel oLabel)
         {
             m_Window.viewer360_View.MyCam.FieldOfView = oLabel.m_hFov;
-            m_Window.viewer360_View.MyCam.LookDirection = new Vector3D(oLabel.m_vLookDirectionX, oLabel.m_vLookDirectionY, oLabel.m_vLookDirectionZ);
+            m_Window.viewer360_View.MyCam.LookDirection = new Vector3D(oLabel.m_vLocalAtX, oLabel.m_vLocalAtY, oLabel.m_vLocalAtZ);
 
             m_Window.viewer360_View.UpdateThetaAndPhi(m_Window.viewer360_View.MyCam.LookDirection);
 
             SharingHelper.m_bCameraAtHasChanged = true;
-            m_Window.RestorePolygon(oLabel.m_aLabelInfo[0]);
+            m_Window.RestorePolygon(oLabel);
 
             RaisePropertyChanged("Hfov");
             RaisePropertyChanged("Vfov");
@@ -275,7 +281,7 @@ namespace Viewer360.ViewModel
                 Image = null;
             }
 
-            if (Image != null)
+            if (Image != null && m_Window.viewer360_View.GetProjection()== ViewerProjection.Spheric)
             {
                 if (Math.Abs(Image.Width / Image.Height - 2) > 0.001)
                     WarningMessage("Warning", "The opened image is not equirectangular (2:1)! Rendering may be improper.");
@@ -333,7 +339,7 @@ namespace Viewer360.ViewModel
 
             if (Image != null)
             {
-                if (Math.Abs(Image.Width / Image.Height - 2) > 0.001)
+                if (Math.Abs(Image.Width / Image.Height - 2) > 0.001 && m_Window.viewer360_View.GetProjection() == ViewerProjection.Spheric)
                     WarningMessage("Warning", "The opened image is not equirectangular (2:1)! Rendering may be improper.");
 
                 //RecentImageManager.AddAndSave(sImageFile);
@@ -371,8 +377,10 @@ namespace Viewer360.ViewModel
             RaisePropertyChanged("Phi");
 
 
-            Image = null; RaisePropertyChanged("Image");
-            IsLoading = true; RaisePropertyChanged("IsLoading");
+            Image = null; 
+//            RaisePropertyChanged("Image");
+            IsLoading = true; 
+//            RaisePropertyChanged("IsLoading");
 
             try
             {
@@ -396,7 +404,7 @@ namespace Viewer360.ViewModel
 
             if (Image != null)
             {
-                if (Math.Abs(Image.Width / Image.Height - 2) > 0.001)
+                if (Math.Abs(Image.Width / Image.Height - 2) > 0.001 && m_Window.viewer360_View.GetProjection() == ViewerProjection.Spheric)
                     WarningMessage("Warning", "The opened image is not equirectangular (2:1)! Rendering may be improper.");
             }
 
