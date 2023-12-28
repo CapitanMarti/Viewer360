@@ -18,11 +18,12 @@ namespace Viewer360.View
     static public class CUIManager
     {
         static public View.MainWindow m_Window;
-        static ViewerMode m_eMode;
+        static ViewerMode m_eMode= ViewerMode.Undefined;
 
         public enum ViewerMode
         {
-            Create=0,
+            Undefined=-1,
+            Create,
             Edit
         }
 
@@ -129,7 +130,10 @@ namespace Viewer360.View
         }
         static public void SetViewerMode(ViewerMode eMode)
         {
-            m_eMode = eMode;
+            if(m_eMode==eMode)
+                return;
+
+////            m_eMode = eMode;
             if (eMode == ViewerMode.Create)
             {
                 m_Window.CreateMode.IsChecked = true;
@@ -141,7 +145,9 @@ namespace Viewer360.View
                 m_Window.EditMode.IsChecked = true;
             }
 
-                UpdateUI();
+            ChangeMode();
+
+            ////UpdateUI();
         }
 
         static public void ChangeMode()
@@ -154,7 +160,7 @@ namespace Viewer360.View
                     m_Window.ResetPolygon();  // Resetto il mirino
                 }
                 m_eMode = ViewerMode.Create;
-  //              m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(Color.FromArgb(0, 255, 0, 0));
+                m_Window.ViewFinderPolygon.Fill = null;
             }
             else
             {
@@ -165,14 +171,17 @@ namespace Viewer360.View
                     // Se non esiste alcuna label ripristino la modalità Create
                     if ((m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex == -1)
                     {
-                        SetViewerMode(ViewerMode.Create);
+                        m_Window.CreateMode.IsChecked = true;
+                        m_Window.EditMode.IsChecked = false;
+                        m_eMode= ViewerMode.Create;   
+                        UpdateUI();
                         return;
                     }
 
                 }
 
                 m_eMode = ViewerMode.Edit;
-//                m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
+                m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
             }
             UpdateUI();
         }

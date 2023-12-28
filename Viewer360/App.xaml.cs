@@ -118,6 +118,7 @@ namespace Viewer360
                         m_oMsgManager.GetCameraSelected(sMsg.m_sMsg, ref sCameraName);
 
                         (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName);
+                        CUIManager.SetViewerMode(ViewerMode.Create);
                         m_bNewImageLoaded = true;
 
                         return;
@@ -148,7 +149,7 @@ namespace Viewer360
                 int index = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex;
                 double dX = 1;
                 double dY = 0;
-                string sElementlName = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel.m_sJpgFileName;
+                string sElementlName = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel.m_sJsonFileName;
                 sElementlName = System.IO.Path.GetFileNameWithoutExtension(sElementlName);
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);

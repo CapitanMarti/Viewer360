@@ -93,15 +93,15 @@
             </Grid.RowDefinitions>
             <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="12" Margin="0,0,-80,0" >
                 <TextBlock Text="  Category: " IsEnabled= "False" />
-                <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="75" Height="19">
+                <ComboBox Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="75" Height="24">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
                 <TextBlock Text="    Item: " IsEnabled= "False" />
-                <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="55" Height="19">
+                <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="65" Height="24">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
-                <TextBlock Text="    Label name: " IsEnabled= "False" />
-                <TextBox  Name="ElementName" Width="60" />
+                <TextBlock Text="    Name: " IsEnabled= "False" />
+                <TextBox  Name="ElementName" Width="80" Height="24" RenderTransformOrigin="0.498,0.752" />
             </Menu>
             <Grid Grid.ColumnSpan="12" Grid.Row="1">
                 <Grid.RowDefinitions>

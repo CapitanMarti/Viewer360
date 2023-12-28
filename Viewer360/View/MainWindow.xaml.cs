@@ -144,6 +144,14 @@ namespace Viewer360.View
 
         private void Cerchio_BottonUp(object sender, MouseButtonEventArgs e)
         {
+            //++++++++++++++++++++++
+            // Console.WriteLine("Cerchio_BottonUp");
+            //++++++++++++++++++++++
+            if(CUIManager.GetMode()==ViewerMode.Edit)
+                m_Window.ViewFinderPolygon.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 255, 0, 0));
+            else
+                m_Window.ViewFinderPolygon.Fill = null;
+
             Ellipse cerchioCliccato = sender as Ellipse;
 
             // Esegui qui le azioni desiderate in risposta al clic sul cerchio
@@ -159,6 +167,11 @@ namespace Viewer360.View
         {
             if (!Keyboard.IsKeyDown(Key.LeftCtrl))
                     return;
+            //++++++++++++++++++++++
+            Console.WriteLine("Cerchio_Click");
+            //++++++++++++++++++++++
+            m_Window.ViewFinderPolygon.Fill = null;
+
 
             // Ottieni il cerchio su cui è stato effettuato il clic
             Ellipse cerchioCliccato = sender as Ellipse;
@@ -168,8 +181,6 @@ namespace Viewer360.View
             {
                 cerchioCliccato.Fill = Brushes.Red;
                 iDraggingPoint = FindEllipseIndex(cerchioCliccato.Name);
-
-
             }
         }
 
