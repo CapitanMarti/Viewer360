@@ -53,16 +53,15 @@
         <!-- StackPanel per i pulsanti al di fuori di myGrid -->
         <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="0,30,0,0" Width="80" Background="LightGray" Grid.Column="2">
             <Separator Margin="0" Background="Gray"/>
-            <RadioButton Name ="CreateMode" Content="Photo" Margin="5" Click="ChangeMode_Click"/>
-            <Button Name="NextImageButton" Content="Next Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
-            <Button Name="PrevImageButton" Content="Prev. Image" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
-            <Separator Margin="0,3" Background="Gray"/>
-            <RadioButton Name ="EditMode" Content="Label" Margin="5" Click="ChangeMode_Click"/>
+            <RadioButton Name ="CreateMode" Content="Browser" Margin="5" Click="ChangeMode_Click"/>
+            <RadioButton Name ="EditMode" Content="Editor" Margin="5" Click="ChangeMode_Click"/>
+            <Separator Margin="0,3"  Name ="Sep1" Background="Gray"/>
+            <Button Name="NextImageButton" Content="Next photo" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
+            <Button Name="PrevImageButton" Content="Prev. photo" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
             <Button Name="NextLabelButton" Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <Button Name="PrevLabelButton" Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
-            <Button Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
-            <Separator Margin="0,3" Background="Gray"/>
             <Button Name="SaveButton" Content="Save change" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="SaveLabel_Click"/>
+            <Button Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
             <!-- Aggiungi altri pulsanti se necessario -->
         </StackPanel>
 

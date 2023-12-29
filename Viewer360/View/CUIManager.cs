@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media;
 using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Viewer360.View
 {
@@ -19,6 +20,7 @@ namespace Viewer360.View
     {
         static public View.MainWindow m_Window;
         static ViewerMode m_eMode= ViewerMode.Undefined;
+        static public bool m_bDebugMode = false;
 
         public enum ViewerMode
         {
@@ -27,6 +29,16 @@ namespace Viewer360.View
             Edit
         }
 
+        public static void Init()
+        {
+            if (m_bDebugMode == false)
+            {
+                m_Window.CreateMode.Visibility = Visibility.Collapsed;
+                m_Window.EditMode.Visibility = Visibility.Collapsed;
+                m_Window.Sep1.Visibility = Visibility.Collapsed;
+            }
+
+        }
         static public ViewerMode GetMode() { return m_eMode; }
 
         static public void InitUI(CSingleFileLabel oLabel)
@@ -46,6 +58,7 @@ namespace Viewer360.View
                 (m_Window.DataContext as ViewModel.MainViewModel).RestoreFovAndPolygons(oLabel);
             else
                 (m_Window.DataContext as ViewModel.MainViewModel).RestorePolygons(oLabel);
+
         }
 
         static public void UpdateUI()
@@ -53,6 +66,15 @@ namespace Viewer360.View
 
             if (m_eMode == ViewerMode.Create)
             {
+                //++++++++++++++++++++++++++++++
+                m_Window.NextImageButton.Visibility = Visibility.Visible;
+                m_Window.PrevImageButton.Visibility = Visibility.Visible;
+                m_Window.NextLabelButton.Visibility = Visibility.Collapsed;
+                m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
+                m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
+                m_Window.DeleteLabelButton.Visibility = Visibility.Collapsed;
+                //++++++++++++++++++++++++++++++
+/*
                 m_Window.NextImageButton.IsEnabled = true;
                 m_Window.NextImageButton.BorderBrush = Brushes.Black;
                 m_Window.NextImageButton.Foreground= Brushes.Black;
@@ -72,7 +94,7 @@ namespace Viewer360.View
                 m_Window.DeleteLabelButton.IsEnabled= false;
                 m_Window.DeleteLabelButton.BorderBrush = Brushes.LightGray;
                 m_Window.DeleteLabelButton.Foreground = Brushes.LightGray;
-
+*/
                 m_Window.CategoryCombo.IsEnabled = true;
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
                 m_Window.CategoryCombo.Foreground = Brushes.Black;
@@ -90,6 +112,15 @@ namespace Viewer360.View
             }
             else  // Edit mode
             {
+                //++++++++++++++++++++++++++++++
+                m_Window.NextImageButton.Visibility = Visibility.Collapsed;
+                m_Window.PrevImageButton.Visibility = Visibility.Collapsed;
+                m_Window.NextLabelButton.Visibility = Visibility.Visible;
+                m_Window.PrevLabelButton.Visibility = Visibility.Visible;
+                m_Window.PrevLabelButton.Visibility = Visibility.Visible;
+                m_Window.DeleteLabelButton.Visibility = Visibility.Visible;
+                //++++++++++++++++++++++++++++++
+                /*
                 m_Window.NextImageButton.IsEnabled = false;
                 m_Window.NextImageButton.BorderBrush = Brushes.LightGray;
                 m_Window.NextImageButton.Foreground = Brushes.LightGray;
@@ -111,7 +142,7 @@ namespace Viewer360.View
                 m_Window.PrevLabelButton.IsEnabled = true;
                 m_Window.PrevLabelButton.BorderBrush = Brushes.Black;
                 m_Window.PrevLabelButton.Foreground = Brushes.Black;
-
+                */
                 m_Window.CategoryCombo.IsEnabled = true;
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
                 m_Window.CategoryCombo.Foreground = Brushes.Black;

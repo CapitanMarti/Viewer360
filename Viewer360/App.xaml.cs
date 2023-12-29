@@ -37,7 +37,10 @@ namespace Viewer360
             m_Window.viewer360_View.m_Window = m_Window;
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
             CUIManager.m_Window = m_Window;
-            //            m_Window.Show();
+            CUIManager.m_bDebugMode = false;
+
+
+            CUIManager.Init();
 
 
             // Inizializzazione CameraManager (lettura dati posizioni/orientamento camere da Mapfile creato dal server)
@@ -71,14 +74,18 @@ namespace Viewer360
 
             // Inizializzo la messaggistica col server
             m_oMsgManager = new CMessageManager(CMessageManager.PipeType.Client);
-            m_oMsgManager.CreateConnection();
+
+            if (CUIManager.m_bDebugMode == false)
+            {
+                m_oMsgManager.CreateConnection();
 
 
-            // Attendo che la il Server si connetta
-            m_oMsgManager.WaitForConnection();
+                // Attendo che la il Server si connetta
+                m_oMsgManager.WaitForConnection();
 
-            // Attivo thread di ricezione; si dovrebbe chiudere da solo all'uscita della finestra.
-            CMessageManager.StartListener(m_oMsgManager);
+                // Attivo thread di ricezione; si dovrebbe chiudere da solo all'uscita della finestra.
+                CMessageManager.StartListener(m_oMsgManager);
+            }
 
             // Inizializzo UI
             m_Window.InitUI();
