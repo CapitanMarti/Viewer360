@@ -492,6 +492,8 @@ namespace Viewer360.View
             // Aggiornare la label corrente
             (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
 
+            SharingHelper.m_bLabelAdded = true;
+
             // Faccio partire il timer per l'animazione del mirino
             ClickTimer.Start();
         }

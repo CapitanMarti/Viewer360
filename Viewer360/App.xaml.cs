@@ -172,6 +172,7 @@ namespace Viewer360
                 m_oMsgManager.SendCameraSelected1(index, dX, dY);
 
                 SharingHelper.m_bPhotoHasChanged = false;
+                SharingHelper.m_bCameraAtHasChanged = false; // Per evitare doppio messaggio
                 return;
             }
 
@@ -197,6 +198,14 @@ namespace Viewer360
                 SharingHelper.m_bElementDeleted = false;
                 return;
             }
+
+            if (SharingHelper.m_bLabelAdded)
+            {
+                m_oMsgManager.SendLabelAddedWarning();
+                SharingHelper.m_bLabelAdded = false;
+                return;
+            }
+            
 
             if (SharingHelper.m_bParentWallRequested)
             {

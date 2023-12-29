@@ -100,6 +100,7 @@ namespace Viewer360.ViewModel
         // Private methods
         #region private_methods
 
+        /*
         // Open image with dialog
         private async void Open()
         {
@@ -110,7 +111,7 @@ namespace Viewer360.ViewModel
                 await Open(ofd.FileName,"","","");
             }
         }
-
+        */
         public void NextImage_Click(object sender, RoutedEventArgs e)
         {
             m_iCurrentPhotoIndex++;
@@ -249,6 +250,15 @@ namespace Viewer360.ViewModel
             RaisePropertyChanged("Vfov");
         }
 
+        public void UnloadImage()
+        {
+            m_Window.Title = "Scan2Bim 360° Viewer    -    ";
+
+            m_iCurrentPhotoIndex = -1;
+
+        }
+
+
         public void LoadImage(string sImageFile)
         {
             m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
@@ -293,7 +303,7 @@ namespace Viewer360.ViewModel
             RaisePropertyChanged("Image");
 
         }
-
+        /*
         // Open image by file name
         public async Task Open(string sObjCatalogFile, string sImageFile, string sJsonPath, string sSegmentPath)
         {
@@ -349,6 +359,7 @@ namespace Viewer360.ViewModel
             SharingHelper.m_bPhotoHasChanged=true;
             RaisePropertyChanged("Image");
         }
+        */
 
         public void LoadNewImage(string sImageFile)
         {
