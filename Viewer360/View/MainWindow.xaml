@@ -61,6 +61,7 @@
             <Button Name="NextLabelButton" Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
             <Button Name="PrevLabelButton" Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
             <Button Name="SaveButton" Content="Save change" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="SaveLabel_Click"/>
+            <Button Name="NewLabelButton" Content="New Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NewLabel_Click"/>
             <Button Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
             <!-- Aggiungi altri pulsanti se necessario -->
         </StackPanel>

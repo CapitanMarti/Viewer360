@@ -66,35 +66,15 @@ namespace Viewer360.View
 
             if (m_eMode == ViewerMode.Create)
             {
-                //++++++++++++++++++++++++++++++
                 m_Window.NextImageButton.Visibility = Visibility.Visible;
                 m_Window.PrevImageButton.Visibility = Visibility.Visible;
                 m_Window.NextLabelButton.Visibility = Visibility.Collapsed;
                 m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
                 m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
                 m_Window.DeleteLabelButton.Visibility = Visibility.Collapsed;
-                //++++++++++++++++++++++++++++++
-/*
-                m_Window.NextImageButton.IsEnabled = true;
-                m_Window.NextImageButton.BorderBrush = Brushes.Black;
-                m_Window.NextImageButton.Foreground= Brushes.Black;
+                m_Window.NewLabelButton.Visibility = Visibility.Collapsed;
 
-                m_Window.PrevImageButton.IsEnabled = true;
-                m_Window.PrevImageButton.BorderBrush = Brushes.Black;
-                m_Window.PrevImageButton.Foreground = Brushes.Black;
 
-                m_Window.NextLabelButton.IsEnabled = false;
-                m_Window.NextLabelButton.BorderBrush = Brushes.LightGray;
-                m_Window.NextLabelButton.Foreground = Brushes.LightGray;
-
-                m_Window.PrevLabelButton.IsEnabled = false;
-                m_Window.PrevLabelButton.BorderBrush = Brushes.LightGray;
-                m_Window.PrevLabelButton.Foreground = Brushes.LightGray;
-
-                m_Window.DeleteLabelButton.IsEnabled= false;
-                m_Window.DeleteLabelButton.BorderBrush = Brushes.LightGray;
-                m_Window.DeleteLabelButton.Foreground = Brushes.LightGray;
-*/
                 m_Window.CategoryCombo.IsEnabled = true;
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
                 m_Window.CategoryCombo.Foreground = Brushes.Black;
@@ -112,37 +92,15 @@ namespace Viewer360.View
             }
             else  // Edit mode
             {
-                //++++++++++++++++++++++++++++++
                 m_Window.NextImageButton.Visibility = Visibility.Collapsed;
                 m_Window.PrevImageButton.Visibility = Visibility.Collapsed;
                 m_Window.NextLabelButton.Visibility = Visibility.Visible;
                 m_Window.PrevLabelButton.Visibility = Visibility.Visible;
                 m_Window.PrevLabelButton.Visibility = Visibility.Visible;
                 m_Window.DeleteLabelButton.Visibility = Visibility.Visible;
-                //++++++++++++++++++++++++++++++
-                /*
-                m_Window.NextImageButton.IsEnabled = false;
-                m_Window.NextImageButton.BorderBrush = Brushes.LightGray;
-                m_Window.NextImageButton.Foreground = Brushes.LightGray;
+                m_Window.NewLabelButton.Visibility = Visibility.Visible;
 
 
-                m_Window.PrevImageButton.IsEnabled = false;
-                m_Window.PrevImageButton.BorderBrush = Brushes.LightGray;
-                m_Window.PrevImageButton.Foreground = Brushes.LightGray;
-
-
-                m_Window.NextLabelButton.IsEnabled = true;
-                m_Window.NextLabelButton.BorderBrush = Brushes.Black;
-                m_Window.NextLabelButton.Foreground = Brushes.Black;
-
-                m_Window.DeleteLabelButton.IsEnabled = true;
-                m_Window.DeleteLabelButton.BorderBrush = Brushes.Black;
-                m_Window.DeleteLabelButton.Foreground = Brushes.Black;
-
-                m_Window.PrevLabelButton.IsEnabled = true;
-                m_Window.PrevLabelButton.BorderBrush = Brushes.Black;
-                m_Window.PrevLabelButton.Foreground = Brushes.Black;
-                */
                 m_Window.CategoryCombo.IsEnabled = true;
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
                 m_Window.CategoryCombo.Foreground = Brushes.Black;

@@ -421,6 +421,11 @@ namespace Viewer360.View
             (DataContext as ViewModel.MainViewModel).NextLabel_Click(sender, e);
         }
 
+        private void NewLabel_Click(object sender, RoutedEventArgs e)
+        {
+            m_Window.CreateMode.IsChecked = true;
+            CUIManager.ChangeMode();
+        }
         private void PrevLabel_Click(object sender, RoutedEventArgs e)
         {
             (DataContext as ViewModel.MainViewModel).PrevLabel_Click(sender, e);
