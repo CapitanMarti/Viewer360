@@ -45,6 +45,7 @@ namespace Viewer360
 
             // Inizializzazione CameraManager (lettura dati posizioni/orientamento camere da Mapfile creato dal server)
             CViewerCameraManager.Init();
+            CProjectPlane.Init(m_Window.viewer360_View);
 
             // Acquisizione parametri command line e apertura file
             string sCatalogNameFull = "";
@@ -111,10 +112,23 @@ namespace Viewer360
 
         private void OnApplicationIdle(object sender, EventArgs e)
         {
-
+            //++++++++++++++++++++
+            //CProjectPlane.GetProjectionMatrix();
+            CProjectPlane.Test3();
+            //++++++++++++++++++++++++++++++++
             if (m_oMsgManager != null && m_oMsgManager.PendingMsg())
             {
                 CMessageManager.CMessage sMsg = m_oMsgManager.GetMsg();
+
+                if (sMsg.m_Type == MsgType.CastPlaneWall)  // Messaggio pending è di tipo CastPlaneWall
+                {
+                    double dPosX=0;
+                    double dPosY = 0;
+                    double dNX = 0;
+                    double dNY = 0;
+                    m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY);
+
+                }
 
                 if (m_Window.IsActive == false)  // Il focus è al Server--> processo i messaggi  // ATTENZIONE AI MESSAGGI SUI MURI PER W&D
                 {
@@ -214,10 +228,10 @@ namespace Viewer360
             }
             
 
-            if (SharingHelper.m_bParentWallRequested)
+            if (SharingHelper.m_bCastPlaneRequestedWall)
             {
                 m_oMsgManager.SendParentWallRequested();
-                SharingHelper.m_bParentWallRequested = false;
+                SharingHelper.m_bCastPlaneRequestedWall = false;
                 return;
             }
         }

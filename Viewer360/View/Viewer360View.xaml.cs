@@ -60,6 +60,10 @@ namespace Viewer360.View
         public System.Windows.Size m_ViewSize;
         public View.MainWindow m_Window;
 
+        public Matrix3D GetWorldMatrix()
+        {
+            return m_mRotXYZ;
+        }
         public ViewerProjection GetProjection() { return m_Projection; }
         public void SetProjection(ViewerProjection eProg) {m_Projection= eProg; }
 
@@ -553,6 +557,18 @@ namespace Viewer360.View
             m_mRotXYZ = m_mRotX * m_mRotY * m_mRotZ ;
         }
 
+        public Vector3D PointGlob2Loc(Vector3D vPoint)
+        {
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            Vector3D vTmp = new Vector3D(vPoint.X - vCameraPos.X, vPoint.Y - vCameraPos.Y, vPoint.Z - vCameraPos.Z);
+
+            return m_mRotXYZ.Transform(vTmp);
+        }
+        public Vector3D VectorGlob2Loc(Vector3D vVec)
+        {
+            return m_mRotXYZ.Transform(vVec);
+        }
+
         public void SetNewCameraAt(double dGlobalX, double dGlobalY, double dGlobalZ)  // imposta la nuova camera at in base a quella in coordinate mondo passata in argomento
         {
             if (m_Projection == ViewerProjection.Planar)
@@ -635,6 +651,40 @@ namespace Viewer360.View
 
             return mCameraRot;
         }
+
+        public Matrix3D GetViewMatrix()
+        {
+            // Calcolo direzioni At,Up di camera locale, tenendo conto che in questo codice risulta sempre Up=[0,0,1]
+            Vector3D vAt = MyCam.LookDirection;
+            vAt.Z = -vAt.Z;  // ATTENZIONE: Z va invertita per compatibilità sistema riferimento adottato da Scan2Bim
+            Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
+            vTmp.Normalize();
+            Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+
+            // Recupero posizione e rotazioni globali
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            Vector3D vCameraRot = SharingHelper.GetCameraRot();
+
+            // Matrice rotazione locale camera: [ Up | Up X At | At] 
+            Matrix3D mCameraRot = new Matrix3D();
+            mCameraRot.M11 = vRealUp.X;
+            mCameraRot.M12 = vTmp.X;
+            mCameraRot.M13 = vAt.X;
+            mCameraRot.M14 = 0;
+            mCameraRot.M21 = vRealUp.Y;
+            mCameraRot.M22 = vTmp.Y;
+            mCameraRot.M23 = vAt.Y;
+            mCameraRot.M24 = 0;
+            mCameraRot.M31 = vRealUp.Z;
+            mCameraRot.M32 = vTmp.Z;
+            mCameraRot.M33 = vAt.Z;
+            mCameraRot.M34 = 0;
+            mCameraRot.M44 = 1;
+
+            return mCameraRot;
+        }
+
+
 
         public void SaveCameraInfo(string sCameraInfoFileName)
         {

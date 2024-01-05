@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30204.135
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Viewer360", "Viewer360\Viewer360.csproj", "{4F5D2A65-5C54-41FA-98AC-081544E850D3}"
 EndProject

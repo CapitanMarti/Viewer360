@@ -41,10 +41,15 @@
     <ApplicationIcon>Scan2Bim.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HelixToolkit.Wpf, Version=2.24.0.0, Culture=neutral, PublicKeyToken=52aa3500039caf0d, processorArchitecture=MSIL">
+      <HintPath>..\packages\HelixToolkit.Wpf.2.24.0\lib\net462\HelixToolkit.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="PointCloudUtility, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\PointCloudUtility\bin\Debug\PointCloudUtility.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework.Classic" />
+    <Reference Include="PresentationFramework.Royale" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -52,6 +57,7 @@
       <HintPath>..\packages\System.Drawing.Common.6.0.0\lib\net461\System.Drawing.Common.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -73,6 +79,7 @@
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="Converters\FullscreenToVisibilityConverter.cs" />
     <Compile Include="Converters\FullscreenToWindowStyleConverter.cs" />
+    <Compile Include="CProjectPlane.cs" />
     <Compile Include="Model\GeometryHelper.cs" />
     <Compile Include="Model\RecentImageManager.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />

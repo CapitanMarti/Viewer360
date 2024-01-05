@@ -27,7 +27,7 @@ namespace Viewer360.View
         public static bool m_bLabelHasChanged = false;
         public static bool m_bElementDeleted = false;
         public static bool m_bLabelAdded = false;
-        public static bool m_bParentWallRequested = false;
+        public static bool m_bCastPlaneRequestedWall = false;
         public static double m_dConvFactor;
         public static double m_dPlanarZoomFactor = 1;
 
