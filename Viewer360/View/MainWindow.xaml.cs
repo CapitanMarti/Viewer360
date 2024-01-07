@@ -35,31 +35,31 @@ namespace Viewer360.View
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
-
+        /*
         private bool isDragging;
         private int  iDraggingPoint;
         private Point offset;
         private Point vViewfinderCentre;
         private Point vVewfinderBBox;
         private PointCollection aPointTmp;
-        private List<int> aItemDefaultEntry;
         private Point []  m_aOriginalPolygon;
-
         List<Ellipse> m_EllipseList;
         int m_iEllipseIncrementalNum;
         Canvas myCanvas;
+        private List<int> aItemDefaultEntry;
+        */
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = new MainViewModel();
-            iDraggingPoint = -1;
+            //iDraggingPoint = -1;
 
             CUIManager.m_Window = this;
             CUIManager.m_bDebugMode = false;
             CUIManager.Init(ViewFinderPolygon, myGrid);
 
-            aItemDefaultEntry = new List<int>();
+//            aItemDefaultEntry = new List<int>();
 
             // If the window style is set to none when the window is maximized, the taskbar will not
             // be covered. Therefore, the window is restored to normal and maximized again.
@@ -77,50 +77,9 @@ namespace Viewer360.View
 
         }
 
-        public void InitUI()
-        {
-            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
-
-            int iDefEntry;
-            for (int iCat = 1; iCat < oLList.Count; iCat++)
-            {
-                CategoryCombo.Items.Add(oLList[iCat][0].sCategory);
-
-                iDefEntry = 0;
-                for (int iItem = 0; iItem< oLList[iCat].Count; iItem++)
-                {
-                    if (oLList[iCat][iItem].bUIDefEntry)
-                    {
-                        iDefEntry = iItem;
-                        break;
-                    }
-                }
-                aItemDefaultEntry.Add(iDefEntry);
-            }
-
-            CategoryCombo.SelectedIndex = 2;  // Wall
-
-        }
-
         private void CategorySelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
-
-            ItemCombo.Items.Clear();
-            int iSelectedCatIndex = CategoryCombo.SelectedIndex+1; // Ho escluso la categoria 0 
-
-            for (int iItem = 0; iItem < oLList[iSelectedCatIndex].Count; iItem++)
-                ItemCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_CategoryInfo);
-
-            ItemCombo.SelectedIndex = aItemDefaultEntry[CategoryCombo.SelectedIndex];
-            ElementName.Text = CategoryCombo.SelectedItem.ToString();
-
-            int iCat = oLList[iSelectedCatIndex][0].nCategory;
-            CUIManager.SetCurrentCategory(iCat);
-            CUIManager.UpdateUI();
-
-            SharingHelper.m_iSendCategoryToServer = iCat;
-
+            CUIManager.CategorySelectionChanged();
         }
         private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
@@ -177,7 +136,6 @@ namespace Viewer360.View
             return oLabel;
 
         }
-
         public CSingleFileLabel BuildSavingLabelCandidate(string sNewJsonFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection)
         {
             // Creo file manager per file attuale
@@ -243,7 +201,6 @@ namespace Viewer360.View
             return oLabel;
 
         }
-
         public void SaveJason(CSingleFileLabel oLabel, string sNewJsonFileName)
         {
 
@@ -254,7 +211,6 @@ namespace Viewer360.View
             // Aggiorno CLabelManager
             CLabelManager.AddLabel(oLabel);
         }
-
         private void NextImage_Click(object sender, RoutedEventArgs e)
         {
             (DataContext as ViewModel.MainViewModel).NextImage_Click(sender, e);
@@ -341,51 +297,7 @@ namespace Viewer360.View
 
         private void Project2Plane_Click(object sender, RoutedEventArgs e)
         {
-            Ray3D oRay;
-
-            Point3D[] aPoint = new Point3D[4];
-            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
-            {
-                oRay = Viewport3DHelper.GetRay(viewer360_View.vp, ViewFinderPolygon.Points[i]);
-                aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
-                aPoint[i].Z = -aPoint[i].Z;  // Per ragioni misteriose l'oggetto oRay è ribaltato rispetto a Z e quindi anche il punto di intersezione col piano (verticale!)
-                aPoint[i] = viewer360_View.PointLoc2Glob(aPoint[i]);
-            }
-
-            double dZMax = (aPoint[0].Z + aPoint[1].Z) / 2;
-            aPoint[0].Z = dZMax;
-            aPoint[1].Z = dZMax;
-
-            double dZMin = (aPoint[2].Z + aPoint[3].Z) / 2;
-            aPoint[2].Z = dZMin;
-            aPoint[3].Z = dZMin;
-
-            double dXLeft = (aPoint[0].X + aPoint[3].X) / 2;
-            aPoint[0].X = dXLeft;
-            aPoint[3].X = dXLeft;
-            double dYLeft = (aPoint[0].Y + aPoint[3].Y) / 2;
-            aPoint[0].Y = dYLeft;
-            aPoint[3].Y = dYLeft;
-
-
-            double dXRight = (aPoint[1].X + aPoint[2].X) / 2;
-            aPoint[1].X = dXRight;
-            aPoint[2].X = dXRight;
-            double dYRight = (aPoint[1].Y + aPoint[2].Y) / 2;
-            aPoint[1].Y = dYRight;
-            aPoint[2].Y = dYRight;
-
-            for (int i = 0; i < 4; i++)
-                aPoint[i] = viewer360_View.PointGlob2Loc(aPoint[i]);
-
-            // Memorizzo 
-            CProjectPlane.m_aFace3DPoint=aPoint;
-
-            // Aggiorno il mirino
-            UpdateViewPolygonFromFace3D();
-
-            //CUIManager.SetViewerMode(ViewerMode.Edit);
-//            CUIManager.ChangeMode();
+            CUIManager.Project2Plane_Click();
         }
     }
 }

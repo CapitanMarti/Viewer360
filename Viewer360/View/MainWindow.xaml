@@ -117,7 +117,7 @@
                     <ColumnDefinition Width="83*"/>
                 </Grid.ColumnDefinitions>
                 <!--<Image Source="{Binding Image}" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
-                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="2" Margin="0,0,0,0" Grid.RowSpan="3" Loaded="viewer360_View_Loaded"/>
+                <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="2" Margin="0,0,0,0" Grid.RowSpan="3"/>
 
 
                 <Polygon Points="350,210 450,210 450,310 350,310" x:Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="3" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.468"/>

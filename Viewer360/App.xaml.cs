@@ -84,7 +84,7 @@ namespace Viewer360
             }
 
             // Inizializzo UI
-            m_Window.InitUI();
+            CUIManager.StartUpUI();
             CUIManager.SetViewerMode(ViewerMode.Create);
             m_Window.Show();
 

@@ -49,6 +49,7 @@ namespace Viewer360.View
         static private bool isDragging;
         static private int iDraggingPoint;
         static private Point offset;
+        static private List<int> aItemDefaultEntry;
 
 
         static public void SetCurrentCategory(int iCategory)
@@ -403,6 +404,7 @@ namespace Viewer360.View
                 m_Window.Sep1.Visibility = Visibility.Collapsed;
             }
 
+            aItemDefaultEntry = new List<int>();
         }
         static public ViewerMode GetMode() { return m_eMode; }
 
@@ -743,7 +745,7 @@ namespace Viewer360.View
             UpdateUI();
         }
 
-        static private void Project2Plane_Click(object sender, RoutedEventArgs e)
+        static public void Project2Plane_Click()
         {
             Ray3D oRay;
 
@@ -792,6 +794,52 @@ namespace Viewer360.View
             //            CUIManager.ChangeMode();
         }
 
+
+        static public void CategorySelectionChanged()
+        {
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+
+            m_Window.ItemCombo.Items.Clear();
+            int iSelectedCatIndex = m_Window.CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 
+
+            for (int iItem = 0; iItem < oLList[iSelectedCatIndex].Count; iItem++)
+                m_Window.ItemCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_CategoryInfo);
+
+            m_Window.ItemCombo.SelectedIndex = aItemDefaultEntry[m_Window.CategoryCombo.SelectedIndex];
+            m_Window.ElementName.Text = m_Window.CategoryCombo.SelectedItem.ToString();
+
+            int iCat = oLList[iSelectedCatIndex][0].nCategory;
+            CUIManager.SetCurrentCategory(iCat);
+            CUIManager.UpdateUI();
+
+            SharingHelper.m_iSendCategoryToServer = iCat;
+
+        }
+
+        static public void StartUpUI()
+        {
+            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+
+            int iDefEntry;
+            for (int iCat = 1; iCat < oLList.Count; iCat++)
+            {
+                m_Window.CategoryCombo.Items.Add(oLList[iCat][0].sCategory);
+
+                iDefEntry = 0;
+                for (int iItem = 0; iItem < oLList[iCat].Count; iItem++)
+                {
+                    if (oLList[iCat][iItem].bUIDefEntry)
+                    {
+                        iDefEntry = iItem;
+                        break;
+                    }
+                }
+                aItemDefaultEntry.Add(iDefEntry);
+            }
+
+            m_Window.CategoryCombo.SelectedIndex = 2;  // Wall
+
+        }
 
     }
 }
