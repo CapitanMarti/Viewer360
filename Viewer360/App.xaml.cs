@@ -36,11 +36,6 @@ namespace Viewer360
             m_Window = new View.MainWindow();
             m_Window.viewer360_View.m_Window = m_Window;
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
-            CUIManager.m_Window = m_Window;
-            CUIManager.m_bDebugMode = false;
-
-
-            CUIManager.Init();
 
 
             // Inizializzazione CameraManager (lettura dati posizioni/orientamento camere da Mapfile creato dal server)
@@ -112,10 +107,7 @@ namespace Viewer360
 
         private void OnApplicationIdle(object sender, EventArgs e)
         {
-            //++++++++++++++++++++
-            //CProjectPlane.GetProjectionMatrix();
-            CProjectPlane.Test3();
-            //++++++++++++++++++++++++++++++++
+
             if (m_oMsgManager != null && m_oMsgManager.PendingMsg())
             {
                 CMessageManager.CMessage sMsg = m_oMsgManager.GetMsg();
@@ -128,6 +120,12 @@ namespace Viewer360
                     double dNY = 0;
                     m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY);
 
+                    if (dNX <= 1)  // Piano valido
+                        CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY);
+                    else  // Nessun piano identificato
+                        CProjectPlane.RemovePlane();
+
+                    CUIManager.UpdateUI();
                 }
 
                 if (m_Window.IsActive == false)  // Il focus è al Server--> processo i messaggi  // ATTENZIONE AI MESSAGGI SUI MURI PER W&D
@@ -228,10 +226,10 @@ namespace Viewer360
             }
             
 
-            if (SharingHelper.m_bCastPlaneRequestedWall)
+            if (SharingHelper.m_iSendCategoryToServer>=0)
             {
-                m_oMsgManager.SendParentWallRequested();
-                SharingHelper.m_bCastPlaneRequestedWall = false;
+                m_oMsgManager.SendCategoryToServer(SharingHelper.m_iSendCategoryToServer);
+                SharingHelper.m_iSendCategoryToServer = -1;
                 return;
             }
         }

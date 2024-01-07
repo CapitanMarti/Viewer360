@@ -17,57 +17,102 @@ namespace Viewer360
 {
     static public class CProjectPlane
     {
-        static public bool m_bIdDefined = false;
+        static public bool m_bPlaneDefined = false;
         static public Vector3D m_vCentreGlobal;
         static public Vector3D m_vNormalGlobal;
         static public Vector3D m_vCentreLocal;
-        static public Vector3D m_vNormalLocalal;
+        static public Vector3D m_vNormalLocal;
         static public Viewer360View viewer360View = null;
         static public Viewport3D vp;
-
+        static public Point3D[] m_aFace3DPoint;
         static public void Init(Viewer360View viewer)
         {
             m_vCentreGlobal = new Vector3D();
             m_vNormalGlobal = new Vector3D();
             m_vCentreLocal = new Vector3D();
-            m_vNormalLocalal = new Vector3D();
-            m_bIdDefined = false;
+            m_vNormalLocal = new Vector3D();
+            m_bPlaneDefined = false;
             viewer360View = viewer;
+            m_aFace3DPoint = null;
             //            vp = viewport;
         }
 
         static public void SetPlane(double dGlobalPosX, double dGlobalPosY, double dGlobalNX, double dGlobalNY)
         {
-            m_bIdDefined = true;
+            m_bPlaneDefined = true;
             Vector3D vCameraPos = SharingHelper.GetCameraPos();
-            m_vCentreGlobal = new Vector3D(dGlobalPosX, dGlobalPosX, vCameraPos.Z);
+            m_vCentreGlobal = new Vector3D(dGlobalPosX, dGlobalPosY, vCameraPos.Z);
             m_vNormalGlobal = new Vector3D(dGlobalNX, dGlobalNY, 0);
+
+            //++++++++++++++++++++++++++++++++
+            // m_vNormalGlobal = new Vector3D(0, 1, 0); // AM
+            //++++++++++++++++++++++++++++++++
 
             // Calcolo piano in riferimento locale
             m_vCentreLocal = viewer360View.PointGlob2Loc(m_vCentreGlobal);
-            m_vNormalGlobal = viewer360View.VectorGlob2Loc(m_vNormalGlobal);
+            m_vNormalLocal = viewer360View.VectorGlob2Loc(m_vNormalGlobal);
         }
 
         static public void RemovePlane()
         {
-            m_bIdDefined = false;
+            m_bPlaneDefined = false;
+        }
+
+        static public Point3D? GetIntersection(Ray3D oRay)
+        {
+            oRay.Direction/=oRay.Direction.Length;
+//+++++++++++++++++++++++++
+//            oRay.Direction /= -oRay.Direction.Length;
+//            oRay.Direction = new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
+//+++++++++++++++++++++++++
+            double dDen = Vector3D.DotProduct(oRay.Direction, m_vNormalLocal);
+            if (Math.Abs(dDen) > 1e-3)
+            {
+                Vector3D vDelta = new Vector3D(m_vCentreLocal.X - oRay.Origin.X, m_vCentreLocal.Y - oRay.Origin.Y, m_vCentreLocal.Z - oRay.Origin.Z);
+                double s = Vector3D.DotProduct(vDelta, m_vNormalLocal) / dDen;
+                Point3D vResult = new Point3D(oRay.Origin.X+s* oRay.Direction.X, oRay.Origin.Y + s * oRay.Direction.Y, oRay.Origin.Z + s * oRay.Direction.Z);
+
+                return vResult;
+
+            }
+            else
+                return null;
+
         }
 
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-        static public void Test3()
+        public static bool Point2DtoPoint3D(this Viewport3D viewport, Point pointIn, out Point3D pointNear, out Point3D pointFar)
         {
+            pointNear = new Point3D();
+            pointFar = new Point3D();
 
-            // Creare un punto nello spazio mondo
-            Point3D pointWorld = new Point3D(viewer360View.MyCam.Position.X, viewer360View.MyCam.Position.Y - 10, viewer360View.MyCam.Position.Z);
+            var pointIn3D = new Point3D(pointIn.X, pointIn.Y, 0);
+            var matrixViewport = Viewport3DHelper.GetViewportTransform(viewport);
+            var matrixCamera = Viewport3DHelper.GetCameraTransform(viewport);
 
+            if (!matrixViewport.HasInverse)
+            {
+                return false;
+            }
 
-           // Convertire le coordinate del punto da mondo a schermo utilizzando Viewport3DHelper
-            Point pointScreen = Viewport3DHelper.Point3DtoPoint2D(viewer360View.vp, pointWorld);
-            double dDist = CameraDist(pointWorld, viewer360View.MyCam);
+            if (!matrixCamera.HasInverse)
+            {
+                return false;
+            }
 
-            
+            matrixViewport.Invert();
+            matrixCamera.Invert();
+
+            var pointNormalized = matrixViewport.Transform(pointIn3D);
+            pointNormalized.Z = 0.01;
+            pointNear = matrixCamera.Transform(pointNormalized);
+            pointNormalized.Z = 0.99;
+            pointFar = matrixCamera.Transform(pointNormalized);
+
+            return true;
         }
+
 
         static public double CameraDist(Point3D pointWorld, PerspectiveCamera myCam)
         {

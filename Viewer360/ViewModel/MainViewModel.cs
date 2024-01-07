@@ -240,6 +240,10 @@ namespace Viewer360.ViewModel
         {
             m_Window.viewer360_View.MyCam.FieldOfView = oLabel.m_hFov;
             m_Window.viewer360_View.MyCam.LookDirection = new Vector3D(oLabel.m_vLocalAtX, oLabel.m_vLocalAtY, oLabel.m_vLocalAtZ);
+            //++++++++++++++++++++++++++++++
+            //double sTmp = Math.Sqrt(2) / 2;
+            //m_Window.viewer360_View.MyCam.LookDirection = new Vector3D(0, -sTmp, sTmp);
+            //+++++++++++++++++++++++++++++++
 
             m_Window.viewer360_View.UpdateThetaAndPhi(m_Window.viewer360_View.MyCam.LookDirection);
 

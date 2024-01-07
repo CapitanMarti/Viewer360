@@ -27,7 +27,7 @@ namespace Viewer360.View
         public static bool m_bLabelHasChanged = false;
         public static bool m_bElementDeleted = false;
         public static bool m_bLabelAdded = false;
-        public static bool m_bCastPlaneRequestedWall = false;
+        public static int m_iSendCategoryToServer = -1;
         public static double m_dConvFactor;
         public static double m_dPlanarZoomFactor = 1;
 
@@ -58,12 +58,22 @@ namespace Viewer360.View
 
         public static List<List<CCatalogManager.CObjInfo>> GetAllLabelGroupedByCategory() { return m_oCatalogGroupedElem; }
 
+        public static int SearchCategoryByID(int iIndex)
+        {
+            return m_oCM.SearchCategoryByID(iIndex);
+        }
+
         public static void SetCameraPos(double dX, double dY, double dZ)
         {
             m_vCameraPos = new Vector3D(dX, dY, dZ);
         }
         public static void SetCameraRot(double dX, double dY, double dZ)
         {
+            //++++++++++++++++++++++++  // AM
+            //dX = 0;
+            //dY = 0;
+            //dZ = 90;
+            //++++++++++++++++++++++++
             m_vCameraRot = new Vector3D(dX, dY, dZ);
         }
 

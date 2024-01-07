@@ -53,6 +53,7 @@ namespace Viewer360.View
         private Matrix3D m_mRotY;
         private Matrix3D m_mRotZ;
         private Matrix3D m_mRotXYZ;
+        private Matrix3D m_mInvRotXYZ;
         public PerspectiveCamera MyCam;
         public OrthographicCamera MyOrthoCam;
 
@@ -148,6 +149,7 @@ namespace Viewer360.View
             m_mRotY = new Matrix3D();
             m_mRotZ = new Matrix3D();
             m_mRotXYZ = new Matrix3D();
+            m_mInvRotXYZ= new Matrix3D();
         }
 
         private void ClickTimer_Tick(object sender, EventArgs e)
@@ -307,6 +309,11 @@ namespace Viewer360.View
             RaisePropertyChanged("Phi");
 
             ComputeGlobalRotMatrix();
+
+            if(CProjectPlane.m_aFace3DPoint!=null)
+            {
+                m_Window.UpdateViewPolygonFromFace3D();
+            }
         }
 /*
         static double newWidth = 2;
@@ -555,6 +562,8 @@ namespace Viewer360.View
             m_mRotZ.M44 = 1;
 
             m_mRotXYZ = m_mRotX * m_mRotY * m_mRotZ ;
+            m_mInvRotXYZ= m_mRotX * m_mRotY * m_mRotZ;
+            m_mInvRotXYZ.Invert();
         }
 
         public Vector3D PointGlob2Loc(Vector3D vPoint)
@@ -564,10 +573,40 @@ namespace Viewer360.View
 
             return m_mRotXYZ.Transform(vTmp);
         }
+        public Point3D PointGlob2Loc(Point3D vPoint)
+        {
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            Point3D vTmp = new Point3D(vPoint.X - vCameraPos.X, vPoint.Y - vCameraPos.Y, vPoint.Z - vCameraPos.Z);
+
+            return m_mRotXYZ.Transform(vTmp);
+        }
         public Vector3D VectorGlob2Loc(Vector3D vVec)
         {
             return m_mRotXYZ.Transform(vVec);
         }
+        public Vector3D PointLoc2Glob(Vector3D vPoint)
+        {
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            vPoint=m_mInvRotXYZ.Transform(vPoint);
+            Vector3D vTmp = new Vector3D(vPoint.X + vCameraPos.X, vPoint.Y + vCameraPos.Y, vPoint.Z + vCameraPos.Z);
+
+            return vTmp;
+        }
+        public Point3D PointLoc2Glob(Point3D vPoint)
+        {
+            Vector3D vCameraPos = SharingHelper.GetCameraPos();
+            vPoint = m_mInvRotXYZ.Transform(vPoint);
+            Point3D vTmp = new Point3D(vPoint.X + vCameraPos.X, vPoint.Y + vCameraPos.Y, vPoint.Z + vCameraPos.Z);
+
+            return vTmp;
+        }
+        public Vector3D VectorLoc2Glob(Vector3D vVec)
+        {
+            return m_mInvRotXYZ.Transform(vVec);
+        }
+
+
+
 
         public void SetNewCameraAt(double dGlobalX, double dGlobalY, double dGlobalZ)  // imposta la nuova camera at in base a quella in coordinate mondo passata in argomento
         {
@@ -582,6 +621,17 @@ namespace Viewer360.View
             // direttamente la RotXYZ
 
             vNewAt = m_mRotXYZ.Transform(vNewAt);  // InvRotXYX * vNewAt == vNewAt*RotXYX
+            //++++++++++++++++++++++++++++++  // AM
+            /*
+            vNewAt.X = 0;
+            vNewAt.Y = -1;
+            vNewAt.Z = 0;
+
+            double sTmp = Math.Sqrt(2) / 2;
+            vNewAt.Y = -sTmp;
+            vNewAt.Z = sTmp;
+            */
+            //++++++++++++++++++++++++++++++
 
             /*
             camPhi = 180.0*Math.Acos(vNewAt.Z)/Math.PI;

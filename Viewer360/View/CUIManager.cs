@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
@@ -18,9 +19,11 @@ namespace Viewer360.View
 {
     static public class CUIManager
     {
+        // ************* Sezione inerente la UI esterna
         static public View.MainWindow m_Window;
         static ViewerMode m_eMode= ViewerMode.Undefined;
         static public bool m_bDebugMode = false;
+        static int m_iCategory=-1;
 
         public enum ViewerMode
         {
@@ -29,8 +32,87 @@ namespace Viewer360.View
             Edit
         }
 
-        public static void Init()
+
+        // ************* Sezione inerente la UI interna (poligono, ecc)
+        static Polygon m_oVFinder;
+        static private Point[] m_aOriginalPolygon;
+
+        static List<Ellipse> m_EllipseList;
+        static int m_iEllipseIncrementalNum;
+        static Canvas myCanvas;
+        static private PointCollection m_aPointTmp;
+        static private Point vViewfinderCentre;
+        static private Point vVewfinderBBox;
+
+
+
+
+
+        static public void SetCurrentCategory(int iCategory)
         {
+            m_iCategory = iCategory;  // 1==Wall,2==Floor,3==Ceiling,4==Window,5==Door,6==PCSection
+        }
+        static public int GetCurrentCategory()
+        {
+            return m_iCategory; // 1==Wall,2==Floor,3==Ceiling,4==Window,5==Door,6==PCSection
+        }
+
+        static private void AddEllipse(Canvas canvas, double left, double top, int iPointIndex = -1)
+        {
+
+            Ellipse ellipse = new Ellipse();
+            ellipse.Width = 8;
+            ellipse.Height = 8;
+            ellipse.Fill = Brushes.Green;
+            ellipse.Name = "P" + m_iEllipseIncrementalNum.ToString();
+            m_iEllipseIncrementalNum++;
+
+            //ellipse.MouseLeftButtonDown += Cerchio_Click;   // TODO
+            //ellipse.MouseLeftButtonUp += Cerchio_BottonUp;
+            //ellipse.MouseRightButtonDown += DeleteCerchio_Click;
+
+            Canvas.SetLeft(ellipse, left - 4);
+            Canvas.SetTop(ellipse, top - 4);
+
+            canvas.Children.Add(ellipse);
+
+            if (iPointIndex < 0) // Append
+                m_EllipseList.Add(ellipse);
+            else
+                m_EllipseList.Insert(iPointIndex, ellipse);
+        
+        }
+
+        public static void Init(Polygon oFinder, Grid myGrid)
+        {
+            m_oVFinder = oFinder;
+            m_EllipseList = new List<Ellipse>();
+            m_aOriginalPolygon = new Point[m_oVFinder.Points.Count];
+
+            m_iEllipseIncrementalNum = 0;
+            myCanvas = new Canvas();
+            Grid.SetRow(myCanvas, 1);
+            Grid.SetColumnSpan(myCanvas, 5);
+            myGrid.Children.Add(myCanvas);
+
+            for (int i = 0; i < m_oVFinder.Points.Count; i++)
+            {
+                m_aOriginalPolygon[i].X = m_oVFinder.Points[i].X;
+                m_aOriginalPolygon[i].Y = m_oVFinder.Points[i].Y;
+                AddEllipse(myCanvas, m_oVFinder.Points[i].X, m_oVFinder.Points[i].Y, i);
+            }
+
+
+            // Inizializzo centro mirino
+            vViewfinderCentre.X = (m_oVFinder.Points[0].X + m_oVFinder.Points[1].X) / 2;
+            vViewfinderCentre.Y = (m_oVFinder.Points[1].Y + m_oVFinder.Points[2].Y) / 2;
+            vVewfinderBBox.X = (m_oVFinder.Points[1].X - m_oVFinder.Points[0].X) / 2;
+            vVewfinderBBox.Y = (m_oVFinder.Points[2].Y - m_oVFinder.Points[1].Y) / 2;
+
+            m_aPointTmp = new PointCollection();
+
+
+
             if (m_bDebugMode == false)
             {
                 m_Window.CreateMode.Visibility = Visibility.Collapsed;
@@ -89,7 +171,33 @@ namespace Viewer360.View
 
                 m_Window.SaveButton.Content = "Save new";
 
-            }
+                if (m_iCategory == 4 || m_iCategory == 5)  // Windows or Door
+                {
+                    m_Window.Project2PlaneButton.Visibility = Visibility.Visible;
+                    if (CProjectPlane.m_bPlaneDefined)
+                    {
+                        m_Window.Project2PlaneButton.BorderBrush = Brushes.Black;
+                        m_Window.Project2PlaneButton.Foreground = Brushes.Black;
+                        m_Window.Project2PlaneButton.IsEnabled = true;
+                    }
+                    else
+                    {
+                        m_Window.Project2PlaneButton.IsEnabled = false;
+                        m_Window.Project2PlaneButton.BorderBrush = Brushes.LightGray;
+                        m_Window.Project2PlaneButton.Foreground = Brushes.LightGray;
+                    }
+
+                    m_Window.AIButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    m_Window.Project2PlaneButton.Visibility = Visibility.Collapsed;
+                    m_Window.AIButton.Visibility = Visibility.Visible;
+                }
+
+
+
+                }
             else  // Edit mode
             {
                 m_Window.NextImageButton.Visibility = Visibility.Collapsed;
@@ -100,10 +208,9 @@ namespace Viewer360.View
                 m_Window.DeleteLabelButton.Visibility = Visibility.Visible;
                 m_Window.NewLabelButton.Visibility = Visibility.Visible;
 
-
-                m_Window.CategoryCombo.IsEnabled = true;
-                m_Window.CategoryCombo.BorderBrush = Brushes.Black;
-                m_Window.CategoryCombo.Foreground = Brushes.Black;
+                m_Window.CategoryCombo.IsEnabled = false;
+                m_Window.CategoryCombo.BorderBrush = Brushes.LightGray;
+                m_Window.CategoryCombo.Foreground = Brushes.LightGray;
 
                 m_Window.ItemCombo.IsEnabled = true;
                 m_Window.ItemCombo.BorderBrush = Brushes.Black;
@@ -114,6 +221,10 @@ namespace Viewer360.View
                 m_Window.ElementName.Foreground = Brushes.Black;
 
                 m_Window.SaveButton.Content = "Save change";
+
+                m_Window.Project2PlaneButton.Visibility = Visibility.Collapsed;
+
+                m_Window.AIButton.Visibility = Visibility.Collapsed;
             }
 
         }

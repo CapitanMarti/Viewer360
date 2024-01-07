@@ -18,6 +18,8 @@ using static PointCloudUtility.CommonUtil;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static Viewer360.View.CUIManager;
 using System.Globalization;
+using HelixToolkit.Wpf;
+using System.Net;
 
 
 namespace Viewer360.View
@@ -53,14 +55,18 @@ namespace Viewer360.View
             DataContext = new MainViewModel();
             iDraggingPoint = -1;
 
+            CUIManager.m_Window = this;
+            CUIManager.m_bDebugMode = false;
+            CUIManager.Init(ViewFinderPolygon, myGrid);
+
+//++++++++++++++++++++++  // TODO  eliminare
             m_iEllipseIncrementalNum = 0;
             myCanvas = new Canvas();
             Grid.SetRow(myCanvas, 1);
             Grid.SetColumnSpan(myCanvas, 5);
             myGrid.Children.Add(myCanvas);
 
-            m_EllipseList=new List<Ellipse>();
-
+            m_EllipseList = new List<Ellipse>();
             m_aOriginalPolygon=new Point[ViewFinderPolygon.Points.Count];
 
             for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
@@ -69,10 +75,10 @@ namespace Viewer360.View
                 m_aOriginalPolygon[i].Y = ViewFinderPolygon.Points[i].Y;
                 AddEllipse(myCanvas, ViewFinderPolygon.Points[i].X, ViewFinderPolygon.Points[i].Y, i);
             }
+//++++++++++++++++++++++  
 
-
-                // Inizializzo centro mirino
-                vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
+            // Inizializzo centro mirino
+            vViewfinderCentre.X = (ViewFinderPolygon.Points[0].X + ViewFinderPolygon.Points[1].X) / 2;
             vViewfinderCentre.Y = (ViewFinderPolygon.Points[1].Y + ViewFinderPolygon.Points[2].Y) / 2;
             vVewfinderBBox.X= (ViewFinderPolygon.Points[1].X - ViewFinderPolygon.Points[0].X) / 2;
             vVewfinderBBox.Y = (ViewFinderPolygon.Points[2].Y - ViewFinderPolygon.Points[1].Y) / 2;
@@ -81,9 +87,9 @@ namespace Viewer360.View
             aItemDefaultEntry=new List<int>();
 
 
-        // If the window style is set to none when the window is maximized, the taskbar will not
-        // be covered. Therefore, the window is restored to normal and maximized again.
-        DependencyPropertyDescriptor d = DependencyPropertyDescriptor.FromProperty(
+            // If the window style is set to none when the window is maximized, the taskbar will not
+            // be covered. Therefore, the window is restored to normal and maximized again.
+            DependencyPropertyDescriptor d = DependencyPropertyDescriptor.FromProperty(
                 System.Windows.Window.WindowStyleProperty,typeof(System.Windows.Window));
             d.AddValueChanged(this, (sender, args) =>
             {
@@ -168,7 +174,7 @@ namespace Viewer360.View
             if (!Keyboard.IsKeyDown(Key.LeftCtrl))
                     return;
             //++++++++++++++++++++++
-            Console.WriteLine("Cerchio_Click");
+            //Console.WriteLine("Cerchio_Click");
             //++++++++++++++++++++++
             m_Window.ViewFinderPolygon.Fill = null;
 
@@ -269,6 +275,12 @@ namespace Viewer360.View
 
             ItemCombo.SelectedIndex = aItemDefaultEntry[CategoryCombo.SelectedIndex];
             ElementName.Text = CategoryCombo.SelectedItem.ToString();
+
+            int iCat = oLList[iSelectedCatIndex][0].nCategory;
+            CUIManager.SetCurrentCategory(iCat);
+            CUIManager.UpdateUI();
+
+            SharingHelper.m_iSendCategoryToServer = iCat;
 
         }
         private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -490,6 +502,98 @@ namespace Viewer360.View
             viewer360_View.SaveImageAndJson();
         }
 
+        private void LaunchAI_Click(object sender, RoutedEventArgs e)
+        { 
+        }
+
+            private void Project2Plane_Click(object sender, RoutedEventArgs e)
+        {
+            Ray3D oRay;
+            //++++++++++++++++++++++++++++++++
+            /// CProjectPlane.SetPlane(80.62, 12, 0, -1);  // AM
+
+            /*
+            double dVx = 0;
+            double dVy = -1;
+            double dVz = 0;
+            Vector3D vAt= new Vector3D(dVx,dVy,dVz);
+            vAt.Normalize();
+
+            viewer360_View.MyCam.LookDirection = vAt;
+            */
+            //+++++++++++++++++++++++++++++++++
+
+
+            Point3D[] aPoint = new Point3D[4];
+            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+            {
+//++++++++++++++++++++++++++
+/*
+                Point3D pointNear, pointFar;
+                bool ok = Viewport3DHelper.Point2DtoPoint3D(viewer360_View.vp, ViewFinderPolygon.Points[i], out pointNear, out pointFar);
+                Point3D pointNear1, pointFar1;
+                bool ok1 = CProjectPlane.Point2DtoPoint3D(viewer360_View.vp, ViewFinderPolygon.Points[i], out pointNear1, out pointFar1);
+*/
+//++++++++++++++++++++++++++
+                oRay = Viewport3DHelper.GetRay(viewer360_View.vp, ViewFinderPolygon.Points[i]);
+                aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
+                aPoint[i].Z = -aPoint[i].Z;  // Per ragioni misteriose l'oggetto oRay è ribaltato rispetto a Z e quindi anche il punto di intersezione col piano (verticale!)
+                aPoint[i] = viewer360_View.PointLoc2Glob(aPoint[i]);
+            }
+
+            double dZMax = (aPoint[0].Z + aPoint[1].Z) / 2;
+            aPoint[0].Z = dZMax;
+            aPoint[1].Z = dZMax;
+
+            double dZMin = (aPoint[2].Z + aPoint[3].Z) / 2;
+            aPoint[2].Z = dZMin;
+            aPoint[3].Z = dZMin;
+
+            double dXLeft = (aPoint[0].X + aPoint[3].X) / 2;
+            aPoint[0].X = dXLeft;
+            aPoint[3].X = dXLeft;
+            double dYLeft = (aPoint[0].Y + aPoint[3].Y) / 2;
+            aPoint[0].Y = dYLeft;
+            aPoint[3].Y = dYLeft;
+
+
+            double dXRight = (aPoint[1].X + aPoint[2].X) / 2;
+            aPoint[1].X = dXRight;
+            aPoint[2].X = dXRight;
+            double dYRight = (aPoint[1].Y + aPoint[2].Y) / 2;
+            aPoint[1].Y = dYRight;
+            aPoint[2].Y = dYRight;
+
+            for (int i = 0; i < 4; i++)
+                aPoint[i] = viewer360_View.PointGlob2Loc(aPoint[i]);
+
+            // Memorizzo 
+            CProjectPlane.m_aFace3DPoint=aPoint;
+
+            // Aggiorno il mirino
+            UpdateViewPolygonFromFace3D();
+
+            //CUIManager.SetViewerMode(ViewerMode.Edit);
+//            CUIManager.ChangeMode();
+        }
+
+        public void UpdateViewPolygonFromFace3D()
+        {
+            if (ViewFinderPolygon.Points == null)
+                ViewFinderPolygon.Points = new PointCollection { new Point(0, 0), new Point(0, 0), new Point(0, 0), new Point(0, 0) };
+
+            for (int i = 0; i <4; i++)
+            {
+                double dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPoint[i], viewer360_View.MyCam);
+                if(dDist > 0)  // Dietro la telecamera
+                {
+                    ViewFinderPolygon.Points=null;
+                    return;
+                }
+                Point3D pTmp=new Point3D(CProjectPlane.m_aFace3DPoint[i].X, CProjectPlane.m_aFace3DPoint[i].Y, -CProjectPlane.m_aFace3DPoint[i].Z);
+                ViewFinderPolygon.Points[i] = Viewport3DHelper.Point3DtoPoint2D(viewer360_View.vp, pTmp);
+            }
+        }
 
         public void Polygon_LeftCtrlMouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -760,7 +864,8 @@ namespace Viewer360.View
                         vP.X = -1;
                         aPointTmp[0] = vP;
                     }
-
+                    if(CUIManager.GetMode()== ViewerMode.Edit && CProjectPlane.m_bPlaneDefined)  // TODO aggiungere check opportuni
+                        UpdateViewPolygonFromFace3D();
                 }
 
                 if(ArePointInsideView(aPointTmp,dSizeX,dSizeY)) // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
