@@ -312,7 +312,7 @@ namespace Viewer360.View
 
             if(CProjectPlane.m_aFace3DPoint!=null)
             {
-                m_Window.UpdateViewPolygonFromFace3D();
+                CUIManager.UpdateViewPolygonFromFace3D();
             }
         }
 /*
@@ -326,10 +326,13 @@ namespace Viewer360.View
         {
 
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
-                m_Window.Polygon_MouseMove(sender, e);
+            {
+                CUIManager.Polygon_MouseMove(e);
+                //            m_Window.Polygon_MouseMove(sender, e);
+            }
             else  // Rotazione/traslazione camera
             {
-                if (!isMouseDown) 
+                if (!isMouseDown)
                     return;
 
                 if (m_Projection == ViewerProjection.Spheric)  // Caso sferico--> calcolo velocità di rotazione; nel caso planare NON FACCIO NULLA
@@ -366,12 +369,13 @@ namespace Viewer360.View
         {
             base.OnRenderSizeChanged(sizeInfo);
             // Scalo anche il mirino
-            m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
+            //m_Window.RescaleViewfinderOnWindowChange(sizeInfo);
+            CUIManager.RescaleViewfinderOnWindowChange(sizeInfo);
 
-               m_ViewSize = sizeInfo.NewSize;
+            m_ViewSize = sizeInfo.NewSize;
 
-               RaisePropertyChanged("Hfov");
-               RaisePropertyChanged("Vfov");
+            RaisePropertyChanged("Hfov");
+            RaisePropertyChanged("Vfov");
         }
 
         private void vp_MouseRightButtonDown(object sender, System.Windows.Input.MouseEventArgs e)
@@ -934,7 +938,8 @@ namespace Viewer360.View
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl))  // Attivazione drag mirino/creazione punti mirino 
             {
-                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
+//                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
+                CUIManager.Polygon_LeftCtrlMouseDown(e);
             }
             else  // Spostamento CameraAt
             {
@@ -953,7 +958,8 @@ namespace Viewer360.View
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
             {
-                m_Window.Polygon_MouseUp(sender, e);
+//                m_Window.Polygon_MouseUp(sender, e);
+                CUIManager.Polygon_MouseUp();
             }
             else
             {
@@ -967,7 +973,10 @@ namespace Viewer360.View
         private void vp_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
-                m_Window.Polygon_MouseWheel(sender, e);
+            {
+//                m_Window.Polygon_MouseWheel(sender, e);
+                CUIManager.Polygon_MouseWheel(e);
+            }
             else
             {
                 if (m_Projection == ViewerProjection.Spheric)
@@ -986,7 +995,7 @@ namespace Viewer360.View
                 {
                     if (e.Delta > 0)
                         SharingHelper.m_dPlanarZoomFactor += 0.05;
-                    else if(e.Delta < 0)
+                    else if (e.Delta < 0)
                         SharingHelper.m_dPlanarZoomFactor -= 0.05;
 
                     SetViewAndWindowSize();

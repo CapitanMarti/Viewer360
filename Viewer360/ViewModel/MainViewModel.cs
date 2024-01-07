@@ -230,11 +230,12 @@ namespace Viewer360.ViewModel
 
         }
 
-
+        /*
         public void RestorePolygons(CSingleFileLabel oLabel)
         {
             m_Window.RestorePolygon(oLabel);
         }
+        */
 
         public void RestoreFovAndPolygons(CSingleFileLabel oLabel)
         {
@@ -248,7 +249,8 @@ namespace Viewer360.ViewModel
             m_Window.viewer360_View.UpdateThetaAndPhi(m_Window.viewer360_View.MyCam.LookDirection);
 
             SharingHelper.m_bCameraAtHasChanged = true;
-            m_Window.RestorePolygon(oLabel);
+            CUIManager.RestorePolygon(oLabel);
+//            m_Window.RestorePolygon(oLabel);
 
             RaisePropertyChanged("Hfov");
             RaisePropertyChanged("Vfov");
