@@ -16,7 +16,7 @@ namespace Viewer360.View
         private static CCatalogManager m_oCM;
 
         private static string m_sFullFileName;
-        private static string m_sJsonPath;
+        private static string m_sLabelPath;
         private static string m_sSegmentPath;
         private static Vector3D m_vCameraPos;
         private static Vector3D m_vCameraRot;
@@ -31,14 +31,19 @@ namespace Viewer360.View
         public static double m_dConvFactor;
         public static double m_dPlanarZoomFactor = 1;
 
-
+        public class CNewMsgInfo1
+        {
+            public CSingleFileLabel m_sLabel;
+            public string sNewJsonFileName;
+        }
+        public static CNewMsgInfo1 m_oMsgInfo1=null;
 
 
         static public CCatalogManager GetCatalogManager() { return m_oCM; } 
-        public static void SetFileAndFolderNames(string sFileName, string sJsonPath, string sSegmentPath)
+        public static void SetFileAndFolderNames(string sFileName, string sLabelPath, string sSegmentPath)
         {
             m_sFullFileName = sFileName;
-            m_sJsonPath = sJsonPath;
+            m_sLabelPath = sLabelPath;
             m_sSegmentPath = sSegmentPath;
         }
 
@@ -103,7 +108,7 @@ namespace Viewer360.View
 
         public static string GetJsonPath()
         {
-            return m_sJsonPath;
+            return m_sLabelPath;
         }
 
         public static string GetSegmentPath()
@@ -111,18 +116,20 @@ namespace Viewer360.View
             return m_sSegmentPath;
         }
 
-        public static string GetNewJsonFileName()
+        public static string GetUniqueFileName(string sExt)
         {
             string sTmp=Path.GetFileNameWithoutExtension(m_sFullFileName);
             bool bContinue = true;
             string sNewFile="";
+            string sTmpName = "";
             int iCount = 0;
             while (bContinue) 
             {
-                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount)+ ".json";
-//                sNewFile = m_sJsonPath + "\\" + sTmp + "##" + Convert.ToString(iCount) + Path.GetExtension(m_sFullFileName);
-                if (!File.Exists(sNewFile)) 
+                sTmpName= sTmp + "##" + Convert.ToString(iCount) + ".*";
+                var files = Directory.GetFiles(m_sLabelPath, sTmpName);
+                if (files.Length==0) 
                 {
+                    sNewFile = m_sLabelPath + "\\" + sTmp + "##" + Convert.ToString(iCount) + sExt;
                     break;
                 }
                 iCount++;

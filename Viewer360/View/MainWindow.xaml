@@ -59,10 +59,10 @@
             <Separator Margin="0,3"  x:Name ="Sep1" Background="Gray"/>
             <Button x:Name="NextImageButton" Content="Next photo" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextImage_Click"/>
             <Button x:Name="PrevImageButton" Content="Prev. photo" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevImage_Click" Width="80" Height="26" />
-            <Button x:Name="NextLabelButton" Content="Next Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
-            <Button x:Name="PrevLabelButton" Content="Prev. Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
+            <Button x:Name="NextLabelButton" Content="Next Element" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NextLabel_Click"/>
+            <Button x:Name="PrevLabelButton" Content="Prev. Element" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="PrevLabel_Click"/>
             <Button x:Name="SaveButton" Content="Save change" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="SaveLabel_Click"/>
-            <Button x:Name="NewLabelButton" Content="New Label" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NewLabel_Click"/>
+            <Button x:Name="NewLabelButton" Content="New Element" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NewLabel_Click"/>
             <Button x:Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
             <Button x:Name="Project2PlaneButton" Content="Proj. to wall" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="Project2Plane_Click"/>
             <Button x:Name="AIButton" Content="Auto detect" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="LaunchAI_Click"/>
@@ -120,7 +120,7 @@
                 <my:Viewer360View x:Name="viewer360_View" Image="{Binding Image}" Grid.ColumnSpan="2" Margin="0,0,0,0" Grid.RowSpan="3"/>
 
 
-                <Polygon Points="350,210 450,210 450,310 350,310" x:Name="ViewFinderPolygon" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="3" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.468"/>
+                <Polygon Points="350,210 450,210 450,310 350,310" x:Name="ViewFinderPolygon" PreviewMouseWheel="Polygon_PreviewMouseWheel" PreviewMouseDown="Polygon_PreviewMouseDown" PreviewMouseUp="Polygon_PreviewMouseUp" PreviewMouseMove="Polygon_PreviewMouseMove" Stroke="Blue" StrokeThickness="1" Grid.RowSpan="3" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.468"/>
 
             </Grid>
 

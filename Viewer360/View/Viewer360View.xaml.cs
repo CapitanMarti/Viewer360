@@ -310,7 +310,7 @@ namespace Viewer360.View
 
             ComputeGlobalRotMatrix();
 
-            if(CProjectPlane.m_aFace3DPoint!=null)
+            if(CProjectPlane.m_bPlaneDefined && CUIManager.GetMode()==ViewerMode.Edit)
             {
                 CUIManager.UpdateViewPolygonFromFace3D();
             }
@@ -322,7 +322,7 @@ namespace Viewer360.View
         static double dScale = 1;
 */
         // Mouse move: set camera movement speed
-        private void vp_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        public void vp_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
 
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
@@ -393,7 +393,7 @@ namespace Viewer360.View
 
             string sNewJsonFileName;
             if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
-                sNewJsonFileName = SharingHelper.GetNewJsonFileName();
+                sNewJsonFileName = SharingHelper.GetUniqueFileName(".json");
             else
                 sNewJsonFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
 
@@ -402,14 +402,10 @@ namespace Viewer360.View
                 oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
             else
             {
-                /*
-                double dHeight = vp.RenderSize.Width * Image.Height / Image.Width;
-                double dWidth = m_ViewSize.Width ;
-                */
                 System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
                 System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
 
-                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  // TODO aggiungere dati associati a .mlb
             }
             PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
 
@@ -501,8 +497,11 @@ namespace Viewer360.View
                 SaveCameraInfo(sNewJsonFileName);
 
             // Scrittura file .json
-//            m_Window.SaveJason(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
-            m_Window.SaveJason(oLabelCandidate, sNewJsonFileName);
+            //            m_Window.SaveJason(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            int iPhotoIndex = -1;
+            int iLabelIndex = -1;
+
+            m_Window.SaveJason(oLabelCandidate, sNewJsonFileName, ref iPhotoIndex, ref iLabelIndex);
 
             // Aggiornare la label corrente
             (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
@@ -512,6 +511,74 @@ namespace Viewer360.View
             // Faccio partire il timer per l'animazione del mirino
             ClickTimer.Start();
         }
+
+        public void SaveMlb()
+        {
+
+            string sNewJsonFileName;
+            if (CUIManager.GetMode() == ViewerMode.Create)  // Chiedo filename all'Helper
+                sNewJsonFileName = SharingHelper.GetUniqueFileName(".mlb");
+            else
+                sNewJsonFileName = (m_Window.DataContext as ViewModel.MainViewModel).m_sCurrentLabelFileName;
+
+            PointCloudUtility.CSingleFileLabel oLabelCandidate;
+            if (m_Projection == ViewerProjection.Spheric)
+                oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            else
+            {
+                System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
+                System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
+
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);   // TODO aggiungere dati associati a .mlb
+            }
+
+            PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
+
+
+            // Verifico se il nome della label è cambiato e sono in modalità Create
+            if (CUIManager.GetMode() != ViewerMode.Create && oOldLabel != null && oLabelCandidate.m_aLabelInfo[0].sLabelName != oOldLabel.m_aLabelInfo[0].sLabelName)
+            {
+                DialogResult result = ConfirmDialog("Il nome della label corrente è stato cambiato; le eventuali entità derivate da essa, con il vecchio nome, saranno eliminate.\n\n\nConfermi?");
+                if (result == System.Windows.Forms.DialogResult.No)
+                    return;
+
+                string sJsonFileName = System.IO.Path.GetFileNameWithoutExtension(oOldLabel.m_sJsonFileName);
+                try
+                {
+                    var files = Directory.GetFiles(SharingHelper.GetJsonPath(), sJsonFileName + "*.*");
+                    foreach (string file in files)
+                    {
+                        System.IO.File.SetAttributes(file, FileAttributes.Normal);
+                        System.IO.File.Delete(file);
+
+                    }
+                  
+                    SharingHelper.m_bElementDeleted = true;
+                }
+                catch (IOException ex)
+                {
+                    return;
+                }
+            }
+
+            // Scrittura file .mlb
+            int iPhotoIndex = -1;
+            int iLabelIndex = -1;
+            m_Window.SaveMlb(oLabelCandidate, sNewJsonFileName, ref iPhotoIndex, ref iLabelIndex);
+
+            // Aggiornare la label corrente
+            (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
+            (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex=iPhotoIndex;
+            (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex = iLabelIndex;
+
+            SharingHelper.CNewMsgInfo1 oNewMsg= new SharingHelper.CNewMsgInfo1();
+            oNewMsg.m_sLabel = oLabelCandidate;
+            oNewMsg.sNewJsonFileName = sNewJsonFileName;
+            SharingHelper.m_oMsgInfo1 = oNewMsg;  // Questo attiverà l'invio del messaggio al server
+
+//            SharingHelper.m_bLabelAdded = true;
+        }
+
 
         public void ComputeGlobalRotMatrix()
         {
@@ -934,7 +1001,7 @@ namespace Viewer360.View
 
 
         // Mouse down: start moving camera
-        private void vp_MouseDown(object sender, MouseButtonEventArgs e)
+        public void vp_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl))  // Attivazione drag mirino/creazione punti mirino 
             {
@@ -954,23 +1021,33 @@ namespace Viewer360.View
 
 
         // Mouse up: stop moving camera
-        private void vp_MouseUp(object sender, MouseButtonEventArgs e)
+        public void vp_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl))
-            {
-//                m_Window.Polygon_MouseUp(sender, e);
-                CUIManager.Polygon_MouseUp();
-            }
-            else
+            /*
+                        if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                        {
+                            CUIManager.Polygon_MouseUp();
+                        }
+                        else
+                        {
+                            isMouseDown = false;
+                            this.Cursor = System.Windows.Input.Cursors.Arrow;
+                            timer.Stop();
+                        }
+            */
+            CUIManager.Polygon_MouseUp();
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl))
             {
                 isMouseDown = false;
                 this.Cursor = System.Windows.Input.Cursors.Arrow;
                 timer.Stop();
             }
+
+
         }
 
         // Mouse wheel: zoom
-        private void vp_MouseWheel(object sender, MouseWheelEventArgs e)
+        public void vp_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
             {
@@ -981,11 +1058,14 @@ namespace Viewer360.View
             {
                 if (m_Projection == ViewerProjection.Spheric)
                 {
+                    double dOldFov = MyCam.FieldOfView;
                     MyCam.FieldOfView -= e.Delta / 100;
                     if (MyCam.FieldOfView < 1)
                         MyCam.FieldOfView = 1;
                     else if (MyCam.FieldOfView > 140)
                         MyCam.FieldOfView = 140;
+
+                    CUIManager.RescaleViewfinderOnFovChange(dOldFov, MyCam.FieldOfView);
 
                     SharingHelper.m_bCameraAtHasChanged = true;
                     RaisePropertyChanged("Hfov");

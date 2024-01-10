@@ -118,12 +118,17 @@ namespace Viewer360
                     double dPosY = 0;
                     double dNX = 0;
                     double dNY = 0;
-                    m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY);
+                    int iSide = -1;
+                    string sWallName = "";
+                    m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY, ref iSide, ref sWallName);
 
-                    if (dNX <= 1)  // Piano valido
-                        CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY);
-                    else  // Nessun piano identificato
-                        CProjectPlane.RemovePlane();
+                    if (CUIManager.GetMode() == ViewerMode.Create)  // Modalità Create
+                    {
+                        if (dNX <= 1 && CUIManager.GetMode() == ViewerMode.Create)  // Piano valido
+                            CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY, sWallName);
+                        else  // Nessun piano identificato
+                            CProjectPlane.RemovePlane();
+                    }
 
                     CUIManager.UpdateUI();
                 }
@@ -228,8 +233,50 @@ namespace Viewer360
 
             if (SharingHelper.m_iSendCategoryToServer>=0)
             {
-                m_oMsgManager.SendCategoryToServer(SharingHelper.m_iSendCategoryToServer);
+                m_oMsgManager.SendCategoryToServer(SharingHelper.m_iSendCategoryToServer,(int)CUIManager.GetMode());
                 SharingHelper.m_iSendCategoryToServer = -1;
+                return;
+            }
+
+            if(SharingHelper.m_oMsgInfo1!=null)
+            {
+                CSingleFileLabel oLabel = SharingHelper.m_oMsgInfo1.m_sLabel;
+                string sLabelFileName = oLabel.m_sJsonFileName;
+                string sLabelName = oLabel.m_aLabelInfo[0].sLabelName;
+                string sParentEl = oLabel.m_aLabelInfo[0].sParentElementName;
+//                string sCameraName= oLabel.m_aLabelInfo[0].m_sC
+                int iCatalogID= oLabel.m_aLabelInfo[0].iObjCatalogID;
+                int iCategory = oLabel.m_aLabelInfo[0].iCategory;
+
+                double[] aCameraPos = new double[3];
+                aCameraPos[0] = m_Window.viewer360_View.MyCam.Position.X;
+                aCameraPos[1] = m_Window.viewer360_View.MyCam.Position.Y;
+                aCameraPos[2] = m_Window.viewer360_View.MyCam.Position.Z;
+
+                double[] aPos0 = new double[3];
+                aPos0[0] = oLabel.m_aLabelInfo[0].aPolyPointX[0];
+                aPos0[1] = oLabel.m_aLabelInfo[0].aPolyPointY[0];
+                aPos0[2] = oLabel.m_aLabelInfo[0].aPolyPointZ[0];
+
+                double[] aPos1= new double[3];
+                aPos1[0] = oLabel.m_aLabelInfo[0].aPolyPointX[1];
+                aPos1[1] = oLabel.m_aLabelInfo[0].aPolyPointY[1];
+                aPos1[2] = oLabel.m_aLabelInfo[0].aPolyPointZ[1];
+
+                double[] aPos2 = new double[3];
+                aPos2[0] = oLabel.m_aLabelInfo[0].aPolyPointX[2];
+                aPos2[1] = oLabel.m_aLabelInfo[0].aPolyPointY[2];
+                aPos2[2] = oLabel.m_aLabelInfo[0].aPolyPointZ[2];
+
+                double[] aPos3 = new double[3];
+                aPos3[0] = oLabel.m_aLabelInfo[0].aPolyPointX[3];
+                aPos3[1] = oLabel.m_aLabelInfo[0].aPolyPointY[3];
+                aPos3[2] = oLabel.m_aLabelInfo[0].aPolyPointZ[3];
+
+                m_oMsgManager.SendBuildNewElementRequest(sLabelFileName, sLabelName, sParentEl, iCatalogID, iCategory, aCameraPos,
+                                                         aPos0,aPos1,aPos2,aPos3);
+
+                SharingHelper.m_oMsgInfo1 = null;
                 return;
             }
         }

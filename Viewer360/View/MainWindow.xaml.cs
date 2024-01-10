@@ -77,6 +77,26 @@ namespace Viewer360.View
 
         }
 
+        private void Polygon_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            viewer360_View.vp_MouseDown(sender, e);
+        }
+
+        private void Polygon_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            viewer360_View.vp_MouseUp(sender, e);
+        }
+
+        private void Polygon_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            viewer360_View.vp_MouseWheel(sender, e);
+        }
+
+        private void Polygon_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            viewer360_View.vp_MouseMove(sender, e);
+        }
+
         private void CategorySelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             CUIManager.CategorySelectionChanged();
@@ -108,7 +128,7 @@ namespace Viewer360.View
             // Aggiungo nome file .png
             //            oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = ElementName.Text;
-            oLabelInfo.sParentLabelName = ""; // TODO il valore va ricevuto dal Server 
+            oLabelInfo.sParentElementName = ""; // TODO il valore va ricevuto dal Server 
 
             // Aggiungo la category
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
@@ -175,10 +195,13 @@ namespace Viewer360.View
             // Aggiungo nome file .png
             //            oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = ElementName.Text;
-            oLabelInfo.sParentLabelName = ""; // TODO il valore va ricevuto dal Server 
+            if (CProjectPlane.m_bPlaneDefined)
+                oLabelInfo.sParentElementName = CProjectPlane.m_sWallName;
+            else
+                oLabelInfo.sParentElementName = "";
 
             // Aggiungo la category
-            List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
+            List <List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
             int iSelectedCat = CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
             int iSelectedItem = ItemCombo.SelectedIndex;
 
@@ -189,10 +212,24 @@ namespace Viewer360.View
             // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<double>();
             oLabelInfo.aPolyPointY = new List<double>();
-            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+
+            if (CProjectPlane.m_bPlaneDefined)
             {
-                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * SharingHelper.m_dConvFactor));
-                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * SharingHelper.m_dConvFactor));
+                oLabelInfo.aPolyPointZ = new List<double>();
+                for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+                {
+                    oLabelInfo.aPolyPointX.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].X));
+                    oLabelInfo.aPolyPointY.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].Y));
+                    oLabelInfo.aPolyPointZ.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].Z));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+                {
+                    oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * SharingHelper.m_dConvFactor));
+                    oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * SharingHelper.m_dConvFactor));
+                }
             }
 
             // Aggiungo LabelInfo a LabelManager
@@ -201,7 +238,7 @@ namespace Viewer360.View
             return oLabel;
 
         }
-        public void SaveJason(CSingleFileLabel oLabel, string sNewJsonFileName)
+        public void SaveJason(CSingleFileLabel oLabel, string sNewJsonFileName, ref int iPhotoIndex, ref int iLabelIndex)
         {
 
             // Salvo file .json
@@ -209,8 +246,19 @@ namespace Viewer360.View
             oLabel.SaveToJsonFile(sNewJsonFileName, sJpegFileName);
 
             // Aggiorno CLabelManager
-            CLabelManager.AddLabel(oLabel);
+            CLabelManager.AddLabel(oLabel, ref iPhotoIndex, ref iLabelIndex);
         }
+        public void SaveMlb(CSingleFileLabel oLabel, string sNewJsonFileName, ref int iPhotoIndex, ref int iLabelIndex)
+        {
+
+            // Salvo file .json
+            string sJpegFileName = System.IO.Path.GetFileName(SharingHelper.GetFullJpegFileName());
+            oLabel.SaveToMlbFile(sNewJsonFileName, sJpegFileName);
+
+            // Aggiorno CLabelManager
+            CLabelManager.AddLabel(oLabel, ref iPhotoIndex, ref iLabelIndex);
+        }
+
         private void NextImage_Click(object sender, RoutedEventArgs e)
         {
             (DataContext as ViewModel.MainViewModel).NextImage_Click(sender, e);
@@ -225,7 +273,11 @@ namespace Viewer360.View
         }
         private void NewLabel_Click(object sender, RoutedEventArgs e)
         {
-            m_Window.CreateMode.IsChecked = true;
+            if(m_Window.CreateMode.IsChecked==false)
+                m_Window.CreateMode.IsChecked = true;
+            else
+                m_Window.CreateMode.IsChecked = false;
+
             CUIManager.ChangeMode();
         }
         private void PrevLabel_Click(object sender, RoutedEventArgs e)
@@ -289,7 +341,10 @@ namespace Viewer360.View
         }
         private void SaveLabel_Click(object sender, RoutedEventArgs e)
         {
-            viewer360_View.SaveImageAndJson();
+            if(CUIManager.GetCurrentCategory()==4 || CUIManager.GetCurrentCategory() == 5)
+                viewer360_View.SaveMlb();
+            else
+                viewer360_View.SaveImageAndJson();
         }
         private void LaunchAI_Click(object sender, RoutedEventArgs e)
         { 

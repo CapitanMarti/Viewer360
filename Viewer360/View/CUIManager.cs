@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Drawing.Printing;
 using System.Linq;
+using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,11 +52,30 @@ namespace Viewer360.View
         static private int iDraggingPoint;
         static private Point offset;
         static private List<int> aItemDefaultEntry;
+        static int m_iVFMode = 0; // 0=standard, 1==Projection mode
+        static bool m_bProjDragging = false;
+        static int m_iSide = -1;
 
 
+        static void SetVFMode(int iMode)  // Modalità visualizzazione poligono: 0-->normale (dashed), 1-->proiettato (continuo)
+        {
+            if (iMode == m_iVFMode)
+                return;
+
+            m_iVFMode = iMode;
+/*
+            if(iMode == 0)
+                CProjectPlane.RemovePlane();
+*/
+            ResetPolygon();
+
+        }
         static public void SetCurrentCategory(int iCategory)
         {
             m_iCategory = iCategory;  // 1==Wall,2==Floor,3==Ceiling,4==Window,5==Door,6==PCSection
+            if(iCategory != 4 && iCategory != 5)
+                CProjectPlane.RemovePlane();
+
         }
         static public int GetCurrentCategory()
         {
@@ -63,6 +84,8 @@ namespace Viewer360.View
 
         static public void Polygon_LeftCtrlMouseDown(MouseButtonEventArgs e)
         {
+            m_bProjDragging = false;
+            m_iSide = -1;
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 Point vPoint = new Point(Mouse.GetPosition(m_Window.viewer360_View.vp).X, Mouse.GetPosition(m_Window.viewer360_View.vp).Y);
@@ -70,14 +93,25 @@ namespace Viewer360.View
                 // Verifico se ho cliccato su un segmento
                 int iSegment = CheckSegmentClick(vPoint);
 
-                if (iSegment >= 0)
+                if (m_iVFMode == 0 && (m_iCategory!=4 && m_iCategory!=5))
                 {
-                    CreateNewPoint(iSegment, vPoint);
+                    if (iSegment >= 0)
+                    {
+                        CreateNewPoint(iSegment, vPoint);
+                    }
+                    else
+                    {
+                        offset = vPoint;
+                        isDragging = true;
+                    }
                 }
-                else
+                else  // visualizzazione in modalità projected
                 {
+                    m_bProjDragging = true;
+                    m_iSide = iSegment;
                     offset = vPoint;
                     isDragging = true;
+                    m_oVFinder.Fill = null;
                 }
             }
         }
@@ -91,16 +125,6 @@ namespace Viewer360.View
                 if (iDraggingPoint >= 0)  // Sto modificando la posizione di un vertice
                 {
                     m_oVFinder.Points[iDraggingPoint] = newPosition;
-                    //++++++++++++++++++++++++++++++++++++++++++
-                    /*
-                    int nSizeCorrected = (int)(viewer360_View.vp.RenderSize.Width * viewer360_View.Image.Height / viewer360_View.Image.Width);
-                    int nOffset = (int)(viewer360_View.vp.RenderSize.Height - nSizeCorrected) / 2;
-                    int nMaxY = nSizeCorrected- nOffset;
-                    Console.WriteLine("Pos=" + newPosition.ToString() + "   WinSize=" + m_Window.Width.ToString() + "," + m_Window.Height.ToString() + " " + m_Window.Width / m_Window.Height
-                        + "   vp.Size=" + viewer360_View.vp.RenderSize.Width.ToString() + "," + viewer360_View.vp.RenderSize.Height.ToString() 
-                        + " vp.SizeY corretto="+ nSizeCorrected + " maxY="+ nMaxY + "  nOffset="+ nOffset);
-                    */
-                    //++++++++++++++++++++++++++++++++++++++++++
 
                     // Aggiorno le posizioni dei pallini
                     UpdateVertexCircle();
@@ -108,33 +132,72 @@ namespace Viewer360.View
                 else
                 {
 
-                    // Calcolo nuove posizioni
-                    m_aPointTmp.Clear();
-                    double dX, dY;
-                    for (int i = 0; i < m_oVFinder.Points.Count; i++)
+                    if (m_iVFMode == 0)  // Edit di label normale
                     {
-                        dX = m_oVFinder.Points[i].X + newPosition.X - offset.X;
-                        dY = m_oVFinder.Points[i].Y + newPosition.Y - offset.Y;
-                        m_aPointTmp.Add(new Point(dX, dY));
-                    }
-
-                    // Recupero dimensioni finestra
-                    double dSizeX = m_Window.viewer360_View.m_ViewSize.Width;
-                    double dSizeY = m_Window.viewer360_View.m_ViewSize.Height;
-
-                    // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
-                    if (ArePointInsideView(m_aPointTmp, dSizeX, dSizeY)) // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
-                    {
-                        // Aggiorno i vertici
+                        double dX, dY;
+                        // Calcolo nuove posizioni
+                        m_aPointTmp.Clear();
                         for (int i = 0; i < m_oVFinder.Points.Count; i++)
-                            m_oVFinder.Points[i] = m_aPointTmp[i];
+                        {
+                            dX = m_oVFinder.Points[i].X + newPosition.X - offset.X;
+                            dY = m_oVFinder.Points[i].Y + newPosition.Y - offset.Y;
+                            m_aPointTmp.Add(new Point(dX, dY));
+                        }
 
-                        // Aggiorno centro mirino
-                        vViewfinderCentre.X = (m_oVFinder.Points[0].X + m_oVFinder.Points[1].X) / 2;
-                        vViewfinderCentre.Y = (m_oVFinder.Points[1].Y + m_oVFinder.Points[2].Y) / 2;
+                        // Recupero dimensioni finestra
+                        double dSizeX = m_Window.viewer360_View.m_ViewSize.Width;
+                        double dSizeY = m_Window.viewer360_View.m_ViewSize.Height;
+                        // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
+                        if (ArePointInsideView(m_aPointTmp, dSizeX, dSizeY)) // Se tutti i 4 vertici sono interni alla view aggiorno il mirino
+                        {
+                            // Aggiorno i vertici
+                            for (int i = 0; i < m_oVFinder.Points.Count; i++)
+                                m_oVFinder.Points[i] = m_aPointTmp[i];
 
-                        // Aggiorno le posizioni dei pallini
-                        UpdateVertexCircle();
+                            // Aggiorno centro mirino
+                            vViewfinderCentre.X = (m_oVFinder.Points[0].X + m_oVFinder.Points[1].X) / 2;
+                            vViewfinderCentre.Y = (m_oVFinder.Points[1].Y + m_oVFinder.Points[2].Y) / 2;
+
+                            // Aggiorno le posizioni dei pallini
+                            UpdateVertexCircle();
+                        }
+                    }
+                    else if (m_eMode == ViewerMode.Edit && m_iVFMode == 1)  // Edit di porte/finestra
+                    {
+                        double dH = (newPosition.X - offset.X)/400;  // 1 pixel==1cm
+                        double dV = -(newPosition.Y - offset.Y)/400; // 1 pixel==1cm
+
+                        if (m_iSide==0)  // Bordo superiore
+                        {
+                            CProjectPlane.m_aFace3DPointGlob[0].Z += dV;
+                            CProjectPlane.m_aFace3DPointGlob[1].Z += dV;
+
+                        }
+                        else if (m_iSide == 1)  // Bordo dx
+                        {
+                            CProjectPlane.m_aFace3DPointGlob[1].X += dH* CProjectPlane.m_vTangGlobal.X;
+                            CProjectPlane.m_aFace3DPointGlob[1].Y += dH * CProjectPlane.m_vTangGlobal.Y;
+                            CProjectPlane.m_aFace3DPointGlob[2].X += dH * CProjectPlane.m_vTangGlobal.X;
+                            CProjectPlane.m_aFace3DPointGlob[2].Y += dH * CProjectPlane.m_vTangGlobal.Y;
+                        }
+                        else if (m_iSide == 2)  // Bordo inferiore
+                        {
+                            CProjectPlane.m_aFace3DPointGlob[2].Z += dV;
+                            CProjectPlane.m_aFace3DPointGlob[3].Z += dV;
+
+                        }
+                        else if (m_iSide == 3)  // Bordo sn
+                        {
+                            CProjectPlane.m_aFace3DPointGlob[3].X += dH * CProjectPlane.m_vTangGlobal.X;
+                            CProjectPlane.m_aFace3DPointGlob[3].Y += dH * CProjectPlane.m_vTangGlobal.Y;
+                            CProjectPlane.m_aFace3DPointGlob[0].X += dH * CProjectPlane.m_vTangGlobal.X;
+                            CProjectPlane.m_aFace3DPointGlob[0].Y += dH * CProjectPlane.m_vTangGlobal.Y;
+                        }
+
+                        for (int i = 0; i < 4; i++)
+                            CProjectPlane.m_aFace3DPointLoc[i] = m_Window.viewer360_View.PointGlob2Loc(CProjectPlane.m_aFace3DPointGlob[i]);
+
+                        UpdateViewPolygonFromFace3D();
                     }
 
                     offset = newPosition;
@@ -236,11 +299,11 @@ namespace Viewer360.View
         {
             isDragging = false;
             iDraggingPoint = -1;
+            if (m_iVFMode == 1 && (m_iCategory == 4 || m_iCategory == 5))
+            {
+                m_oVFinder.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 255, 0, 0));
+            }
         }
-
-
-
-
 
         static private void AddEllipse(Canvas canvas, double left, double top, int iPointIndex = -1)
         {
@@ -274,7 +337,9 @@ namespace Viewer360.View
             // Console.WriteLine("Cerchio_BottonUp");
             //++++++++++++++++++++++
             if (CUIManager.GetMode() == ViewerMode.Edit)
+            {
                 m_oVFinder.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 255, 0, 0));
+            }
             else
                 m_oVFinder.Fill = null;
 
@@ -311,7 +376,7 @@ namespace Viewer360.View
 
         static private void DeleteCerchio_Click(object sender, MouseButtonEventArgs e)
         {
-            if (!Keyboard.IsKeyDown(Key.LeftCtrl))
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl) || m_iVFMode==1 || m_iCategory==4 || m_iCategory==5)
                 return;
 
             if (m_EllipseList.Count == 3)  // Se sono già a 3 vertici smetto di eliminare punti
@@ -405,6 +470,7 @@ namespace Viewer360.View
             }
 
             aItemDefaultEntry = new List<int>();
+            m_iVFMode = 0;
         }
         static public ViewerMode GetMode() { return m_eMode; }
 
@@ -415,13 +481,13 @@ namespace Viewer360.View
 
             for (int i = 0; i < 4; i++)
             {
-                double dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPoint[i], m_Window.viewer360_View.MyCam);
+                double dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPointLoc[i], m_Window.viewer360_View.MyCam);
                 if (dDist > 0)  // Dietro la telecamera
                 {
                     m_oVFinder.Points = null;
                     return;
                 }
-                Point3D pTmp = new Point3D(CProjectPlane.m_aFace3DPoint[i].X, CProjectPlane.m_aFace3DPoint[i].Y, -CProjectPlane.m_aFace3DPoint[i].Z);
+                Point3D pTmp = new Point3D(CProjectPlane.m_aFace3DPointLoc[i].X, CProjectPlane.m_aFace3DPointLoc[i].Y, -CProjectPlane.m_aFace3DPointLoc[i].Z);
                 m_oVFinder.Points[i] = Viewport3DHelper.Point3DtoPoint2D(m_Window.viewer360_View.vp, pTmp);
             }
         }
@@ -449,18 +515,26 @@ namespace Viewer360.View
             for (int i = 0; i < m_aOriginalPolygon.Length; i++)
             {
                 Point p = new Point(m_aOriginalPolygon[i].X, m_aOriginalPolygon[i].Y);
-                AddEllipse(myCanvas, p.X, p.Y, i);
+                if (m_iVFMode == 0  || m_eMode == ViewerMode.Create)
+                    AddEllipse(myCanvas, p.X, p.Y, i);
                 NewPoints.Add(p);
             }
-
             m_oVFinder.Points = NewPoints;
 
+            if (m_iVFMode == 0)
+            {
+                m_oVFinder.StrokeDashArray = new DoubleCollection(new double[] { 2, 2 }); ;
+            }
+            else
+            {
+                m_oVFinder.StrokeDashArray = null;
+            }
         }
         static public void RestorePolygon(CSingleFileLabel oLabel)
         {
             DeleteAllEllipse();
 
-            PointCollection NewPoints = new PointCollection();
+
             double dScaleX;
             double dScaleY;
             if (m_Window.viewer360_View.GetProjection() == Viewer360View.ViewerProjection.Spheric)
@@ -474,14 +548,57 @@ namespace Viewer360.View
                 dScaleY = m_Window.viewer360_View.RenderSize.Height / oLabel.m_ImageHeight;
             }
 
-            for (int i = 0; i < oLabel.m_aLabelInfo[0].aPolyPointX.Count; i++)
+            int iCat = oLabel.m_aLabelInfo[0].iCategory;
+            if (iCat != 4 && iCat != 5)  // Non windows/door
             {
-                Point p = new Point(oLabel.m_aLabelInfo[0].aPolyPointX[i] * dScaleX, oLabel.m_aLabelInfo[0].aPolyPointY[i] * dScaleY);
-                AddEllipse(myCanvas, p.X, p.Y, i);
-                NewPoints.Add(p);
+                PointCollection NewPoints = new PointCollection();
+
+                for (int i = 0; i < oLabel.m_aLabelInfo[0].aPolyPointX.Count; i++)
+                {
+                    Point p = new Point(oLabel.m_aLabelInfo[0].aPolyPointX[i] * dScaleX, oLabel.m_aLabelInfo[0].aPolyPointY[i] * dScaleY);
+                    AddEllipse(myCanvas, p.X, p.Y, i);
+                    NewPoints.Add(p);
+                }
+
+                m_oVFinder.Points = NewPoints;
+                CProjectPlane.RemovePlane();
+                SetVFMode(0);
+
+            }
+            else
+            {
+                m_oVFinder.Points = null;
+                CSingleFileLabel.SLabelInfo oLInfo= oLabel.m_aLabelInfo[0];
+
+                // Calcolo piano di proiezione
+                double dPosX = oLInfo.aPolyPointX[0];
+                double dPosY = oLInfo.aPolyPointY[0];
+                double dNX = oLInfo.aPolyPointY[1] - oLInfo.aPolyPointY[0];
+                double dNY = oLInfo.aPolyPointX[1] - oLInfo.aPolyPointX[0];
+                double dLen = Math.Sqrt(dNX * dNX + dNY * dNY);
+                CProjectPlane.SetPlane(dPosX, dPosY, dNX / dLen, dNY / dLen, oLInfo.sParentElementName);
+
+                Point3D[] aPoint = new Point3D[oLInfo.aPolyPointX.Count];
+
+                for (int i = 0; i < oLInfo.aPolyPointX.Count; i++)
+                    aPoint[i] = new Point3D(oLInfo.aPolyPointX[i], oLInfo.aPolyPointY[i], oLInfo.aPolyPointZ[i]);
+
+                CProjectPlane.m_aFace3DPointGlob = aPoint;
+
+                // Trasformo i punti in coordinate locali
+                CProjectPlane.m_aFace3DPointLoc = new Point3D[4];
+                for (int i = 0; i < 4; i++)
+                    CProjectPlane.m_aFace3DPointLoc[i] = m_Window.viewer360_View.PointGlob2Loc(CProjectPlane.m_aFace3DPointGlob[i]);
+
+                CProjectPlane.ComputeTangAxes();
+
+                SetVFMode(1);
+
+                // Ricalcolo coordinate schermo
+                UpdateViewPolygonFromFace3D();
+
             }
 
-            m_oVFinder.Points = NewPoints;
         }
 
         static double Length(Point v)
@@ -581,6 +698,45 @@ namespace Viewer360.View
 
         }
 
+
+        static public void RescaleViewfinderOnFovChange(double dOldFov, double dNewFov)
+        {
+            if(dOldFov==dNewFov)
+                return;
+
+            if (m_iVFMode == 1)
+                UpdateViewPolygonFromFace3D();
+            else
+            {
+                // TODO
+            }
+
+/*
+            // Calcolo fattori di scala
+            if (sizeInfo.PreviousSize.Width + sizeInfo.PreviousSize.Height < 1)
+                return;
+
+            double dScaleX = sizeInfo.NewSize.Width / sizeInfo.PreviousSize.Width;
+            double dScaleY = sizeInfo.NewSize.Height / sizeInfo.PreviousSize.Height;
+
+            // Calcolo nuova posizione centro
+            Point vNewCentre = new Point(vViewfinderCentre.X * dScaleX, vViewfinderCentre.Y * dScaleY);
+
+            // Aggiorno coordinate vertici e centro mirino
+            Point vNewDelta;
+            Point vP;
+            for (int i = 0; i < m_oVFinder.Points.Count; i++)
+            {
+                vNewDelta = new Point((m_oVFinder.Points[i].X - vViewfinderCentre.X) * dScaleX, (m_oVFinder.Points[i].Y - vViewfinderCentre.Y) * dScaleY);
+                vP = new Point(vNewCentre.X + vNewDelta.X, vNewCentre.Y + vNewDelta.Y);
+                m_oVFinder.Points[i] = vP;
+            }
+
+            vViewfinderCentre = vNewCentre;
+            UpdateVertexCircle();
+*/
+        }
+
         static public void InitUI(CSingleFileLabel oLabel)
         {
             CCatalogManager oCM = SharingHelper.GetCatalogManager();
@@ -613,7 +769,8 @@ namespace Viewer360.View
                 m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
                 m_Window.PrevLabelButton.Visibility = Visibility.Collapsed;
                 m_Window.DeleteLabelButton.Visibility = Visibility.Collapsed;
-                m_Window.NewLabelButton.Visibility = Visibility.Collapsed;
+                //m_Window.NewLabelButton.Visibility = Visibility.Collapsed;
+                m_Window.NewLabelButton.Content = "View Element";
 
 
                 m_Window.CategoryCombo.IsEnabled = true;
@@ -633,6 +790,7 @@ namespace Viewer360.View
                 if (m_iCategory == 4 || m_iCategory == 5)  // Windows or Door
                 {
                     m_Window.Project2PlaneButton.Visibility = Visibility.Visible;
+                    m_Window.SaveButton.Visibility = Visibility.Collapsed;
                     if (CProjectPlane.m_bPlaneDefined)
                     {
                         m_Window.Project2PlaneButton.BorderBrush = Brushes.Black;
@@ -650,6 +808,7 @@ namespace Viewer360.View
                 }
                 else
                 {
+                    m_Window.SaveButton.Visibility = Visibility.Visible;
                     m_Window.Project2PlaneButton.Visibility = Visibility.Collapsed;
                     m_Window.AIButton.Visibility = Visibility.Collapsed;
                 }
@@ -665,7 +824,9 @@ namespace Viewer360.View
                 m_Window.PrevLabelButton.Visibility = Visibility.Visible;
                 m_Window.PrevLabelButton.Visibility = Visibility.Visible;
                 m_Window.DeleteLabelButton.Visibility = Visibility.Visible;
-                m_Window.NewLabelButton.Visibility = Visibility.Visible;
+                //m_Window.NewLabelButton.Visibility = Visibility.Visible;
+                m_Window.NewLabelButton.Content = "New Element";
+
 
                 m_Window.CategoryCombo.IsEnabled = false;
                 m_Window.CategoryCombo.BorderBrush = Brushes.LightGray;
@@ -679,6 +840,7 @@ namespace Viewer360.View
                 m_Window.ElementName.BorderBrush = Brushes.Black;
                 m_Window.ElementName.Foreground = Brushes.Black;
 
+                m_Window.SaveButton.Visibility = Visibility.Visible;
                 m_Window.SaveButton.Content = "Save change";
 
                 m_Window.Project2PlaneButton.Visibility = Visibility.Collapsed;
@@ -716,15 +878,19 @@ namespace Viewer360.View
 
                 if (m_eMode != ViewerMode.Create)  // Sto passando da Edit a Create
                 {
+                    m_eMode = ViewerMode.Create;
                     ResetPolygon();  // Resetto il mirino
+                    SetVFMode(0);  // Sicuramentein questa modalià il "mirino" è standard
+                    SharingHelper.m_iSendCategoryToServer = m_iCategory;  // Scatena aggiornamento server con restituzione info muro 
                 }
-                m_eMode = ViewerMode.Create;
+                
                 m_oVFinder.Fill = null;
             }
             else
             {
                 if (m_eMode != ViewerMode.Edit)  // Sto passando da Create a Edit
                 {
+                    m_eMode = ViewerMode.Edit;  // MAH!! SPERIAMO BENE
                     (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
 
                     // Se non esiste alcuna label ripristino la modalità Create
@@ -741,6 +907,7 @@ namespace Viewer360.View
 
                 m_eMode = ViewerMode.Edit;
                 m_oVFinder.Fill = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
+
             }
             UpdateUI();
         }
@@ -781,17 +948,28 @@ namespace Viewer360.View
             aPoint[1].Y = dYRight;
             aPoint[2].Y = dYRight;
 
-            for (int i = 0; i < 4; i++)
-                aPoint[i] = m_Window.viewer360_View.PointGlob2Loc(aPoint[i]);
+            // Memorizzo punti in coordinate Globali
+            CProjectPlane.m_aFace3DPointGlob = aPoint;
 
-            // Memorizzo 
-            CProjectPlane.m_aFace3DPoint = aPoint;
+            // Trasformo i punti in coordinate locali
+            CProjectPlane.m_aFace3DPointLoc = new Point3D[4];
+            for (int i = 0; i < 4; i++)
+                CProjectPlane.m_aFace3DPointLoc[i] = m_Window.viewer360_View.PointGlob2Loc(CProjectPlane.m_aFace3DPointGlob[i]);
+
+            // Passo a modalità Proiezione
+            SetVFMode(1);
+
+            // Salvo tutto sul file .mlb
+            m_Window.viewer360_View.SaveMlb();
+
+            // Calcolo l'asse orizzontale (per eventuale edit)
+            CProjectPlane.ComputeTangAxes();
 
             // Aggiorno il mirino
             UpdateViewPolygonFromFace3D();
 
-            //CUIManager.SetViewerMode(ViewerMode.Edit);
-            //            CUIManager.ChangeMode();
+            CUIManager.SetViewerMode(ViewerMode.Edit);
+            //CUIManager.ChangeMode();
         }
 
 
@@ -809,10 +987,23 @@ namespace Viewer360.View
             m_Window.ElementName.Text = m_Window.CategoryCombo.SelectedItem.ToString();
 
             int iCat = oLList[iSelectedCatIndex][0].nCategory;
+
+            if(iCat!=m_iCategory)
+            {
+                SetVFMode(0);
+                /*
+                if (iCat == 4 || iCat == 5)
+                    SetVFMode(1);
+                else 
+                    SetVFMode(0);
+                */
+            }
+
             CUIManager.SetCurrentCategory(iCat);
             CUIManager.UpdateUI();
 
             SharingHelper.m_iSendCategoryToServer = iCat;
+
 
         }
 
