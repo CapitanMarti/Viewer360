@@ -116,9 +116,12 @@ namespace Viewer360.ViewModel
         {
             m_iCurrentPhotoIndex++;
             if (m_iCurrentPhotoIndex >= CLabelManager.GetPhotoNum())
+            {
                 m_iCurrentPhotoIndex = 0;
+                PointCloudUtility.CLabelManager.SelectCameraByIndex(0);
+            }
 
-            LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
+                LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
             SharingHelper.m_bPhotoHasChanged = true;  // Mandare messaggio server su nuova immagine (camera) selezionata
         }
 
@@ -126,7 +129,10 @@ namespace Viewer360.ViewModel
         {
             m_iCurrentPhotoIndex--;
             if (m_iCurrentPhotoIndex < 0)
-                m_iCurrentPhotoIndex = CLabelManager.GetPhotoNum()-1;
+            {
+                m_iCurrentPhotoIndex = CLabelManager.GetPhotoNum() - 1;
+                PointCloudUtility.CLabelManager.SelectCameraByIndex(m_iCurrentPhotoIndex);
+            }
 
             LoadNewImage(CLabelManager.GetPhotoFullName(m_iCurrentPhotoIndex));
             SharingHelper.m_bPhotoHasChanged = true; // Mandare messaggio server su nuova immagine (camera) selezionata
@@ -148,6 +154,7 @@ namespace Viewer360.ViewModel
 
             // Qui devo impostare i parametri associati alla nuova Label: valori di UI e poligono
             m_iCurrentLabelIndex = iCurrentLabelIndex;
+            PointCloudUtility.CLabelManager.SelectCameraByIndex(m_iCurrentPhotoIndex,m_iCurrentLabelIndex);
             CUIManager.InitUI(oLabel);
 
             if(!bSoppressFlag)
@@ -261,6 +268,7 @@ namespace Viewer360.ViewModel
             m_Window.Title = "Scan2Bim 360° Viewer    -    ";
 
             m_iCurrentPhotoIndex = -1;
+            PointCloudUtility.CLabelManager.SelectCameraByIndex(-1);
 
         }
 
@@ -270,6 +278,7 @@ namespace Viewer360.ViewModel
             m_Window.Title = "Scan2Bim 360° Viewer    -    " + System.IO.Path.GetFileName(sImageFile);
 
             m_iCurrentPhotoIndex = CLabelManager.GetPhotoIndexFromName(System.IO.Path.GetFileName(sImageFile));
+            PointCloudUtility.CLabelManager.SelectCameraByIndex(m_iCurrentPhotoIndex,-1);
             CViewerCameraManager.CameraInfo oInfo = CViewerCameraManager.GetCameraInfo(m_iCurrentPhotoIndex);
             SharingHelper.SetCameraPos(oInfo.dPosX, oInfo.dPosY, oInfo.dPosZ);
             SharingHelper.SetCameraRot(oInfo.dRotX, oInfo.dRotY, oInfo.dRotZ);
@@ -381,6 +390,8 @@ namespace Viewer360.ViewModel
             SharingHelper.SetFileName(sImageFile);
 
             m_iCurrentPhotoIndex = CLabelManager.GetPhotoIndexFromName(System.IO.Path.GetFileName(sImageFile));
+            PointCloudUtility.CLabelManager.SelectCameraByIndex(m_iCurrentPhotoIndex);
+
             CViewerCameraManager.CameraInfo oInfo = CViewerCameraManager.GetCameraInfo(m_iCurrentPhotoIndex);
             SharingHelper.SetCameraPos(oInfo.dPosX, oInfo.dPosY, oInfo.dPosZ);
             SharingHelper.SetCameraRot(oInfo.dRotX, oInfo.dRotY, oInfo.dRotZ);

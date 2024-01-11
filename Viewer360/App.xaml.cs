@@ -12,6 +12,8 @@ using System.Windows.Media.Media3D;
 using static PointCloudUtility.CMessageManager;
 using static Viewer360.View.CUIManager;
 using System.Xml.Linq;
+using System.Globalization;
+using System.Collections.Generic;
 
 
 namespace Viewer360
@@ -122,8 +124,18 @@ namespace Viewer360
                     string sWallName = "";
                     m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY, ref iSide, ref sWallName);
 
+
+
                     if (CUIManager.GetMode() == ViewerMode.Create)  // Modalità Create
                     {
+                        //++++++++++++++++++++++++
+                        Console.WriteLine(sWallName);
+                        Console.WriteLine("vPos="+ dPosX.ToString(CultureInfo.InvariantCulture)+"  "+ dPosY.ToString(CultureInfo.InvariantCulture));
+                        Console.WriteLine("vN="+ dNX.ToString(CultureInfo.InvariantCulture)+ "  "+dNX.ToString(CultureInfo.InvariantCulture));
+                        Console.WriteLine("iSide="+ iSide.ToString(CultureInfo.InvariantCulture));
+                        Console.WriteLine("");
+                        //++++++++++++++++++++++++
+
                         if (dNX <= 1 && CUIManager.GetMode() == ViewerMode.Create)  // Piano valido
                             CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY, sWallName);
                         else  // Nessun piano identificato
@@ -218,7 +230,19 @@ namespace Viewer360
 
             if (SharingHelper.m_bElementDeleted)
             {
-                m_oMsgManager.SendElementDeletedWarning();
+                int iPhotoIndex=-1;
+                int iLabelIndex=-1;
+                CLabelManager.GetSelectionIndex(ref iPhotoIndex, ref iLabelIndex);
+
+                iPhotoIndex = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex;
+                iLabelIndex = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex;
+
+                string sSelElementName = "";
+
+                if(iPhotoIndex>=0 && iLabelIndex>=0)
+                    sSelElementName=CLabelManager.GetLabelName(iPhotoIndex, iLabelIndex);
+
+                m_oMsgManager.SendElementDeletedWarning(sSelElementName);
                 SharingHelper.m_bElementDeleted = false;
                 return;
             }

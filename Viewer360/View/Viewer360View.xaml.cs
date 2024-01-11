@@ -570,6 +570,7 @@ namespace Viewer360.View
             (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel = oLabelCandidate;
             (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex=iPhotoIndex;
             (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentLabelIndex = iLabelIndex;
+            PointCloudUtility.CLabelManager.SelectCameraByIndex(iPhotoIndex, iLabelIndex);
 
             SharingHelper.CNewMsgInfo1 oNewMsg= new SharingHelper.CNewMsgInfo1();
             oNewMsg.m_sLabel = oLabelCandidate;

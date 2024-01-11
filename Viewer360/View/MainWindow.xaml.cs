@@ -325,7 +325,8 @@ namespace Viewer360.View
             // TODO  Mando messaggio di cancellazione a server
 
             // Elimino la label dalla lista 
-            CLabelManager.RemoveLabel(oCurrentLabel);
+            //            CLabelManager.RemoveLabel(oCurrentLabel);
+            CLabelManager.ReloadLabel();
 
             // Cerco nuova label
             (DataContext as MainViewModel).m_iCurrentLabelIndex = -1;

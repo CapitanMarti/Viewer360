@@ -920,8 +920,12 @@ namespace Viewer360.View
             for (int i = 0; i < m_oVFinder.Points.Count; i++)
             {
                 oRay = Viewport3DHelper.GetRay(m_Window.viewer360_View.vp, m_oVFinder.Points[i]);
+                //++++++++++++++++++
+                oRay.Origin = new Point3D(oRay.Origin.X, oRay.Origin.Y, -oRay.Origin.Z);
+                oRay.Direction= new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
+                //++++++++++++++++++
                 aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
-                aPoint[i].Z = -aPoint[i].Z;  // Per ragioni misteriose l'oggetto oRay è ribaltato rispetto a Z e quindi anche il punto di intersezione col piano (verticale!)
+//                aPoint[i].Z = -aPoint[i].Z;  // Per ragioni misteriose l'oggetto oRay è ribaltato rispetto a Z e quindi anche il punto di intersezione col piano (verticale!)
                 aPoint[i] = m_Window.viewer360_View.PointLoc2Glob(aPoint[i]);
             }
 
