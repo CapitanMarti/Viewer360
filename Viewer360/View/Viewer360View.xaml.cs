@@ -388,6 +388,75 @@ namespace Viewer360.View
 
         }
 
+        public void SaveImageAndJsonForCloudClick()
+        {
+
+            string sNewJsonFileName="";
+            string sViewerPngFile="";
+            string sCloudClickPngFile="";
+
+            SharingHelper.GetUniqueFileNameForCloudClick(ref sNewJsonFileName, ref sViewerPngFile, ref sCloudClickPngFile);
+
+            PointCloudUtility.CSingleFileLabel oLabelCandidate;
+            if (m_Projection == ViewerProjection.Spheric)
+                oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+            else
+            {
+                System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
+                System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
+
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  // TODO aggiungere dati associati a .mlb
+            }
+
+            // Genero immagine partendo da render target
+            int nWidth;
+            int nHeight;
+            double dOffset = 0;
+            if (m_Projection == ViewerProjection.Spheric)
+            {
+                nWidth = Convert.ToInt32(m_ViewSize.Width * SharingHelper.m_dConvFactor);
+                nHeight = Convert.ToInt32(m_ViewSize.Height * SharingHelper.m_dConvFactor);
+            }
+            else
+            {
+                double dSizeCorrected = vp.RenderSize.Width * Image.Height / Image.Width;
+                dOffset = SharingHelper.m_dConvFactor*(vp.RenderSize.Height - dSizeCorrected) / 2;
+
+//                nHeight =(int)((vp.RenderSize.Width + dSizeCorrected) * Image.Height * SharingHelper.m_dConvFactor / Image.Width);
+                nHeight = (int)((vp.RenderSize.Width + dOffset) * Image.Height * SharingHelper.m_dConvFactor / Image.Width);
+                nWidth = Convert.ToInt32(m_ViewSize.Width * SharingHelper.m_dConvFactor);
+            }
+            var renderTarget = new RenderTargetBitmap(nWidth, nHeight, 144, 144, PixelFormats.Default);
+            renderTarget.Render(vp);
+
+            MemoryStream stream = new MemoryStream();
+            BitmapEncoder encoder = new BmpBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderTarget));
+            encoder.Save(stream);
+            System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(stream);
+
+            // Salvo la bitmap
+            bitmap.Save(sViewerPngFile);
+
+
+            // Salvo il file .CIF
+            if (m_Projection == ViewerProjection.Spheric)
+                SaveCameraInfo(sNewJsonFileName);
+
+            // Scrittura file .json
+            int iPhotoIndex = -1;
+            int iLabelIndex = -1;
+
+            m_Window.SaveJason(oLabelCandidate, sNewJsonFileName, ref iPhotoIndex, ref iLabelIndex);
+
+            // Invio messaggio a viewer con i nomi dei file
+            SharingHelper.m_bSendInfoForCloudClick = true;
+            SharingHelper.m_sNewJsonFileName = sNewJsonFileName;
+            SharingHelper.m_sViewerPngFile = sViewerPngFile;
+            SharingHelper.m_sCloudClickPngFile = sCloudClickPngFile;
+
+        }
+
         public void SaveImageAndJson()
         {
 

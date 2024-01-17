@@ -31,6 +31,11 @@ namespace Viewer360.View
         public static double m_dConvFactor;
         public static double m_dPlanarZoomFactor = 1;
 
+        public static bool m_bSendInfoForCloudClick = false;
+        public static string m_sNewJsonFileName = "";
+        public static string m_sViewerPngFile = "";
+        public static string m_sCloudClickPngFile = "";
+
         public class CNewMsgInfo1
         {
             public CSingleFileLabel m_sLabel;
@@ -114,6 +119,31 @@ namespace Viewer360.View
         public static string GetSegmentPath()
         {
             return m_sSegmentPath;
+        }
+
+
+        public static void GetUniqueFileNameForCloudClick(ref string sJsonFile, ref string sViewerPngFile, ref string sCloudClickPngFile)
+        {
+            string sCloudRenderPath = m_sLabelPath + "\\..\\CloudRender\\";
+            string sPngFileName=Path.GetFileNameWithoutExtension(m_sFullFileName);
+            bool bContinue = true;
+
+            string sTmpName = "";
+            int iCount = 0;
+            while (bContinue)
+            {
+                sTmpName = sPngFileName + "##" + Convert.ToString(iCount) + ".*";
+
+                var files = Directory.GetFiles(sCloudRenderPath, sTmpName);
+                if (files.Length == 0)
+                {
+                    sViewerPngFile = sCloudRenderPath + sPngFileName + "##" + Convert.ToString(iCount) + ".png";
+                    sCloudClickPngFile = sCloudRenderPath + sPngFileName + "##" + Convert.ToString(iCount) + "_CC.png";
+                    sJsonFile = m_sLabelPath + "\\" + sPngFileName + "##" + Convert.ToString(iCount) + "_CC.json";
+                    return;
+                }
+                iCount++;
+            }
         }
 
         public static string GetUniqueFileName(string sExt)

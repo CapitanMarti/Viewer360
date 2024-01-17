@@ -176,6 +176,11 @@ namespace Viewer360
 
                         return;
                     }
+                    else if (sMsg.m_Type == MsgType.CloudClickRequest)
+                    {
+                        m_Window.viewer360_View.SaveImageAndJsonForCloudClick();
+                        return;
+                    }
                 }
             }
 
@@ -301,6 +306,13 @@ namespace Viewer360
                                                          aPos0,aPos1,aPos2,aPos3);
 
                 SharingHelper.m_oMsgInfo1 = null;
+                return;
+            }
+
+            if(SharingHelper.m_bSendInfoForCloudClick == true)
+            {
+                m_oMsgManager.SendCloudClickInfoToViewer(SharingHelper.m_sNewJsonFileName, SharingHelper.m_sViewerPngFile, SharingHelper.m_sCloudClickPngFile);
+                SharingHelper.m_bSendInfoForCloudClick = false;
                 return;
             }
         }
