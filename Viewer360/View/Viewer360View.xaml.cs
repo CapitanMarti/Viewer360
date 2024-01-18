@@ -88,6 +88,31 @@ namespace Viewer360.View
         /// </summary>
         public double Phi { get { return camPhi; } }
 
+        public void SetOrthoCameraOrientation(Vector3D vAt)
+        {
+            // Calcolo proiezione vAt su piano orizzontale
+            double dUpX = vAt.X;
+            double dUpY = vAt.Y;
+            double dDen=Math.Sqrt(dUpX*dUpX + dUpY*dUpY);
+            dUpX /= dDen;
+            dUpY /= dDen;
+
+            // Valcolo versore trasversale
+            Vector3D vTras = new Vector3D(dUpX, dUpY, 0);
+
+            // Calcolo UpDirection come prodotto vettoriale dei due
+            Vector3D vUpDirection=Vector3D.CrossProduct(vAt, vTras);
+
+            MyOrthoCam = new OrthographicCamera
+            {
+                //                    Width = 3,
+                Position = new Point3D(0, 0, 0),
+                LookDirection = vAt,
+                UpDirection = vUpDirection
+            };
+            vp.Camera = MyOrthoCam;
+        }
+
         public void InitCamera()
         {
             timer = new DispatcherTimer(); // Initialize timer
@@ -250,7 +275,8 @@ namespace Viewer360.View
                 double dSizeX = Image.PixelWidth;
                 double dSizeY = Image.PixelHeight;
 
-                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY); // Initialize mesh 
+//                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, vp.Camera); // Initialize mesh 
+                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, null); // Initialize mesh 
                 sphereMesh = null;
 
                 // Adatta l'aspetto di finestra e view a foto

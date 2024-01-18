@@ -119,23 +119,80 @@ namespace Viewer360.Model
         }
 
 
-        public static MeshGeometry3D CreatePlaneMesh(double dSizeX, double dSizeY)
+        public static MeshGeometry3D CreatePlaneMesh(double dSizeX, double dSizeY,Camera cam)
         {
+            OrthographicCamera oCam;
+            Vector3D vGridCentre=new Vector3D(0,0,0);
+            Vector3D vUp = new Vector3D(0, 1, 0);
+            Vector3D vTras = new Vector3D(1, 0, 0);
+            Vector3D vNormal = new Vector3D(0, 0, 1);
+
+
+            if (cam != null)
+            {
+                oCam = (cam as OrthographicCamera);
+                vGridCentre = oCam.LookDirection;
+                vUp = oCam.UpDirection;
+                vTras = Vector3D.CrossProduct(oCam.UpDirection,oCam.LookDirection);
+                vNormal = -oCam.LookDirection;
+
+                //+++++++++++++++++++++++++++++++++++++
+                /*  Il seguente codice di test funziona correttamente
+
+                Vector3D vFakeAt = new Vector3D(0, 1, 1);
+                vFakeAt.Normalize();
+
+                Vector3D vFakeAt2D= new Vector3D(vFakeAt.X, vFakeAt.Y, 0);
+                vFakeAt2D.Normalize();
+
+                Vector3D vTmp = Vector3D.CrossProduct(vFakeAt, vFakeAt2D);
+                vTmp.Normalize();
+                vTras = vTmp;
+
+                //                vTras = new Vector3D(1, 0, 0);
+                vUp = Vector3D.CrossProduct(vTras, vFakeAt);
+                vUp.Normalize();
+                vGridCentre = vFakeAt;
+                vNormal = vFakeAt;
+
+                oCam = (cam as OrthographicCamera);
+                oCam.LookDirection = vFakeAt;
+                oCam.UpDirection = vUp;
+                oCam.Position = new Point3D(0, 0, 0);
+                */
+                //+++++++++++++++++++++++++++++++++++++
+
+            }
 
             MeshGeometry3D mesh = new MeshGeometry3D();
 
             double dX = 1;
             double dY = dSizeY / dSizeX;
 
-            mesh.Positions.Add(new Point3D(-dX, -dY, 0));
-            mesh.Positions.Add(new Point3D(-dX, dY, 0));
-            mesh.Positions.Add(new Point3D(dX, dY, 0));
-            mesh.Positions.Add(new Point3D(dX, -dY, 0));
+            Vector3D v0 = vGridCentre - dX * vTras - dY * vUp;
+            Vector3D v1 = vGridCentre - dX * vTras + dY * vUp;
+            Vector3D v2 = vGridCentre + dX * vTras + dY * vUp;
+            Vector3D v3 = vGridCentre + dX * vTras - dY * vUp;
+            /*
+                    mesh.Positions.Add(new Point3D(-dX, -dY, 0));
+                    mesh.Positions.Add(new Point3D(-dX, dY, 0));
+                    mesh.Positions.Add(new Point3D(dX, dY, 0));
+                    mesh.Positions.Add(new Point3D(dX, -dY, 0));
 
-            mesh.Normals.Add(new Vector3D(0, 0, 1));
-            mesh.Normals.Add(new Vector3D(0, 0, 1));
-            mesh.Normals.Add(new Vector3D(0, 0, 1));
-            mesh.Normals.Add(new Vector3D(0, 0, 1));
+                    mesh.Normals.Add(new Vector3D(0, 0, 1));
+                    mesh.Normals.Add(new Vector3D(0, 0, 1));
+                    mesh.Normals.Add(new Vector3D(0, 0, 1));
+                    mesh.Normals.Add(new Vector3D(0, 0, 1));
+            */
+            mesh.Positions.Add(new Point3D(v0.X, v0.Y, v0.Z));
+            mesh.Positions.Add(new Point3D(v1.X, v1.Y, v1.Z));
+            mesh.Positions.Add(new Point3D(v2.X, v2.Y, v2.Z));
+            mesh.Positions.Add(new Point3D(v3.X, v3.Y, v3.Z));
+
+            mesh.Normals.Add(vNormal);
+            mesh.Normals.Add(vNormal);
+            mesh.Normals.Add(vNormal);
+            mesh.Normals.Add(vNormal);
 
             mesh.TextureCoordinates.Add(new Point(0, dSizeY));
             mesh.TextureCoordinates.Add(new Point(0, 0));

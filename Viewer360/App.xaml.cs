@@ -150,8 +150,8 @@ namespace Viewer360
                     if (sMsg.m_Type == MsgType.CameraSelected)  // Messaggio pending è di tipo CameraSelected
                     {
                         string sCameraName = "";
-
-                        m_oMsgManager.GetCameraSelected(sMsg.m_sMsg, ref sCameraName);
+                        double dAtX=0, dAtY=0, dAtZ=0;
+                        m_oMsgManager.GetCameraSelected(sMsg.m_sMsg, ref sCameraName, ref dAtX, ref dAtY, ref dAtZ);
 
                         (m_Window.DataContext as ViewModel.MainViewModel).LoadNewImage(sCameraName);
                         CUIManager.SetViewerMode(ViewerMode.Create);
@@ -194,7 +194,7 @@ namespace Viewer360
                 sElementlName = System.IO.Path.GetFileNameWithoutExtension(sElementlName);
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, sElementlName);
+                m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov, sElementlName);
 
                 SharingHelper.m_bLabelHasChanged = false;
                 return;
