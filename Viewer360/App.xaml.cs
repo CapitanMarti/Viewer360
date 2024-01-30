@@ -39,6 +39,8 @@ namespace Viewer360
             m_Window.viewer360_View.m_Window = m_Window;
             (m_Window.DataContext as ViewModel.MainViewModel).m_Window = m_Window;
 
+            // Inizializzazione CProjectManagerData
+            CProjectManagerData.InitFromMapFile();
 
             // Inizializzazione CameraManager (lettura dati posizioni/orientamento camere da Mapfile creato dal server)
             CViewerCameraManager.Init();
