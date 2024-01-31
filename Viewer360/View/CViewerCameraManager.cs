@@ -1,6 +1,7 @@
 ﻿using PointCloudUtility;
 using System;
 using System.Collections.Generic;
+using System.Data.Odbc;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -24,6 +25,11 @@ namespace Viewer360.View
             public double dRotX { get; set; }
             public double dRotY { get; set; }
             public double dRotZ { get; set; }
+            public double dAtX { get; set; }
+            public double dAtY { get; set; }
+            public double dAtZ { get; set; }
+            public double dFovH { get; set; }
+            public double dFovV { get; set; }
 
             public CameraInfo()
             {
@@ -112,7 +118,16 @@ namespace Viewer360.View
                         oTmp.dRotY = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
                     else if (sName == "RZ")
                         oTmp.dRotZ = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
-
+                    else if (sName == "vAtX")
+                        oTmp.dAtX = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vAtY")
+                        oTmp.dAtY = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vAtZ")
+                        oTmp.dAtZ = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "fovH")
+                        oTmp.dFovH = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "fovV")
+                        oTmp.dFovV = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
 
                     paramNode = paramNode.NextSibling;
                 }
@@ -125,6 +140,21 @@ namespace Viewer360.View
 
             return 0;
         }
+
+        static public CameraInfo GetCameraInfo(string sCameraName)
+        {
+            if (m_aCameraInfo == null)
+                return null;
+
+            foreach(var oInfo in m_aCameraInfo)
+            {
+                if (sCameraName == oInfo.sPhotoName)
+                    return oInfo;
+            }
+
+            return null;
+        }
+
 
         static public CameraInfo GetCameraInfo(int index)
         {

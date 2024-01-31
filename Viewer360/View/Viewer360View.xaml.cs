@@ -56,6 +56,8 @@ namespace Viewer360.View
         private Matrix3D m_mInvRotXYZ;
         public PerspectiveCamera MyCam;
         public OrthographicCamera MyOrthoCam;
+        private double m_dPlanarModeFovH=0;
+        private double m_dPlanarModeFovV = 0;
 
 
         public System.Windows.Size m_ViewSize;
@@ -71,12 +73,26 @@ namespace Viewer360.View
         /// <summary>
         /// Camera horizontal FOV
         /// </summary>
-        public double Hfov { get { return MyCam.FieldOfView; } }
+        public double Hfov { get 
+            {
+                if (MyCam != null)  // Proiezione sferica
+                    return MyCam.FieldOfView;
+                else  // Caso planare
+                    return m_dPlanarModeFovH;
+            } 
+        }
 
         /// <summary>
         /// Camera vertical FOV
         /// </summary>
-        public double Vfov { get { return 2 * Math.Atan(ActualHeight / ActualWidth * Math.Tan(MyCam.FieldOfView * Math.PI / 180 / 2)) * 180 / Math.PI; } }
+        public double Vfov { get 
+            {
+                if (MyCam != null)  // Proiezione sferica
+                    return 2 * Math.Atan(ActualHeight / ActualWidth * Math.Tan(MyCam.FieldOfView * Math.PI / 180 / 2)) * 180 / Math.PI;
+                else  // Caso planare
+                    return m_dPlanarModeFovV;
+            } 
+        }
 
         /// <summary>
         /// Camera horizontal orientation
@@ -275,8 +291,14 @@ namespace Viewer360.View
                 double dSizeX = Image.PixelWidth;
                 double dSizeY = Image.PixelHeight;
 
-//                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, vp.Camera); // Initialize mesh 
-                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, null); // Initialize mesh 
+                string sFileName = Path.GetFileName(Image.ToString());
+                CViewerCameraManager.CameraInfo oInfo = CViewerCameraManager.GetCameraInfo(sFileName);
+
+                m_dPlanarModeFovH = oInfo.dFovH * Math.PI / 180;
+                m_dPlanarModeFovV = oInfo.dFovV * Math.PI / 180;
+
+                Vector3D vOriginalPhotoAt = new Vector3D(oInfo.dAtX,oInfo.dAtY,oInfo.dAtZ);
+                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, vp.Camera, vOriginalPhotoAt); // Initialize mesh 
                 sphereMesh = null;
 
                 // Adatta l'aspetto di finestra e view a foto
@@ -431,7 +453,7 @@ namespace Viewer360.View
                 System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
                 System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
 
-                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  // TODO aggiungere dati associati a .mlb
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  
             }
 
             // Genero immagine partendo da render target
@@ -500,7 +522,7 @@ namespace Viewer360.View
                 System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
                 System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
 
-                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  // TODO aggiungere dati associati a .mlb
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  
             }
             PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;
 
@@ -618,7 +640,7 @@ namespace Viewer360.View
 
             PointCloudUtility.CSingleFileLabel oLabelCandidate;
             if (m_Projection == ViewerProjection.Spheric)
-                oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection);
+                oLabelCandidate = m_Window.BuildSavingLabelCandidate(sNewJsonFileName, m_ViewSize, camTheta, camPhi, Vfov, Hfov, MyCam.LookDirection,true);
             else
             {
                 System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
@@ -713,7 +735,11 @@ namespace Viewer360.View
             m_mRotY.M34 = 0;
             m_mRotY.M44 = 1;
 
-            double dRotZ = -GeometryHelper.Deg2Rad(vCameraRot.Z) + Math.PI / 2;  // OFFSET ANGOLARE PER COMPATIBILITA' TRIMBLE!
+            double dOffset = 0;
+            if(m_Projection==ViewerProjection.Spheric)
+                dOffset= Math.PI / 2;  // OFFSET ANGOLARE PER COMPATIBILITA' TRIMBLE!
+
+            double dRotZ = -GeometryHelper.Deg2Rad(vCameraRot.Z) + dOffset;  
             m_mRotZ.M11 = Math.Cos(dRotZ);
             m_mRotZ.M12 = Math.Sin(dRotZ);
             m_mRotZ.M13 = 0;
@@ -1073,10 +1099,6 @@ namespace Viewer360.View
                 double dLen = Math.Sqrt(dX * dX + dY * dY);
                 dX /= dLen;
                 dY /= dLen;
-            }
-            else
-            {
-                // TODO
             }
         }
 

@@ -212,7 +212,7 @@ namespace Viewer360
                 double dY = 0;
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraSelected1(index, dX, dY);
+                m_oMsgManager.SendCameraSelected1(index, dX, dY);  // Nota: nel caso planare i valori inviati di dX e dY non saranno utilizzati
 
                 SharingHelper.m_bPhotoHasChanged = false;
                 SharingHelper.m_bCameraAtHasChanged = false; // Per evitare doppio messaggio
@@ -280,9 +280,18 @@ namespace Viewer360
                 int iCategory = oLabel.m_aLabelInfo[0].iCategory;
 
                 double[] aCameraPos = new double[3];
-                aCameraPos[0] = m_Window.viewer360_View.MyCam.Position.X;
-                aCameraPos[1] = m_Window.viewer360_View.MyCam.Position.Y;
-                aCameraPos[2] = m_Window.viewer360_View.MyCam.Position.Z;
+                if (m_Window.viewer360_View.MyCam != null)
+                {
+                    aCameraPos[0] = m_Window.viewer360_View.MyCam.Position.X;
+                    aCameraPos[1] = m_Window.viewer360_View.MyCam.Position.Y;
+                    aCameraPos[2] = m_Window.viewer360_View.MyCam.Position.Z;
+                }
+                else
+                {
+                    aCameraPos[0] = m_Window.viewer360_View.MyOrthoCam.Position.X;
+                    aCameraPos[1] = m_Window.viewer360_View.MyOrthoCam.Position.Y;
+                    aCameraPos[2] = m_Window.viewer360_View.MyOrthoCam.Position.Z;
+                }
 
                 double[] aPos0 = new double[3];
                 aPos0[0] = oLabel.m_aLabelInfo[0].aPolyPointX[0];

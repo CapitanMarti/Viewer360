@@ -105,7 +105,7 @@ namespace Viewer360
         }
 
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+        /*
         public static bool Point2DtoPoint3D(this Viewport3D viewport, Point pointIn, out Point3D pointNear, out Point3D pointFar)
         {
             pointNear = new Point3D();
@@ -136,7 +136,19 @@ namespace Viewer360
 
             return true;
         }
+        */
 
+        static public double CameraDist(Point3D pointWorld, OrthographicCamera myCam)
+        {
+            // Calcolare il vettore dalla telecamera al punto
+            Vector3D vectorToCamera = pointWorld - myCam.Position;
+
+            // Calcolare il prodotto scalare tra il vettore di direzione della telecamera e il vettore al punto
+            double dotProduct = myCam.LookDirection.X * vectorToCamera.X + myCam.LookDirection.Y * vectorToCamera.Y - myCam.LookDirection.Z * vectorToCamera.Z;  // LA Z della camera è ribaltata!!
+
+            return dotProduct;
+
+        }
 
         static public double CameraDist(Point3D pointWorld, PerspectiveCamera myCam)
         {
@@ -145,7 +157,6 @@ namespace Viewer360
             Vector3D vectorToCamera = pointWorld - myCam.Position;
 
             // Calcolare il prodotto scalare tra il vettore di direzione della telecamera e il vettore al punto
-            //            double dotProduct = Vector3D.DotProduct(myCam.LookDirection, vectorToCamera);
             double dotProduct = myCam.LookDirection.X * vectorToCamera.X + myCam.LookDirection.Y * vectorToCamera.Y - myCam.LookDirection.Z * vectorToCamera.Z;  // LA Z della camera è ribaltata!!
 
             return dotProduct;

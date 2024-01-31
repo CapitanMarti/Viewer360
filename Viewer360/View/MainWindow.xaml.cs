@@ -123,12 +123,15 @@ namespace Viewer360.View
             oLabel.m_sJsonFileName = System.IO.Path.GetFileName(sNewJsonFileName);
 
             // Creo e inizializzo LabelInfo
-            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo();
+            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo(true);
 
             // Aggiungo nome file .png
             //            oLabelInfo.sImageFileName = sNewFileName;
             oLabelInfo.sLabelName = ElementName.Text;
-            oLabelInfo.sParentElementName = ""; // TODO il valore va ricevuto dal Server 
+            if (CProjectPlane.m_bPlaneDefined)
+                oLabelInfo.sParentElementName = CProjectPlane.m_sWallName;
+            else
+                oLabelInfo.sParentElementName = "";
 
             // Aggiungo la category
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
@@ -142,21 +145,34 @@ namespace Viewer360.View
             // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<double>();
             oLabelInfo.aPolyPointY = new List<double>();
-            double dConvFactorX = ImageSize.Width / ViewSize.Width;
-            double dConvFactorY = ImageSize.Height / ViewSize.Height;
-            for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
-            {
-                oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * dConvFactorX));
-                oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * dConvFactorY));
-            }
 
+            if (CProjectPlane.m_bPlaneDefined)
+            {
+                oLabelInfo.aPolyPointZ = new List<double>();
+                for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+                {
+                    oLabelInfo.aPolyPointX.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].X));
+                    oLabelInfo.aPolyPointY.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].Y));
+                    oLabelInfo.aPolyPointZ.Add((float)(CProjectPlane.m_aFace3DPointGlob[i].Z));
+                }
+            }
+            else
+            {
+                double dConvFactorX = ImageSize.Width / ViewSize.Width;
+                double dConvFactorY = ImageSize.Height / ViewSize.Height;
+                for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
+                {
+                    oLabelInfo.aPolyPointX.Add((float)(ViewFinderPolygon.Points[i].X * dConvFactorX));
+                    oLabelInfo.aPolyPointY.Add((float)(ViewFinderPolygon.Points[i].Y * dConvFactorY));
+                }
+            }
             // Aggiungo LabelInfo a LabelManager
             oLabel.Add(oLabelInfo);
 
             return oLabel;
 
         }
-        public CSingleFileLabel BuildSavingLabelCandidate(string sNewJsonFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection)
+        public CSingleFileLabel BuildSavingLabelCandidate(string sNewJsonFileName, Size ViewSize, double dTheta, double dPhi, double dVFov, double dHFov, Vector3D vLookDirection,bool bMlb=false)
         {
             // Creo file manager per file attuale
             CSingleFileLabel oLabel = new CSingleFileLabel();
@@ -190,7 +206,7 @@ namespace Viewer360.View
 
 
             // Creo e inizializzo LabelInfo
-            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo();
+            CSingleFileLabel.SLabelInfo oLabelInfo = new CSingleFileLabel.SLabelInfo(bMlb);
 
             // Aggiungo nome file .png
             //            oLabelInfo.sImageFileName = sNewFileName;

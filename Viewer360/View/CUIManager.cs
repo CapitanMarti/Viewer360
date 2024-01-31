@@ -19,6 +19,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Viewer360.View.Viewer360View;
 
 namespace Viewer360.View
 {
@@ -479,16 +480,36 @@ namespace Viewer360.View
             if (m_oVFinder.Points == null)
                 m_oVFinder.Points = new PointCollection { new Point(0, 0), new Point(0, 0), new Point(0, 0), new Point(0, 0) };
 
-            for (int i = 0; i < 4; i++)
+
+            double dDist;
+            if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Spheric)
             {
-                double dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPointLoc[i], m_Window.viewer360_View.MyCam);
-                if (dDist > 0)  // Dietro la telecamera
+                for (int i = 0; i < 4; i++)
                 {
-                    m_oVFinder.Points = null;
-                    return;
+                    dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPointLoc[i], m_Window.viewer360_View.MyCam);
+                    if (dDist > 0)  // Dietro la telecamera
+                    {
+                        m_oVFinder.Points = null;
+                        return;
+                    }
+                    Point3D pTmp = new Point3D(CProjectPlane.m_aFace3DPointLoc[i].X, CProjectPlane.m_aFace3DPointLoc[i].Y, -CProjectPlane.m_aFace3DPointLoc[i].Z);
+                    m_oVFinder.Points[i] = Viewport3DHelper.Point3DtoPoint2D(m_Window.viewer360_View.vp, pTmp);
                 }
-                Point3D pTmp = new Point3D(CProjectPlane.m_aFace3DPointLoc[i].X, CProjectPlane.m_aFace3DPointLoc[i].Y, -CProjectPlane.m_aFace3DPointLoc[i].Z);
-                m_oVFinder.Points[i] = Viewport3DHelper.Point3DtoPoint2D(m_Window.viewer360_View.vp, pTmp);
+            }
+            else
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    dDist = CProjectPlane.CameraDist(CProjectPlane.m_aFace3DPointLoc[i], (m_Window.viewer360_View.vp.Camera as OrthographicCamera));
+                    if (dDist < 0)  // Dietro la telecamera
+                    {
+                        m_oVFinder.Points = null;
+                        return;
+                    }
+                    Point3D pTmp = new Point3D(CProjectPlane.m_aFace3DPointLoc[i].X, CProjectPlane.m_aFace3DPointLoc[i].Y, CProjectPlane.m_aFace3DPointLoc[i].Z);
+                    m_oVFinder.Points[i] = MyPoint3DtoPoint2D(pTmp);
+                }
+
             }
         }
 
@@ -912,21 +933,98 @@ namespace Viewer360.View
             UpdateUI();
         }
 
+        static Point MyPoint3DtoPoint2D(Point3D oPoint3D)
+        {
+            Point oPoint = new Point(-1000000, -1000000);
+
+            OrthographicCamera oCam = (m_Window.viewer360_View.vp.Camera as OrthographicCamera);
+            Vector3D vTras = Vector3D.CrossProduct(oCam.LookDirection, oCam.UpDirection);
+
+            // Calcolo ray come differenza fra punto e centro camera
+            Vector3D vRayDirection = new Vector3D(oPoint3D.X - oCam.Position.X, oPoint3D.Y - oCam.Position.Y, oPoint3D.Z - oCam.Position.Z);
+            vRayDirection.Normalize();
+
+            // Proietto raggio lungo vCameraAt
+            double dTmp = Vector3D.DotProduct(oCam.LookDirection, vRayDirection);
+            if (dTmp > 0)
+                vRayDirection /= dTmp;
+            else
+                return oPoint;
+
+            //+++++++++++++++++++++++++++++++++++
+            double dTest= Vector3D.DotProduct(oCam.LookDirection, vRayDirection);
+            //+++++++++++++++++++++++++++++++++++
+
+            // Calcolo vettore scostamento da centro camera 
+            Vector3D vDiff =vRayDirection - oCam.LookDirection;
+
+            double dX = Vector3D.DotProduct(vDiff, vTras);
+            double dY = Vector3D.DotProduct(vDiff , oCam.UpDirection);
+
+            double dSizeX = m_Window.viewer360_View.m_ViewSize.Width / 2;
+            double dSizeY = m_Window.viewer360_View.m_ViewSize.Height/ 2;  // La Y dell'immagine corrisponde alla Up della camera
+
+            oPoint = new Point(dSizeX*(1+dX/Math.Sin(m_Window.viewer360_View.Hfov/2)), dSizeY * (1 - dY / Math.Sin(m_Window.viewer360_View.Vfov/2)));
+
+            return oPoint;
+        }
+
+        static Ray3D OrthoCameraGetRay(Point oPoint)
+        {
+            Ray3D oRay=new Ray3D();
+
+            OrthographicCamera oCam= (m_Window.viewer360_View.vp.Camera as OrthographicCamera);
+
+            // Imposto origine raggio in centro camera
+            oRay.Origin = oCam.Position;
+
+            // Calcolo la direzione
+            Vector3D vRayDirection = new Vector3D();
+            Vector3D vTras = Vector3D.CrossProduct(oCam.LookDirection, oCam.UpDirection);
+
+            double dSizeX = m_Window.viewer360_View.m_ViewSize.Width / 2;
+            double dSizeY = m_Window.viewer360_View.m_ViewSize.Height / 2;  // La Y dell'immagine corrisponde alla Up della camera
+
+            double dX = (oPoint.X / dSizeX - 1) * Math.Sin(m_Window.viewer360_View.Hfov/2);
+            double dY = (oPoint.Y / dSizeY - 1) * Math.Sin(m_Window.viewer360_View.Vfov/2);
+
+            vRayDirection = oCam.LookDirection + vTras * dX - oCam.UpDirection * dY;
+
+            oRay.Direction = vRayDirection;
+            return oRay;
+        }
         static public void Project2Plane_Click()
         {
             Ray3D oRay;
 
             Point3D[] aPoint = new Point3D[4];
-            for (int i = 0; i < m_oVFinder.Points.Count; i++)
+            if (m_Window.viewer360_View.GetProjection() == Viewer360View.ViewerProjection.Spheric)  // Proiezione sferica --> uso Viewport3DHelper per calcolo raggi
             {
-                oRay = Viewport3DHelper.GetRay(m_Window.viewer360_View.vp, m_oVFinder.Points[i]);
-                //++++++++++++++++++
-                oRay.Origin = new Point3D(oRay.Origin.X, oRay.Origin.Y, -oRay.Origin.Z);
-                oRay.Direction= new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
-                //++++++++++++++++++
-                aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
-//                aPoint[i].Z = -aPoint[i].Z;  // Per ragioni misteriose l'oggetto oRay è ribaltato rispetto a Z e quindi anche il punto di intersezione col piano (verticale!)
-                aPoint[i] = m_Window.viewer360_View.PointLoc2Glob(aPoint[i]);
+                for (int i = 0; i < m_oVFinder.Points.Count; i++)
+                {
+                    oRay = Viewport3DHelper.GetRay(m_Window.viewer360_View.vp, m_oVFinder.Points[i]);
+
+                    oRay.Origin = new Point3D(oRay.Origin.X, oRay.Origin.Y, -oRay.Origin.Z);
+                    oRay.Direction = new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
+
+                    aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
+                    aPoint[i] = m_Window.viewer360_View.PointLoc2Glob(aPoint[i]);
+                }
+            }
+            else  // Proiezione planare --> mi calcolo i raggi a mano
+            {
+                for (int i = 0; i < m_oVFinder.Points.Count; i++)
+                {
+                    oRay = OrthoCameraGetRay(m_oVFinder.Points[i]);
+                    //++++++++++++++++++++++++++++++++++++++++++++++++++++
+                    Point3D oTmp3D = new Point3D(oRay.Origin.X + oRay.Direction.X, oRay.Origin.Y + oRay.Direction.Y, oRay.Origin.Z + oRay.Direction.Z);
+                    Point oTmp=MyPoint3DtoPoint2D(oTmp3D);
+                    //++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+                    aPoint[i] = (Point3D)CProjectPlane.GetIntersection(oRay);
+                    aPoint[i] = m_Window.viewer360_View.PointLoc2Glob(aPoint[i]);
+
+                }
             }
 
             double dZMax = (aPoint[0].Z + aPoint[1].Z) / 2;
