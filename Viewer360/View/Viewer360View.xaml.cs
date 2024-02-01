@@ -298,7 +298,9 @@ namespace Viewer360.View
                 m_dPlanarModeFovV = oInfo.dFovV * Math.PI / 180;
 
                 Vector3D vOriginalPhotoAt = new Vector3D(oInfo.dAtX,oInfo.dAtY,oInfo.dAtZ);
-                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, vp.Camera, vOriginalPhotoAt); // Initialize mesh 
+                Vector3D vOriginalPhotoUp = new Vector3D(oInfo.dUpX, oInfo.dUpY, oInfo.dUpZ);
+                Vector3D vOriginalPhotoTras = new Vector3D(oInfo.dTrasX, oInfo.dTrasY, oInfo.dTrasZ);
+                planeMesh = GeometryHelper.CreatePlaneMesh(dSizeX, dSizeY, vp.Camera, vOriginalPhotoAt, vOriginalPhotoUp, vOriginalPhotoTras); // Initialize mesh 
                 sphereMesh = null;
 
                 // Adatta l'aspetto di finestra e view a foto
@@ -646,7 +648,7 @@ namespace Viewer360.View
                 System.Windows.Size vViewSize = new System.Windows.Size(m_ViewSize.Width, m_ViewSize.Height);  // Ripristino il size della foto originale 
                 System.Windows.Size vImageSize = new System.Windows.Size(Image.PixelWidth, Image.PixelHeight);  // Ripristino il size della foto originale 
 
-                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);   // TODO aggiungere dati associati a .mlb
+                oLabelCandidate = m_Window.BuildSavingLabelCandidatePlanar(sNewJsonFileName, vViewSize, vImageSize);  
             }
 
             PointCloudUtility.CSingleFileLabel oOldLabel = (m_Window.DataContext as ViewModel.MainViewModel).m_oCurrentLabel;

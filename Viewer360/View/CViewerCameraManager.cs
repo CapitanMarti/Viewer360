@@ -28,6 +28,12 @@ namespace Viewer360.View
             public double dAtX { get; set; }
             public double dAtY { get; set; }
             public double dAtZ { get; set; }
+            public double dUpX { get; set; }
+            public double dUpY { get; set; }
+            public double dUpZ { get; set; }
+            public double dTrasX { get; set; }
+            public double dTrasY { get; set; }
+            public double dTrasZ { get; set; }
             public double dFovH { get; set; }
             public double dFovV { get; set; }
 
@@ -124,6 +130,20 @@ namespace Viewer360.View
                         oTmp.dAtY = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
                     else if (sName == "vAtZ")
                         oTmp.dAtZ = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vUpX")
+                        oTmp.dUpX = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vUpY")
+                        oTmp.dUpY = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vUpZ")
+                        oTmp.dUpZ = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vTrasX")
+                        oTmp.dTrasX = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vTrasY")
+                        oTmp.dTrasY = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+                    else if (sName == "vTrasZ")
+                        oTmp.dTrasZ = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
+
+
                     else if (sName == "fovH")
                         oTmp.dFovH = double.Parse(paramNode.InnerText.ToString(), CultureInfo.InvariantCulture);
                     else if (sName == "fovV")

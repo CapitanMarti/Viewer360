@@ -338,8 +338,6 @@ namespace Viewer360.View
                 return;
             }
 
-            // TODO  Mando messaggio di cancellazione a server
-
             // Elimino la label dalla lista 
             //            CLabelManager.RemoveLabel(oCurrentLabel);
             CLabelManager.ReloadLabel();

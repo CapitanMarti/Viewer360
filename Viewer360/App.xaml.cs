@@ -27,7 +27,6 @@ namespace Viewer360
         static CMessageManager m_oMsgManager;
         bool m_bNewImageLoaded;
 
-
         private void Application_Startup(object sender, StartupEventArgs e)
         {
             // Aggiunta callback
@@ -74,6 +73,7 @@ namespace Viewer360
 
             // Inizializzo la messaggistica col server
             m_oMsgManager = new CMessageManager(CMessageManager.PipeType.Client);
+            SharingHelper.m_oMsgManager = m_oMsgManager;
 
             if (CUIManager.m_bDebugMode == false)
             {
@@ -163,12 +163,14 @@ namespace Viewer360
                     }
                     else if (sMsg.m_Type == MsgType.ElementSelected)
                     {
+                        m_oMsgManager.DisableSending();
                         string sElementName = "";
 
                         m_oMsgManager.GetElementSelected(sMsg.m_sMsg, ref sElementName);
 
                         (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
                         CUIManager.SetViewerMode(ViewerMode.Edit);
+                        m_oMsgManager.EnableSending();
                         return;
                     }
                     else if (sMsg.m_Type == MsgType.ElementDeletedWarning)

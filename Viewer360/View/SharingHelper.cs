@@ -36,6 +36,8 @@ namespace Viewer360.View
         public static string m_sViewerPngFile = "";
         public static string m_sCloudClickPngFile = "";
 
+        public static CMessageManager m_oMsgManager;
+
         public class CNewMsgInfo1
         {
             public CSingleFileLabel m_sLabel;

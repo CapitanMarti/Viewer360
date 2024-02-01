@@ -255,9 +255,10 @@ namespace Viewer360.ViewModel
 
             m_Window.viewer360_View.UpdateThetaAndPhi(m_Window.viewer360_View.MyCam.LookDirection);
 
-            SharingHelper.m_bCameraAtHasChanged = true;
+            if(SharingHelper.m_oMsgManager.IsSendingEnabled())
+                SharingHelper.m_bCameraAtHasChanged = true;
+
             CUIManager.RestorePolygon(oLabel);
-//            m_Window.RestorePolygon(oLabel);
 
             RaisePropertyChanged("Hfov");
             RaisePropertyChanged("Vfov");
