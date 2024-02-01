@@ -150,29 +150,6 @@ namespace Viewer360.Model
             if (cam != null)
             {
                 oCam = (cam as OrthographicCamera);
-                /*
-                vOriginalPhotoAt.Normalize();
-
-                Vector3D vAt2D= new Vector3D(vOriginalPhotoAt.X, vOriginalPhotoAt.Y, 0);
-                vAt2D.Normalize();
-
-                vCameraTras = new Vector3D(-vAt2D.Y, vAt2D.X, 0);
-
-                vCameraUp = Vector3D.CrossProduct(vCameraTras, vOriginalPhotoAt);
-                vCameraUp.Normalize();
-
-                if(vCameraUp.Z < 0)
-                {
-                    vCameraUp = -vCameraUp;
-                    vCameraTras = -vCameraTras;
-                }
-                */
-
-                //++++++++++++++++++++++++++++
-                //Vector3D vTmp= Vector3D.CrossProduct(vOriginalPhotoAt,vCameraUp);
-                Vector3D vTmp= Vector3D.CrossProduct(vAt,vUp);
-                //+++++++++++++++++++
-
                 vGridCentre = vAt;
                 vNormal = vAt;
 
