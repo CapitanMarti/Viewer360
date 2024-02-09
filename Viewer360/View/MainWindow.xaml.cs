@@ -340,7 +340,7 @@ namespace Viewer360.View
 
             // Elimino la label dalla lista 
             //            CLabelManager.RemoveLabel(oCurrentLabel);
-            CLabelManager.ReloadLabel();
+            CLabelManager.ReloadLabelSet();
 
             // Cerco nuova label
             (DataContext as MainViewModel).m_iCurrentLabelIndex = -1;

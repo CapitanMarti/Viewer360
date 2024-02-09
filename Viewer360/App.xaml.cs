@@ -173,9 +173,23 @@ namespace Viewer360
                         m_oMsgManager.EnableSending();
                         return;
                     }
+                    else if (sMsg.m_Type == MsgType.ReloadLabelRequest)
+                    {
+                        m_oMsgManager.DisableSending();
+                        string sElementName = "";
+
+                        m_oMsgManager.GetReloadLabelRequest(sMsg.m_sMsg, ref sElementName);
+                        CLabelManager.ReloadSingleLabel(CProjectManagerData.GetLabelsFolderName()+sElementName);
+                        int index = sElementName.IndexOf(".");
+                        sElementName = sElementName.Substring(0,index);
+                        (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
+
+                        m_oMsgManager.EnableSending();
+                        return;
+                    }
                     else if (sMsg.m_Type == MsgType.ElementDeletedWarning)
                     {
-                        CLabelManager.ReloadLabel();
+                        CLabelManager.ReloadLabelSet();
                         (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
 
                         return;
