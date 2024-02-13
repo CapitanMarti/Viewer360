@@ -1083,7 +1083,7 @@ namespace Viewer360.View
             int iSelectedCatIndex = m_Window.CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 
 
             for (int iItem = 0; iItem < oLList[iSelectedCatIndex].Count; iItem++)
-                m_Window.ItemCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_CategoryInfo);
+                m_Window.ItemCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_ObjType);
 
             m_Window.ItemCombo.SelectedIndex = aItemDefaultEntry[m_Window.CategoryCombo.SelectedIndex];
             m_Window.ElementName.Text = m_Window.CategoryCombo.SelectedItem.ToString();
