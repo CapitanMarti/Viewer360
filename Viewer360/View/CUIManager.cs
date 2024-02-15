@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using static PointCloudUtility.CCatalogManager;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static Viewer360.View.Viewer360View;
 
@@ -52,11 +53,13 @@ namespace Viewer360.View
         static private bool isDragging;
         static private int iDraggingPoint;
         static private Point offset;
-        static private List<int> aItemDefaultEntry;
+//        static private List<int> aItemDefaultEntry;
         static int m_iVFMode = 0; // 0=standard, 1==Projection mode
         static bool m_bProjDragging = false;
         static int m_iSide = -1;
-
+        static bool m_bIgnoreCategoryChange = false;
+        static public List<int> m_aObjId;
+        static public List<bool> m_aViewerEditable;
 
         static void SetVFMode(int iMode)  // Modalità visualizzazione poligono: 0-->normale (dashed), 1-->proiettato (continuo)
         {
@@ -94,7 +97,8 @@ namespace Viewer360.View
                 // Verifico se ho cliccato su un segmento
                 int iSegment = CheckSegmentClick(vPoint);
 
-                if (m_iVFMode == 0 && (m_iCategory!=4 && m_iCategory!=5))
+                //                if (m_iVFMode == 0 && (m_iCategory!=4 && m_iCategory!=5))
+                if (m_iVFMode == 0 && (m_aViewerEditable[m_Window.ItemCombo.SelectedIndex] == false))
                 {
                     if (iSegment >= 0)
                     {
@@ -300,7 +304,9 @@ namespace Viewer360.View
         {
             isDragging = false;
             iDraggingPoint = -1;
-            if (m_iVFMode == 1 && (m_iCategory == 4 || m_iCategory == 5))
+
+            //            if (m_iVFMode == 1 && (m_iCategory == 4 || m_iCategory == 5))
+            if (m_iVFMode == 1 && m_aViewerEditable[m_Window.ItemCombo.SelectedIndex])
             {
                 m_oVFinder.Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(128, 255, 0, 0));
             }
@@ -377,7 +383,8 @@ namespace Viewer360.View
 
         static private void DeleteCerchio_Click(object sender, MouseButtonEventArgs e)
         {
-            if (!Keyboard.IsKeyDown(Key.LeftCtrl) || m_iVFMode==1 || m_iCategory==4 || m_iCategory==5)
+            //            if (!Keyboard.IsKeyDown(Key.LeftCtrl) || m_iVFMode==1 || m_iCategory==4 || m_iCategory==5)
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl) || m_iVFMode == 1 || m_aViewerEditable[m_Window.ItemCombo.SelectedIndex])
                 return;
 
             if (m_EllipseList.Count == 3)  // Se sono già a 3 vertici smetto di eliminare punti
@@ -469,8 +476,9 @@ namespace Viewer360.View
                 m_Window.EditMode.Visibility = Visibility.Collapsed;
                 m_Window.Sep1.Visibility = Visibility.Collapsed;
             }
-
-            aItemDefaultEntry = new List<int>();
+            m_aObjId = new List<int>();
+            m_aViewerEditable = new List<bool>();
+            //            aItemDefaultEntry = new List<int>();
             m_iVFMode = 0;
         }
         static public ViewerMode GetMode() { return m_eMode; }
@@ -761,21 +769,39 @@ namespace Viewer360.View
         static public void InitUI(CSingleFileLabel oLabel)
         {
             CCatalogManager oCM = SharingHelper.GetCatalogManager();
-            // Inizializzo le Combo
+
+            // Imposto la Family
+            string sFamilyName = oCM.GetFamilyNameFromObjID(oLabel.m_aLabelInfo[0].iObjCatalogID);
+            if(sFamilyName!= m_Window.FamilyCombo.SelectedValue.ToString())
+                m_Window.FamilyCombo.SelectedValue= sFamilyName;
+
+            // Imposto la Category
+            /*
             int iCategoryIndex = oCM.GetCategoryIndex(oLabel.m_aLabelInfo[0].iCategory);
             m_Window.CategoryCombo.SelectedIndex= iCategoryIndex-1;
+            */
+            string sCategoryName = oCM.SearchCategoryUINameByID(oLabel.m_aLabelInfo[0].iCategory);
+            if (sCategoryName != m_Window.CategoryCombo.SelectedValue.ToString())
+                m_Window.CategoryCombo.SelectedValue = sCategoryName;
 
-//            int iItemIndex = oCM.GetItemIndex(oLabel.m_aLabelInfo[0].iCategory, oLabel.m_aLabelInfo[0].iObjCatalogID);
+            // Imposto Item
+            /*
             int iItemIndex = oCM.GetItemIndex(iCategoryIndex, oLabel.m_aLabelInfo[0].iObjCatalogID);
             m_Window.ItemCombo.SelectedIndex = iItemIndex;
+            */
+            string sObjName = oCM.SearchObjUITypeByID(oLabel.m_aLabelInfo[0].iObjCatalogID);
+            if (sObjName != m_Window.ItemCombo.SelectedValue.ToString())
+                m_Window.ItemCombo.SelectedValue = sObjName;
 
+
+            // Imposto Label name
             m_Window.ElementName.Text = oLabel.m_aLabelInfo[0].sLabelName;
 
+            // Ripristino poligono
             if(m_Window.viewer360_View.GetProjection()==Viewer360View.ViewerProjection.Spheric)
                 (m_Window.DataContext as ViewModel.MainViewModel).RestoreFovAndPolygons(oLabel);
             else
                 RestorePolygon(oLabel);
-//            (m_Window.DataContext as ViewModel.MainViewModel).RestorePolygons(oLabel);
 
         }
 
@@ -798,9 +824,9 @@ namespace Viewer360.View
                 m_Window.CategoryCombo.BorderBrush = Brushes.Black;
                 m_Window.CategoryCombo.Foreground = Brushes.Black;
 
-                m_Window.ItemCombo.IsEnabled = true;
-                m_Window.ItemCombo.BorderBrush = Brushes.Black;
-                m_Window.ItemCombo.Foreground = Brushes.Black;
+                m_Window.CategoryCombo.IsEnabled = true;
+                m_Window.CategoryCombo.BorderBrush = Brushes.Black;
+                m_Window.CategoryCombo.Foreground = Brushes.Black;
 
                 m_Window.ElementName.IsEnabled = true;
                 m_Window.ElementName.BorderBrush = Brushes.Black;
@@ -808,7 +834,8 @@ namespace Viewer360.View
 
                 m_Window.SaveButton.Content = "Save new";
 
-                if (m_iCategory == 4 || m_iCategory == 5)  // Windows or Door
+//                if (m_iCategory == 4 || m_iCategory == 5)  // Windows or Door
+                if (m_aViewerEditable[m_Window.ItemCombo.SelectedIndex])  // Windows or Door
                 {
                     m_Window.Project2PlaneButton.Visibility = Visibility.Visible;
                     m_Window.SaveButton.Visibility = Visibility.Collapsed;
@@ -853,9 +880,9 @@ namespace Viewer360.View
                 m_Window.CategoryCombo.BorderBrush = Brushes.LightGray;
                 m_Window.CategoryCombo.Foreground = Brushes.LightGray;
 
-                m_Window.ItemCombo.IsEnabled = true;
-                m_Window.ItemCombo.BorderBrush = Brushes.Black;
-                m_Window.ItemCombo.Foreground = Brushes.Black;
+                m_Window.CategoryCombo.IsEnabled = true;
+                m_Window.CategoryCombo.BorderBrush = Brushes.Black;
+                m_Window.CategoryCombo.Foreground = Brushes.Black;
 
                 m_Window.ElementName.IsEnabled = true;
                 m_Window.ElementName.BorderBrush = Brushes.Black;
@@ -1075,6 +1102,41 @@ namespace Viewer360.View
         }
 
 
+        
+        static public void FamilySelectionChanged()
+        {
+            Dictionary<string, int> oFamilyDictionary=SharingHelper.GetCatalogManager().GetFamilyDictionary();
+
+            string sSelectedFamily= m_Window.FamilyCombo.SelectedValue.ToString();
+            int iFamilyId = oFamilyDictionary[sSelectedFamily];
+
+            List<CCategoryInfo> aCategoryList= SharingHelper.GetCatalogManager().GetCategoryListByFamily(iFamilyId);
+            m_bIgnoreCategoryChange = true;
+            m_Window.CategoryCombo.Items.Clear();
+            for (int iItem = 0; iItem < aCategoryList.Count; iItem++)
+                m_Window.CategoryCombo.Items.Add(aCategoryList[iItem].sUI_CategoryType);
+            m_bIgnoreCategoryChange = false;
+
+
+            if (m_Window.CategoryCombo.SelectedIndex == 0)
+                CategorySelectionChanged();
+            else
+                m_Window.CategoryCombo.SelectedIndex = 0;
+
+            /*
+            m_Window.CategoryCombo.SelectedIndex = 0;
+            iSelectedCatIndex = 0;
+            for (int iItem = 0; iItem < oLList[iSelectedCatIndex].Count; iItem++)
+                m_Window.CategoryCombo.Items.Add(oLList[iSelectedCatIndex][iItem].sUI_ObjType);
+
+
+            CUIManager.SetCurrentCategory(iCat);
+            */
+
+
+        }
+
+        /*
         static public void CategorySelectionChanged()
         {
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
@@ -1091,26 +1153,62 @@ namespace Viewer360.View
             int iCat = oLList[iSelectedCatIndex][0].nCategory;
 
             if(iCat!=m_iCategory)
-            {
                 SetVFMode(0);
-                /*
-                if (iCat == 4 || iCat == 5)
-                    SetVFMode(1);
-                else 
-                    SetVFMode(0);
-                */
-            }
 
+    
             CUIManager.SetCurrentCategory(iCat);
             CUIManager.UpdateUI();
 
             SharingHelper.m_iSendCategoryToServer = iCat;
+
+        }
+*/
+
+
+        static public void CategorySelectionChanged()
+        {
+            if (m_bIgnoreCategoryChange)
+                return;
+             
+            string sCategorySelected = m_Window.CategoryCombo.SelectedValue.ToString();
+            int iCatId=SharingHelper.GetCatalogManager().GetCategoryDictionary()[sCategorySelected];
+            List<CObjInfo> aObjList= SharingHelper.GetCatalogManager().GetObjListByCategory(iCatId);
+
+            m_Window.ItemCombo.Items.Clear();
+            m_aObjId.Clear();
+            m_aViewerEditable.Clear();
+            for (int iItem = 0; iItem < aObjList.Count; iItem++)
+            {
+                m_Window.ItemCombo.Items.Add(aObjList[iItem].sUI_ObjType);
+                m_aObjId.Add(aObjList[iItem].nId);
+                m_aViewerEditable.Add(aObjList[iItem].oCatalogEntityInfo.m_bViewerEditable);
+            }
+
+            m_Window.ItemCombo.SelectedIndex = 0; // aItemDefaultEntry[m_Window.CategoryCombo.SelectedIndex];
+            m_Window.ElementName.Text = m_Window.CategoryCombo.SelectedItem.ToString();
+
+            if(iCatId != m_iCategory)
+                SetVFMode(0);
+
+            CUIManager.SetCurrentCategory(iCatId);
+            CUIManager.UpdateUI();
+
+            SharingHelper.m_iSendCategoryToServer = iCatId;
 
 
         }
 
         static public void StartUpUI()
         {
+            Dictionary<string, int> oFamilyDictionary = SharingHelper.GetCatalogManager().GetFamilyDictionary();
+
+            m_Window.FamilyCombo.Items.Clear();
+            foreach (var oFam in  oFamilyDictionary) 
+                m_Window.FamilyCombo.Items.Add(oFam.Key);
+
+            m_Window.FamilyCombo.SelectedIndex = 0;
+
+            /*
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
 
             int iDefEntry;
@@ -1131,7 +1229,7 @@ namespace Viewer360.View
             }
 
             m_Window.CategoryCombo.SelectedIndex = 2;  // Wall
-
+*/
         }
 
     }

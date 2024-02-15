@@ -95,16 +95,19 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Menu Visibility="{Binding IsFullscreen}" Background="LightGray"  Height="30" VerticalAlignment="Center" Grid.ColumnSpan="12" Margin="0,0,-80,0" >
-                <TextBlock Text="  Category: " IsEnabled= "False" />
-                <ComboBox x:Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="75" Height="24">
+                <TextBlock Text=" Family:" IsEnabled= "False" />
+                <ComboBox x:Name="FamilyCombo" SelectionChanged="FamilySelectionChanged" Width="110" Height="24">
+                    <!-- Elementi della ComboBox -->
+                </ComboBox>                
+                <TextBlock Text=" Category:" IsEnabled= "False" />
+                <ComboBox x:Name="CategoryCombo" SelectionChanged="CategorySelectionChanged" Width="110" Height="24">
                     <!-- Elementi della ComboBox -->
                 </ComboBox>
-                <TextBlock Text="    Type: " IsEnabled= "False" />
+                <TextBlock Text="  Type: " IsEnabled= "False" />
                 <ComboBox x:Name="ItemCombo" SelectionChanged="ItemSelectionChanged" Width="75" Height="24">
                     <!-- Elementi della ComboBox -->
-                </ComboBox>
-                <TextBlock Text="    Name: " IsEnabled= "False" />
-                <TextBox  x:Name="ElementName" Width="80" Height="24" RenderTransformOrigin="0.498,0.752" />
+                </ComboBox>                <TextBlock Text="  Name: " IsEnabled= "False" />
+                <TextBox  x:Name="ElementName" Width="90" Height="24" RenderTransformOrigin="0.498,0.752" />
             </Menu>
             <Grid Grid.ColumnSpan="12" Grid.Row="1">
                 <Grid.RowDefinitions>

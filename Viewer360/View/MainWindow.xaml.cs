@@ -35,19 +35,6 @@ namespace Viewer360.View
     /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
-        /*
-        private bool isDragging;
-        private int  iDraggingPoint;
-        private Point offset;
-        private Point vViewfinderCentre;
-        private Point vVewfinderBBox;
-        private PointCollection aPointTmp;
-        private Point []  m_aOriginalPolygon;
-        List<Ellipse> m_EllipseList;
-        int m_iEllipseIncrementalNum;
-        Canvas myCanvas;
-        private List<int> aItemDefaultEntry;
-        */
 
         public MainWindow()
         {
@@ -58,8 +45,6 @@ namespace Viewer360.View
             CUIManager.m_Window = this;
             CUIManager.m_bDebugMode = false;
             CUIManager.Init(ViewFinderPolygon, myGrid);
-
-//            aItemDefaultEntry = new List<int>();
 
             // If the window style is set to none when the window is maximized, the taskbar will not
             // be covered. Therefore, the window is restored to normal and maximized again.
@@ -101,6 +86,12 @@ namespace Viewer360.View
         {
             CUIManager.CategorySelectionChanged();
         }
+
+        private void FamilySelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            CUIManager.FamilySelectionChanged();
+        }
+
         private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
 
@@ -134,13 +125,23 @@ namespace Viewer360.View
                 oLabelInfo.sParentElementName = "";
 
             // Aggiungo la category
+            /*
             List<List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
             int iSelectedCat = CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
-            int iSelectedItem = ItemCombo.SelectedIndex;
+            int iSelectedItem = CategoryCombo.SelectedIndex;
+            
 
             // Aggiungo il catalogID
             oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
             oLabelInfo.iCategory = SharingHelper.GetCatalogManager().SearchCategoryByID(oLabelInfo.iObjCatalogID);
+            */
+
+            // Aggiungo la category
+            string sCategorySelected = CategoryCombo.SelectedValue.ToString();
+            oLabelInfo.iCategory = SharingHelper.GetCatalogManager().GetCategoryDictionary()[sCategorySelected];
+
+            // Aggiungo il catalogID
+            oLabelInfo.iObjCatalogID=CUIManager.m_aObjId[ItemCombo.SelectedIndex];
 
             // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<double>();
@@ -216,14 +217,23 @@ namespace Viewer360.View
             else
                 oLabelInfo.sParentElementName = "";
 
+            /*
             // Aggiungo la category
             List <List<CCatalogManager.CObjInfo>> oLList = SharingHelper.GetAllLabelGroupedByCategory();
             int iSelectedCat = CategoryCombo.SelectedIndex + 1; // Ho escluso la categoria 0 --> devo aggiungere 1 agli indici
-            int iSelectedItem = ItemCombo.SelectedIndex;
+            int iSelectedItem = CategoryCombo.SelectedIndex;
 
             // Aggiungo il catalogID
             oLabelInfo.iObjCatalogID = oLList[iSelectedCat][iSelectedItem].nId;
             oLabelInfo.iCategory = SharingHelper.GetCatalogManager().SearchCategoryByID(oLabelInfo.iObjCatalogID);
+            */
+
+            // Aggiungo la category
+            string sCategorySelected = CategoryCombo.SelectedValue.ToString();
+            oLabelInfo.iCategory = SharingHelper.GetCatalogManager().GetCategoryDictionary()[sCategorySelected];
+
+            // Aggiungo il catalogID
+            oLabelInfo.iObjCatalogID = CUIManager.m_aObjId[ItemCombo.SelectedIndex];
 
             // Aggiungo i punti
             oLabelInfo.aPolyPointX = new List<double>();
@@ -231,6 +241,9 @@ namespace Viewer360.View
 
             if (CProjectPlane.m_bPlaneDefined)
             {
+                if (ViewFinderPolygon.Points == null)
+                    return null;
+
                 oLabelInfo.aPolyPointZ = new List<double>();
                 for (int i = 0; i < ViewFinderPolygon.Points.Count; i++)
                 {
