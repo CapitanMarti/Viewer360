@@ -31,6 +31,7 @@ namespace Viewer360.View
         static ViewerMode m_eMode= ViewerMode.Undefined;
         static public bool m_bDebugMode = false;
         static int m_iCategory=-1;
+        static int m_iObjCatalogId = -1;
 
         public enum ViewerMode
         {
@@ -76,8 +77,12 @@ namespace Viewer360.View
         }
         static public void SetCurrentCategory(int iCategory)
         {
-            m_iCategory = iCategory;  // 1==Wall,2==Floor,3==Ceiling,4==Window,5==Door,6==PCSection
-            if(iCategory != 4 && iCategory != 5)
+            m_iCategory = iCategory;
+            m_iObjCatalogId = m_aObjId[m_Window.ItemCombo.SelectedIndex];
+
+            
+            //if (iCategory != 4 && iCategory != 5)
+            if (m_aViewerEditable[m_Window.ItemCombo.SelectedIndex]==false)
                 CProjectPlane.RemovePlane();
 
         }
@@ -578,7 +583,8 @@ namespace Viewer360.View
             }
 
             int iCat = oLabel.m_aLabelInfo[0].iCategory;
-            if (iCat != 4 && iCat != 5)  // Non windows/door
+            if (m_aViewerEditable[m_Window.ItemCombo.SelectedIndex] == false)
+            //if (iCat != 4 && iCat != 5)  // Non windows/door
             {
                 PointCollection NewPoints = new PointCollection();
 
@@ -929,7 +935,8 @@ namespace Viewer360.View
                     m_eMode = ViewerMode.Create;
                     ResetPolygon();  // Resetto il mirino
                     SetVFMode(0);  // Sicuramentein questa modalià il "mirino" è standard
-                    SharingHelper.m_iSendCategoryToServer = m_iCategory;  // Scatena aggiornamento server con restituzione info muro 
+                    //SharingHelper.m_iSendCategoryToServer = m_iCategory;  // Scatena aggiornamento server con restituzione info muro 
+                    SharingHelper.m_oSendCategoryToServer = new CObjShortInfo(m_iCategory, m_iObjCatalogId);
                 }
                 
                 m_oVFinder.Fill = null;
@@ -1193,8 +1200,8 @@ namespace Viewer360.View
             CUIManager.SetCurrentCategory(iCatId);
             CUIManager.UpdateUI();
 
-            SharingHelper.m_iSendCategoryToServer = iCatId;
-
+            //            SharingHelper.m_iSendCategoryToServer = iCatId;
+            SharingHelper.m_oSendCategoryToServer = new CObjShortInfo(m_iCategory, m_aObjId[m_Window.ItemCombo.SelectedIndex]);
 
         }
 

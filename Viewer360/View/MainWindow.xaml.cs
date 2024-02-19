@@ -369,10 +369,17 @@ namespace Viewer360.View
         }
         private void SaveLabel_Click(object sender, RoutedEventArgs e)
         {
+            if(CUIManager.m_aViewerEditable[ItemCombo.SelectedIndex])
+                viewer360_View.SaveMlb();
+            else
+                viewer360_View.SaveImageAndJson();
+
+            /*
             if(CUIManager.GetCurrentCategory()==4 || CUIManager.GetCurrentCategory() == 5)
                 viewer360_View.SaveMlb();
             else
                 viewer360_View.SaveImageAndJson();
+            */
         }
         private void LaunchAI_Click(object sender, RoutedEventArgs e)
         { 

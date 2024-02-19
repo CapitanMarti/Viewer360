@@ -11,6 +11,23 @@ using PointCloudUtility;
 
 namespace Viewer360.View
 {
+    public class CObjShortInfo
+    {
+        public int m_iCategory;
+        public int m_iCatalogObjId;
+
+        public CObjShortInfo()
+        {
+            m_iCategory = -1;
+            m_iCatalogObjId = -1;
+        }
+        public CObjShortInfo(int iCategoryId, int iObjId)
+        {
+            m_iCategory = iCategoryId;
+            m_iCatalogObjId = iObjId;
+        }
+
+    }
     public static class SharingHelper
     {
         private static CCatalogManager m_oCM;
@@ -27,7 +44,7 @@ namespace Viewer360.View
         public static bool m_bLabelHasChanged = false;
         public static bool m_bElementDeleted = false;
         public static bool m_bLabelAdded = false;
-        public static int m_iSendCategoryToServer = -1;
+        public static CObjShortInfo m_oSendCategoryToServer = null;
         public static double m_dConvFactor;
         public static double m_dPlanarZoomFactor = 1;
 

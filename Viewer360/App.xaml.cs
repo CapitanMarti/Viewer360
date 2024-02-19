@@ -278,10 +278,10 @@ namespace Viewer360
             }
             
 
-            if (SharingHelper.m_iSendCategoryToServer>=0)
+            if (SharingHelper.m_oSendCategoryToServer != null)
             {
-                m_oMsgManager.SendCategoryToServer(SharingHelper.m_iSendCategoryToServer,(int)CUIManager.GetMode());
-                SharingHelper.m_iSendCategoryToServer = -1;
+                m_oMsgManager.SendCategoryToServer(SharingHelper.m_oSendCategoryToServer.m_iCategory, SharingHelper.m_oSendCategoryToServer.m_iCatalogObjId, (int)CUIManager.GetMode());
+                SharingHelper.m_oSendCategoryToServer = null;
                 return;
             }
 
