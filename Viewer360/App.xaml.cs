@@ -131,11 +131,11 @@ namespace Viewer360
                     if (CUIManager.GetMode() == ViewerMode.Create)  // Modalità Create
                     {
                         //++++++++++++++++++++++++
-                        Console.WriteLine(sWallName);
-                        Console.WriteLine("vPos="+ dPosX.ToString(CultureInfo.InvariantCulture)+"  "+ dPosY.ToString(CultureInfo.InvariantCulture));
-                        Console.WriteLine("vN="+ dNX.ToString(CultureInfo.InvariantCulture)+ "  "+dNX.ToString(CultureInfo.InvariantCulture));
-                        Console.WriteLine("iSide="+ iSide.ToString(CultureInfo.InvariantCulture));
-                        Console.WriteLine("");
+                        //Console.WriteLine(sWallName);
+                        //Console.WriteLine("vPos="+ dPosX.ToString(CultureInfo.InvariantCulture)+"  "+ dPosY.ToString(CultureInfo.InvariantCulture));
+                        //Console.WriteLine("vN="+ dNX.ToString(CultureInfo.InvariantCulture)+ "  "+dNX.ToString(CultureInfo.InvariantCulture));
+                        //Console.WriteLine("iSide="+ iSide.ToString(CultureInfo.InvariantCulture));
+                        //Console.WriteLine("");
                         //++++++++++++++++++++++++
 
                         if (dNX <= 1 && CUIManager.GetMode() == ViewerMode.Create)  // Piano valido
@@ -145,6 +145,20 @@ namespace Viewer360
                     }
 
                     CUIManager.UpdateUI();
+                }
+                else if (sMsg.m_Type == MsgType.ReloadLabelRequest)
+                {
+                    m_oMsgManager.DisableSending();
+                    string sElementName = "";
+
+                    m_oMsgManager.GetReloadLabelRequest(sMsg.m_sMsg, ref sElementName);
+                    CLabelManager.ReloadSingleLabel(CProjectManagerData.GetLabelsFolderName() + sElementName);
+                    int index = sElementName.IndexOf(".");
+                    sElementName = sElementName.Substring(0, index);
+                    (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
+
+                    m_oMsgManager.EnableSending();
+                    return;
                 }
 
                 if (m_Window.IsActive == false)  // Il focus è al Server--> processo i messaggi  // ATTENZIONE AI MESSAGGI SUI MURI PER W&D
@@ -170,20 +184,6 @@ namespace Viewer360
 
                         (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
                         CUIManager.SetViewerMode(ViewerMode.Edit);
-                        m_oMsgManager.EnableSending();
-                        return;
-                    }
-                    else if (sMsg.m_Type == MsgType.ReloadLabelRequest)
-                    {
-                        m_oMsgManager.DisableSending();
-                        string sElementName = "";
-
-                        m_oMsgManager.GetReloadLabelRequest(sMsg.m_sMsg, ref sElementName);
-                        CLabelManager.ReloadSingleLabel(CProjectManagerData.GetLabelsFolderName()+sElementName);
-                        int index = sElementName.IndexOf(".");
-                        sElementName = sElementName.Substring(0,index);
-                        (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
-
                         m_oMsgManager.EnableSending();
                         return;
                     }
