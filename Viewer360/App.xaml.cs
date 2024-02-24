@@ -111,7 +111,9 @@ namespace Viewer360
 
         private void OnApplicationIdle(object sender, EventArgs e)
         {
+            SharingHelper.m_nIdleCount++;
 
+            // *************** Ricezione messaggi *********************
             if (m_oMsgManager != null && m_oMsgManager.PendingMsg())
             {
                 CMessageManager.CMessage sMsg = m_oMsgManager.GetMsg();
@@ -158,6 +160,8 @@ namespace Viewer360
                     (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
 
                     m_oMsgManager.EnableSending();
+
+                    SharingHelper.m_nIdleCount--;
                     return;
                 }
 
@@ -173,6 +177,7 @@ namespace Viewer360
                         CUIManager.SetViewerMode(ViewerMode.Create);
                         m_bNewImageLoaded = true;
 
+                        SharingHelper.m_nIdleCount--;
                         return;
                     }
                     else if (sMsg.m_Type == MsgType.ElementSelected)
@@ -185,6 +190,8 @@ namespace Viewer360
                         (m_Window.DataContext as ViewModel.MainViewModel).LoadLabelForSelectedElement(sElementName);
                         CUIManager.SetViewerMode(ViewerMode.Edit);
                         m_oMsgManager.EnableSending();
+
+                        SharingHelper.m_nIdleCount--;
                         return;
                     }
                     else if (sMsg.m_Type == MsgType.ElementDeletedWarning)
@@ -192,17 +199,21 @@ namespace Viewer360
                         CLabelManager.ReloadLabelSet();
                         (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
 
+                        SharingHelper.m_nIdleCount--;
                         return;
                     }
                     else if (sMsg.m_Type == MsgType.CloudClickRequest)
                     {
                         m_Window.viewer360_View.SaveImageAndJsonForCloudClick();
+
+                        SharingHelper.m_nIdleCount--;
                         return;
                     }
                 }
             }
 
 
+            // *************** Invio messaggi *********************
             if (SharingHelper.m_bLabelHasChanged)
             {
                 int index = (m_Window.DataContext as ViewModel.MainViewModel).m_iCurrentPhotoIndex;
@@ -215,6 +226,8 @@ namespace Viewer360
                 m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov, sElementlName);
 
                 SharingHelper.m_bLabelHasChanged = false;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
@@ -232,22 +245,37 @@ namespace Viewer360
 
                 SharingHelper.m_bPhotoHasChanged = false;
                 SharingHelper.m_bCameraAtHasChanged = false; // Per evitare doppio messaggio
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
             if (SharingHelper.m_bCameraAtHasChanged)
             {
-                //++++++++++++++++++++++++++
-                // Console.WriteLine("Da OnApplicationIdle stop1 Type=2");
-                //++++++++++++++++++++++++++                // Comunico il nuovo indice di Photo
                 // Comunico la nuova direzione della camera al server
                 double dX = 1;
                 double dY = 0;
 
+                List<MyVector3D> avPoint;
+                int iThetaMin=0;
+                int iThetaMax=0;
+                CUIManager.ComputeVFPointVersor(out avPoint, ref iThetaMin, ref iThetaMax);
+
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraInfo(dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov);
+
+                //++++++++++++++++++++++++++++++++
+                double fX = avPoint[0].X;
+                double fY = avPoint[0].Y;
+                double fDen = Math.Sqrt(fX*fX+fY*fY);
+                fX/= fDen;
+                fY/= fDen;
+                double fCosAngle = avPoint[0] * avPoint[1];
+                //++++++++++++++++++++++++++++++++
+                m_oMsgManager.SendCameraInfo(dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov, avPoint,iThetaMin, iThetaMax);
 
                 SharingHelper.m_bCameraAtHasChanged = false;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
@@ -267,13 +295,17 @@ namespace Viewer360
 
                 m_oMsgManager.SendElementDeletedWarning(sSelElementName);
                 SharingHelper.m_bElementDeleted = false;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
-            if (SharingHelper.m_bLabelAdded)
+            if (SharingHelper.m_bLabelAdded)  // Aggiunta label di tipo .json (Wall/floor/Ceiling)
             {
                 m_oMsgManager.SendLabelAddedWarning();
                 SharingHelper.m_bLabelAdded = false;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
             
@@ -282,16 +314,17 @@ namespace Viewer360
             {
                 m_oMsgManager.SendCategoryToServer(SharingHelper.m_oSendCategoryToServer.m_iCategory, SharingHelper.m_oSendCategoryToServer.m_iCatalogObjId, (int)CUIManager.GetMode());
                 SharingHelper.m_oSendCategoryToServer = null;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
-            if(SharingHelper.m_oMsgInfo1!=null)
+            if(SharingHelper.m_oMsgInfo1!=null)  // Richiesta costruzione nuovo elemento
             {
                 CSingleFileLabel oLabel = SharingHelper.m_oMsgInfo1.m_sLabel;
                 string sLabelFileName = oLabel.m_sJsonFileName;
                 string sLabelName = oLabel.m_aLabelInfo[0].sLabelName;
                 string sParentEl = oLabel.m_aLabelInfo[0].sParentElementName;
-//                string sCameraName= oLabel.m_aLabelInfo[0].m_sC
                 int iCatalogID= oLabel.m_aLabelInfo[0].iObjCatalogID;
                 int iCategory = oLabel.m_aLabelInfo[0].iCategory;
 
@@ -333,6 +366,8 @@ namespace Viewer360
                                                          aPos0,aPos1,aPos2,aPos3);
 
                 SharingHelper.m_oMsgInfo1 = null;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
 
@@ -340,8 +375,11 @@ namespace Viewer360
             {
                 m_oMsgManager.SendCloudClickInfoToViewer(SharingHelper.m_sNewJsonFileName, SharingHelper.m_sViewerPngFile, SharingHelper.m_sCloudClickPngFile);
                 SharingHelper.m_bSendInfoForCloudClick = false;
+
+                SharingHelper.m_nIdleCount--;
                 return;
             }
+            SharingHelper.m_nIdleCount--;
         }
     }
 }

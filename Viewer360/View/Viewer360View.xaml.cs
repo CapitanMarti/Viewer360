@@ -340,7 +340,6 @@ namespace Viewer360.View
             camTheta -= camThetaSpeed / 50;
             camPhi -= camPhiSpeed / 50;
             SharingHelper.m_bCameraAtHasChanged = true;
-
             if (camTheta < 0) 
                 camTheta += 360;
             else if (camTheta > 360) 
@@ -856,6 +855,65 @@ namespace Viewer360.View
             RaisePropertyChanged("Phi");
         }
 
+
+        public Matrix3D CalculateRotationMatrix(double theta, double phi)
+        {
+            double cosTheta = Math.Cos(theta);
+            double sinTheta = Math.Sin(theta);
+            double cosPhi = Math.Cos(phi);
+            double sinPhi = Math.Sin(phi);
+
+            Matrix3D rotationMatrix = new Matrix3D();
+
+            // Elementi della matrice di rotazione
+            rotationMatrix.M11 = cosPhi * cosTheta;
+            rotationMatrix.M12 = -sinTheta;
+            rotationMatrix.M13 = sinPhi * cosTheta;
+
+            rotationMatrix.M21 = cosPhi * sinTheta;
+            rotationMatrix.M22 = cosTheta;
+            rotationMatrix.M23 = sinPhi * sinTheta;
+
+            rotationMatrix.M31 = -sinPhi;
+            rotationMatrix.M32 = 0;
+            rotationMatrix.M33 = cosPhi;
+
+            // Restituisce la matrice di rotazione
+            return rotationMatrix;
+        }
+
+        public Matrix3D ComputeLocalCameraRMatrix()
+        {
+            // Calcolo direzioni At,Up di camera locale, tenendo conto che in questo codice risulta sempre Up=[0,0,1]
+            Vector3D vAt = MyCam.LookDirection;
+            vAt.Z = -vAt.Z;  // ATTENZIONE: Z va invertita per compatibilità sistema riferimento adottato da Scan2Bim
+            Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
+            vTmp.Normalize();
+            Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+
+            // Matrice rotazione locale camera: [ Up | Up X At | At] 
+            Matrix3D mCameraRot = new Matrix3D();
+            mCameraRot.M11 = vRealUp.X;
+            mCameraRot.M12 = vTmp.X;
+            mCameraRot.M13 = vAt.X;
+            mCameraRot.M14 = 0;
+            mCameraRot.M21 = vRealUp.Y;
+            mCameraRot.M22 = vTmp.Y;
+            mCameraRot.M23 = vAt.Y;
+            mCameraRot.M24 = 0;
+            mCameraRot.M31 = vRealUp.Z;
+            mCameraRot.M32 = vTmp.Z;
+            mCameraRot.M33 = vAt.Z;
+            mCameraRot.M34 = 0;
+            mCameraRot.M44 = 1;
+
+            mCameraRot.M14 = 0;
+            mCameraRot.M24 = 0;
+            mCameraRot.M34 = 0;
+
+            return mCameraRot;
+        }
+
         public Matrix3D ComputeCameraRTMatrix(bool bReverseZ)
         {
             // Calcolo direzioni At,Up di camera locale, tenendo conto che in questo codice risulta sempre Up=[0,0,1]
@@ -1109,20 +1167,39 @@ namespace Viewer360.View
             if (m_Projection == ViewerProjection.Planar)
                 return;
 
+/*
             Matrix3D mRotTmp = ComputeCameraRTMatrix(false);
             dX = mRotTmp.M13;
             dY = mRotTmp.M23;
             dZ = mRotTmp.M33;
-            //+++++++++++++++++++
-            //Console.WriteLine("Da ComputeCameraAtForServer");
-            //Console.WriteLine("dX=" + dX.ToString() + "  dY=" + dY.ToString());
-            //+++++++++++++++++++
+*/
+            dX = m_mRotXYZ.M11 * MyCam.LookDirection.X + m_mRotXYZ.M12 * MyCam.LookDirection.Y + m_mRotXYZ.M13 * MyCam.LookDirection.Z;
+            dY = m_mRotXYZ.M21 * MyCam.LookDirection.X + m_mRotXYZ.M22 * MyCam.LookDirection.Y + m_mRotXYZ.M23 * MyCam.LookDirection.Z;
+            dZ = m_mRotXYZ.M31 * MyCam.LookDirection.X + m_mRotXYZ.M32 * MyCam.LookDirection.Y + m_mRotXYZ.M33 * MyCam.LookDirection.Z;
+
         }
 
+        public Vector3D ApplyGlobalRotation(Vector3D vVector)  // Applica al vettore in input la rotazione globale
+        {
+
+            double dX = m_mRotXYZ.M11 * vVector.X + m_mRotXYZ.M12 * vVector.Y + m_mRotXYZ.M13 * vVector.Z;
+            double dY = m_mRotXYZ.M21 * vVector.X + m_mRotXYZ.M22 * vVector.Y + m_mRotXYZ.M23 * vVector.Z;
+            double dZ = m_mRotXYZ.M31 * vVector.X + m_mRotXYZ.M32 * vVector.Y + m_mRotXYZ.M33 * vVector.Z;
+
+            return new Vector3D(dX, dY, dZ);
+        }
 
         // Mouse down: start moving camera
         public void vp_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            //+++++++++++++++++++++++++
+            if(SharingHelper.m_nIdleCount!=0)
+            {
+                //Console.WriteLine("ATTENZIONE: IdleCount= " + SharingHelper.m_nIdleCount.ToString(CultureInfo.InvariantCulture));
+                System.Windows.MessageBox.Show("ATTENZIONE: IdleCount= " + SharingHelper.m_nIdleCount.ToString(CultureInfo.InvariantCulture), "Messaggio");
+            }
+            //+++++++++++++++++++++++++
+
             if (Keyboard.IsKeyDown(Key.LeftCtrl))  // Attivazione drag mirino/creazione punti mirino 
             {
 //                m_Window.Polygon_LeftCtrlMouseDown(sender, e);
@@ -1173,6 +1250,7 @@ namespace Viewer360.View
             {
 //                m_Window.Polygon_MouseWheel(sender, e);
                 CUIManager.Polygon_MouseWheel(e);
+                SharingHelper.m_bCameraAtHasChanged = true;
             }
             else
             {

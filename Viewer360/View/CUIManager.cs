@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using Viewer360.Model;
 using static PointCloudUtility.CCatalogManager;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static Viewer360.View.Viewer360View;
@@ -53,7 +54,7 @@ namespace Viewer360.View
         static private Point vVewfinderBBox;
         static private bool isDragging;
         static private int iDraggingPoint;
-        static private Point offset;
+        static private Point offset;  // Posizione mouse al momento di MouseDown
 //        static private List<int> aItemDefaultEntry;
         static int m_iVFMode = 0; // 0=standard, 1==Projection mode
         static bool m_bProjDragging = false;
@@ -129,6 +130,8 @@ namespace Viewer360.View
         {
             if (e.LeftButton == MouseButtonState.Pressed && (isDragging || iDraggingPoint >= 0))
             {
+                SharingHelper.m_bCameraAtHasChanged = true;
+
                 // Recupero posizione mouse
                 Point newPosition = new Point(Mouse.GetPosition(m_Window.viewer360_View.vp).X, Mouse.GetPosition(m_Window.viewer360_View.vp).Y);
 
@@ -142,7 +145,7 @@ namespace Viewer360.View
                 else
                 {
 
-                    if (m_iVFMode == 0)  // Edit di label normale
+                    if (m_iVFMode == 0)  // Edit di label normale  // 0=standard, 1==Projection mode
                     {
                         double dX, dY;
                         // Calcolo nuove posizioni
@@ -172,7 +175,7 @@ namespace Viewer360.View
                             UpdateVertexCircle();
                         }
                     }
-                    else if (m_eMode == ViewerMode.Edit && m_iVFMode == 1)  // Edit di porte/finestra
+                    else if (m_eMode == ViewerMode.Edit && m_iVFMode == 1)  // Edit di porte/finestra // 0=standard, 1==Projection mode
                     {
                         double dH = (newPosition.X - offset.X)/400;  // 1 pixel==1cm
                         double dV = -(newPosition.Y - offset.Y)/400; // 1 pixel==1cm
@@ -327,9 +330,16 @@ namespace Viewer360.View
             ellipse.Name = "P" + m_iEllipseIncrementalNum.ToString();
             m_iEllipseIncrementalNum++;
 
-            ellipse.MouseLeftButtonDown += Cerchio_Click;  
+            ellipse.MouseLeftButtonDown += Cerchio_Click;
+            //ellipse.PreviewMouseLeftButtonDown += Cerchio_Click;
+
             ellipse.MouseLeftButtonUp += Cerchio_BottonUp;
+            //ellipse.PreviewMouseLeftButtonUp += Cerchio_BottonUp;
+
             ellipse.MouseRightButtonDown += DeleteCerchio_Click;
+            //ellipse.PreviewMouseRightButtonDown += DeleteCerchio_Click;
+
+            ellipse.PreviewMouseMove += m_Window.viewer360_View.vp_MouseMove;
 
             Canvas.SetLeft(ellipse, left - 4);
             Canvas.SetTop(ellipse, top - 4);
@@ -399,6 +409,7 @@ namespace Viewer360.View
             Ellipse cerchioCliccato = sender as Ellipse;
 
             DeleteEllipse(cerchioCliccato);
+
         }
 
         static public void DeleteAllEllipse()
@@ -408,6 +419,8 @@ namespace Viewer360.View
                 myCanvas.Children.Remove(eEllipse);
             }
             m_EllipseList.Clear();
+            SharingHelper.m_bCameraAtHasChanged = true;
+
         }
 
         static int FindEllipseIndex(string sEllipseName)
@@ -440,6 +453,9 @@ namespace Viewer360.View
 
                     // Rimuovo il punto dall'elenco
                     m_oVFinder.Points.RemoveAt(iIndex);
+
+                    SharingHelper.m_bCameraAtHasChanged = true;
+
                 }
             }
         }
@@ -1170,7 +1186,89 @@ namespace Viewer360.View
 
         }
 */
+        static public void ComputeVFPointVersor(out List<MyVector3D> avPoint, ref int iThetaMin, ref int iThetaMax)
+        {
+            double fPhi;     // Angolo verticale rispetto ad At
+            double fTheta;   // Angolo orizzontale rispetto ad At
 
+            double dSizeX = m_Window.viewer360_View.m_ViewSize.Width / 2;  
+            double dSizeY = m_Window.viewer360_View.m_ViewSize.Height / 2;
+
+            double dFovH2 = m_Window.viewer360_View.Hfov * Math.PI / 360;
+            double dFovV2 = m_Window.viewer360_View.Vfov * Math.PI / 360;
+
+
+            Vector3D vTras;
+            if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Spheric)
+            {
+                vTras = Vector3D.CrossProduct(m_Window.viewer360_View.MyCam.LookDirection, m_Window.viewer360_View.MyCam.UpDirection);
+            }
+            else
+            {
+                OrthographicCamera oCam = (m_Window.viewer360_View.vp.Camera as OrthographicCamera);
+                vTras = Vector3D.CrossProduct(oCam.LookDirection, oCam.UpDirection);
+            }
+
+
+
+            // Calcolo matrice di rotazione associata all'orientamento corrente della camera
+            double Theta = 90-m_Window.viewer360_View.Theta;
+            double Phi = m_Window.viewer360_View.Phi-90;
+            Matrix3D oRMatrix = m_Window.viewer360_View.CalculateRotationMatrix(Theta*Math.PI/180,Phi * Math.PI / 180);
+
+
+            
+            avPoint = new List<MyVector3D>();
+            double fThetaMin = 10000;
+            double fThetaMax = -10000;
+            double fTmp;
+            for (int i = 0; i < m_oVFinder.Points.Count; i++)
+            {
+                /*
+                fTheta1 = Math.Atan(Math.Tan(dFovH2)*(m_oVFinder.Points[i].X - dSizeX)/(dSizeX));
+                fTheta = fTheta1 + m_Window.viewer360_View.Theta * Math.PI / 180;
+                fPhi = m_Window.viewer360_View.Phi * Math.PI / 180 + Math.Atan(Math.Tan(dFovV2) * (m_oVFinder.Points[i].Y - dSizeY) / (dSizeY));
+                */
+
+                fTheta = Math.Atan(Math.Tan(dFovH2) * (m_oVFinder.Points[i].X - dSizeX) / (dSizeX)) + Math.PI / 2;
+                fPhi =  Math.Atan(Math.Tan(dFovV2) * (m_oVFinder.Points[i].Y - dSizeY) / (dSizeY))+ Math.PI/2;
+
+                // Calcolo versore vertice i in corordinate camera
+                Vector3D v = -GeometryHelper.GetNormal(fTheta, fPhi);
+
+                // Ruoto v in base alla camera
+                double dX = oRMatrix.M11 * v.X + oRMatrix.M12 * v.Y + oRMatrix.M13 * v.Z;
+                double dY = oRMatrix.M21 * v.X + oRMatrix.M22 * v.Y + oRMatrix.M23 * v.Z;
+                double dZ = oRMatrix.M31 * v.X + oRMatrix.M32 * v.Y + oRMatrix.M33 * v.Z;
+
+                v = new Vector3D(dX, dY, dZ);
+                v.Z = -v.Z;  // Per la solita ragione misteriosa inverto la Z
+
+
+                fTmp = Vector3D.DotProduct(vTras, v);
+                if (fTmp < fThetaMin)
+                {
+                    fThetaMin = fTmp;
+                    iThetaMin = i;
+                }
+                if (fTmp > fThetaMax)
+                {
+                    fThetaMax = fTmp;
+                    iThetaMax = i;
+                }
+
+                // Applico rotazione per passare da coordinate locali a coordinate mondo
+                v = m_Window.viewer360_View.ApplyGlobalRotation(v);
+
+                // Aggiungo a lista punti
+                avPoint.Add(new MyVector3D(v.X,v.Y,v.Z));
+            }
+
+            //+++++++++++++++++++++
+            //iThetaMin = 0;
+            //iThetaMax = 1;
+            //+++++++++++++++++++++
+        }
 
         static public void CategorySelectionChanged()
         {

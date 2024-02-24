@@ -55,6 +55,7 @@ namespace Viewer360.View
 
         public static CMessageManager m_oMsgManager;
 
+        public static int m_nIdleCount = 0;
         public class CNewMsgInfo1
         {
             public CSingleFileLabel m_sLabel;
