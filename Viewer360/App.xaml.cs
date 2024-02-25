@@ -223,7 +223,20 @@ namespace Viewer360
                 sElementlName = System.IO.Path.GetFileNameWithoutExtension(sElementlName);
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov, sElementlName);
+
+                List<MyVector3D> avPoint;
+                int iThetaMin = 0;
+                int iThetaMax = 0;
+                CUIManager.ComputeVFVersor(out avPoint, ref iThetaMin, ref iThetaMax);
+
+                List<MyVector3D> avFrustPoint;
+                int iFrustThetaMin = 0;
+                int iFrustThetaMax = 0;
+                CUIManager.ComputeFrustumVersor(out avFrustPoint, ref iFrustThetaMin, ref iFrustThetaMax);
+
+
+                m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov,
+                     avPoint, iThetaMin, iThetaMax, avFrustPoint, iFrustThetaMin, iFrustThetaMax,sElementlName);
 
                 SharingHelper.m_bLabelHasChanged = false;
 
@@ -259,19 +272,27 @@ namespace Viewer360
                 List<MyVector3D> avPoint;
                 int iThetaMin=0;
                 int iThetaMax=0;
-                CUIManager.ComputeVFPointVersor(out avPoint, ref iThetaMin, ref iThetaMax);
+                CUIManager.ComputeVFVersor(out avPoint, ref iThetaMin, ref iThetaMax);
+
+                List<MyVector3D> avFrustPoint;
+                int iFrustThetaMin = 0;
+                int iFrustThetaMax = 0;
+                CUIManager.ComputeFrustumVersor(out avFrustPoint, ref iFrustThetaMin, ref iFrustThetaMax);
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
 
                 //++++++++++++++++++++++++++++++++
+                /*
                 double fX = avPoint[0].X;
                 double fY = avPoint[0].Y;
                 double fDen = Math.Sqrt(fX*fX+fY*fY);
                 fX/= fDen;
                 fY/= fDen;
                 double fCosAngle = avPoint[0] * avPoint[1];
+                */
                 //++++++++++++++++++++++++++++++++
-                m_oMsgManager.SendCameraInfo(dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov, avPoint,iThetaMin, iThetaMax);
+                m_oMsgManager.SendCameraInfo(dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov,
+                    avPoint,iThetaMin, iThetaMax, avFrustPoint, iFrustThetaMin, iFrustThetaMax);
 
                 SharingHelper.m_bCameraAtHasChanged = false;
 

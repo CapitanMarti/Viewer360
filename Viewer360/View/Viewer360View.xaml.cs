@@ -115,9 +115,11 @@ namespace Viewer360.View
 
             // Valcolo versore trasversale
             Vector3D vTras = new Vector3D(dUpX, dUpY, 0);
+            vTras.Normalize();
+
 
             // Calcolo UpDirection come prodotto vettoriale dei due
-            Vector3D vUpDirection=Vector3D.CrossProduct(vAt, vTras);
+            Vector3D vUpDirection =Vector3D.CrossProduct(vAt, vTras);
 
             MyOrthoCam = new OrthographicCamera
             {
@@ -890,6 +892,7 @@ namespace Viewer360.View
             Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
             vTmp.Normalize();
             Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+            vRealUp.Normalize();
 
             // Matrice rotazione locale camera: [ Up | Up X At | At] 
             Matrix3D mCameraRot = new Matrix3D();
@@ -923,6 +926,7 @@ namespace Viewer360.View
             Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
             vTmp.Normalize();
             Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+            vRealUp.Normalize();
 
             // Recupero posizione e rotazioni globali
             Vector3D vCameraPos = SharingHelper.GetCameraPos();
@@ -963,6 +967,7 @@ namespace Viewer360.View
             Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
             vTmp.Normalize();
             Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+            vRealUp.Normalize();
 
             // Recupero posizione e rotazioni globali
             Vector3D vCameraPos = SharingHelper.GetCameraPos();
@@ -1033,6 +1038,7 @@ namespace Viewer360.View
                     Vector3D vTmp = Vector3D.CrossProduct(vAt, MyCam.UpDirection);  // Vetture trasversale
                     vTmp.Normalize();
                     Vector3D vRealUp = Vector3D.CrossProduct(vTmp, vAt);
+                    vRealUp.Normalize();
 
                     // Recupero posizione e rotazioni globali
                     Vector3D vCameraPos = SharingHelper.GetCameraPos();
