@@ -273,7 +273,8 @@ namespace Viewer360.View
             CUIManager.ComputeFrustumVersor(out avFrustPoint, ref iFrustThetaMin, ref iFrustThetaMax);
 
             // Aggiungo info vettoriali su frustum e VF
-            oLabelInfo.oVFInfo = new CVFInfo(avPoint, iThetaMin, iThetaMax);
+            MyVector3D vCameraCenter = new MyVector3D(SharingHelper.GetCameraPos().X, SharingHelper.GetCameraPos().Y, SharingHelper.GetCameraPos().Z);
+            oLabelInfo.oVFInfo = new CVFInfo(vCameraCenter,avPoint, iThetaMin, iThetaMax);
             oLabel.m_oFrustumInfo = new CFrusInfo(avFrustPoint, iFrustThetaMin, iFrustThetaMax);
 
 
