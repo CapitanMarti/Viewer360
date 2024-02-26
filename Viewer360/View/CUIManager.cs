@@ -1113,11 +1113,14 @@ namespace Viewer360.View
             for (int i = 0; i < 4; i++)
                 CProjectPlane.m_aFace3DPointLoc[i] = m_Window.viewer360_View.PointGlob2Loc(CProjectPlane.m_aFace3DPointGlob[i]);
 
-            // Passo a modalità Proiezione
-            SetVFMode(1);
+//            // Passo a modalità Proiezione
+//            SetVFMode(1);
 
             // Salvo tutto sul file .mlb
             m_Window.viewer360_View.SaveMlb();
+
+            // Passo a modalità Proiezione
+            SetVFMode(1);
 
             // Calcolo l'asse orizzontale (per eventuale edit)
             CProjectPlane.ComputeTangAxes();
