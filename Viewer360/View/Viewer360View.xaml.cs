@@ -681,6 +681,14 @@ namespace Viewer360.View
                 }
             }
 
+            /*
+            if(oOldLabel!=null)  // Copio nella label attuale dati utilizzati lato server presenti nella versione precedente
+            {
+                for (int i = 0; i < oOldLabel.m_aVertexOffsetY.Length; i++)
+                    oLabelCandidate.m_aVertexOffsetY[i] = oOldLabel.m_aVertexOffsetY[i];
+
+            }
+            */
             // Scrittura file .mlb
             int iPhotoIndex = -1;
             int iLabelIndex = -1;
