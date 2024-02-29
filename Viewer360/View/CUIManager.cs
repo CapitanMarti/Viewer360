@@ -1326,6 +1326,12 @@ namespace Viewer360.View
             return v;
         }
 
+        static public void ItemSelectionChanged()
+        {
+            if(m_iCategory>=0 && m_Window.ItemCombo.SelectedIndex>=0)
+                SharingHelper.m_oSendCategoryToServer = new CObjShortInfo(m_iCategory, m_aObjId[m_Window.ItemCombo.SelectedIndex]);
+        }
+
         static public void CategorySelectionChanged()
         {
             if (m_bIgnoreCategoryChange)

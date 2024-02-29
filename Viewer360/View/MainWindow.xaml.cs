@@ -94,7 +94,7 @@ namespace Viewer360.View
 
         private void ItemSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-
+            CUIManager.ItemSelectionChanged();
         }
 
         public CSingleFileLabel BuildSavingLabelCandidatePlanar(string sNewJsonFileName, Size ViewSize, Size ImageSize)
@@ -372,6 +372,7 @@ namespace Viewer360.View
             //            CLabelManager.RemoveLabel(oCurrentLabel);
             CLabelManager.ReloadLabelSet();
 
+            /*
             // Cerco nuova label
             (DataContext as MainViewModel).m_iCurrentLabelIndex = -1;
             (DataContext as MainViewModel).GetClosestLabel();
@@ -381,6 +382,11 @@ namespace Viewer360.View
                 CUIManager.SetViewerMode(ViewerMode.Create);
                 return;
             }
+            */
+
+            // Ripristino la modalità Create
+            CUIManager.SetViewerMode(ViewerMode.Create);
+            return;
 
 
         }

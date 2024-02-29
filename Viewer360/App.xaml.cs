@@ -197,7 +197,10 @@ namespace Viewer360
                     else if (sMsg.m_Type == MsgType.ElementDeletedWarning)
                     {
                         CLabelManager.ReloadLabelSet();
-                        (m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
+                        //(m_Window.DataContext as ViewModel.MainViewModel).GetClosestLabel();
+
+                        // Ripristino la modalità Create
+                        CUIManager.SetViewerMode(ViewerMode.Create);
 
                         SharingHelper.m_nIdleCount--;
                         return;
