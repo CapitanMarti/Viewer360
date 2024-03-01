@@ -14,6 +14,7 @@ using static Viewer360.View.CUIManager;
 using System.Xml.Linq;
 using System.Globalization;
 using System.Collections.Generic;
+using static Viewer360.View.Viewer360View;
 
 
 namespace Viewer360
@@ -178,6 +179,10 @@ namespace Viewer360
                         m_bNewImageLoaded = true;
 
                         SharingHelper.m_nIdleCount--;
+
+                        if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Planar)
+                            SharingHelper.m_bCameraAtHasChanged = true;
+
                         return;
                     }
                     else if (sMsg.m_Type == MsgType.ElementSelected)
@@ -260,7 +265,10 @@ namespace Viewer360
                 m_oMsgManager.SendCameraSelected1(index, dX, dY);  // Nota: nel caso planare i valori inviati di dX e dY non saranno utilizzati
 
                 SharingHelper.m_bPhotoHasChanged = false;
-                SharingHelper.m_bCameraAtHasChanged = false; // Per evitare doppio messaggio
+                if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Planar)
+                    SharingHelper.m_bCameraAtHasChanged = true;
+                else
+                    SharingHelper.m_bCameraAtHasChanged = false; // Per evitare doppio messaggio
 
                 SharingHelper.m_nIdleCount--;
                 return;

@@ -1198,7 +1198,10 @@ namespace Viewer360.View
 
                 Vector3D v = new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
                 v.Normalize();
-                v = -m_Window.viewer360_View.ApplyGlobalRotation(v);
+                if (m_Window.viewer360_View.GetProjection() == Viewer360View.ViewerProjection.Spheric)
+                    v = -m_Window.viewer360_View.ApplyGlobalRotation(v);
+                else
+                    v = m_Window.viewer360_View.ApplyGlobalRotation(v);
 
                 // Aggiungo a lista punti
                 avPoint.Add(new MyVector3D(v.X, v.Y, v.Z));
@@ -1263,7 +1266,10 @@ namespace Viewer360.View
                 Vector3D v = new Vector3D(oRay.Direction.X, oRay.Direction.Y, -oRay.Direction.Z);
                 v.Normalize();
                 Vector3D v1 = -m_Window.viewer360_View.ApplyGlobalRotation(v);
-                v= -m_Window.viewer360_View.VectorLoc2Glob(v);
+                if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Spheric)
+                    v = -m_Window.viewer360_View.VectorLoc2Glob(v);
+                else
+                    v = m_Window.viewer360_View.VectorLoc2Glob(v);
 
                 // Aggiungo a lista punti
                 avPoint.Add(new MyVector3D(v.X, v.Y, v.Z));
