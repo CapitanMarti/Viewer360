@@ -127,7 +127,8 @@ namespace Viewer360
                     double dNY = 0;
                     int iSide = -1;
                     string sWallName = "";
-                    m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY, ref iSide, ref sWallName);
+                    float fThickness = -1;
+                    m_oMsgManager.GetCastPlaneWall(sMsg.m_sMsg, ref dPosX, ref dPosY, ref dNX, ref dNY, ref iSide, ref sWallName, ref fThickness);
 
 
 
@@ -142,7 +143,7 @@ namespace Viewer360
                         //++++++++++++++++++++++++
 
                         if (dNX <= 1 && CUIManager.GetMode() == ViewerMode.Create)  // Piano valido
-                            CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY, sWallName);
+                            CProjectPlane.SetPlane(dPosX, dPosY, dNX, dNY, sWallName, fThickness);
                         else  // Nessun piano identificato
                             CProjectPlane.RemovePlane();
                     }
@@ -244,7 +245,7 @@ namespace Viewer360
 
                 MyVector3D vCenter=new MyVector3D(SharingHelper.GetCameraPos().X, SharingHelper.GetCameraPos().Y, SharingHelper.GetCameraPos().Z);
                 m_oMsgManager.SendCameraAndLabelSelected(index, dX, dY, m_Window.viewer360_View.Vfov, m_Window.viewer360_View.Hfov,
-                     vCenter, avPoint, iThetaMin, iThetaMax, avFrustPoint, iFrustThetaMin, iFrustThetaMax,sElementlName);
+                     vCenter, avPoint, iThetaMin, iThetaMax, avFrustPoint, iFrustThetaMin, iFrustThetaMax,sElementlName, (int)CUIManager.GetMode());
 
                 SharingHelper.m_bLabelHasChanged = false;
 
@@ -262,7 +263,7 @@ namespace Viewer360
                 double dY = 0;
 
                 m_Window.viewer360_View.ComputePlanarCameraAt(ref dX, ref dY);
-                m_oMsgManager.SendCameraSelected1(index, dX, dY);  // Nota: nel caso planare i valori inviati di dX e dY non saranno utilizzati
+                m_oMsgManager.SendPhotoChangedOnViewer(index, dX, dY,(int)CUIManager.GetMode());  // Nota: nel caso planare i valori inviati di dX e dY non saranno utilizzati
 
                 SharingHelper.m_bPhotoHasChanged = false;
                 if (m_Window.viewer360_View.GetProjection() == ViewerProjection.Planar)
@@ -396,7 +397,7 @@ namespace Viewer360
                 aPos3[2] = oLabel.m_aLabelInfo[0].aPolyPointZ[3];
 
                 m_oMsgManager.SendBuildNewElementRequest(sLabelFileName, sLabelName, sParentEl, iCatalogID, iCategory, aCameraPos,
-                                                         aPos0,aPos1,aPos2,aPos3);
+                                                         aPos0,aPos1,aPos2,aPos3, SharingHelper.m_oMsgInfo1.m_fThickness, (int)CUIManager.GetMode());
 
                 SharingHelper.m_oMsgInfo1 = null;
 

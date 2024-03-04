@@ -703,6 +703,11 @@ namespace Viewer360.View
             SharingHelper.CNewMsgInfo1 oNewMsg= new SharingHelper.CNewMsgInfo1();
             oNewMsg.m_sLabel = oLabelCandidate;
             oNewMsg.sNewJsonFileName = sNewJsonFileName;
+            if (CProjectPlane.m_bPlaneDefined)
+                oNewMsg.m_fThickness = CProjectPlane.m_fThickness;
+            else
+                oNewMsg.m_fThickness = -1;
+
             SharingHelper.m_oMsgInfo1 = oNewMsg;  // Questo attiverà l'invio del messaggio al server
 
 //            SharingHelper.m_bLabelAdded = true;

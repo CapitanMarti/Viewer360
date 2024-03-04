@@ -60,6 +60,7 @@ namespace Viewer360.View
         {
             public CSingleFileLabel m_sLabel;
             public string sNewJsonFileName;
+            public float m_fThickness;
         }
         public static CNewMsgInfo1 m_oMsgInfo1=null;
 

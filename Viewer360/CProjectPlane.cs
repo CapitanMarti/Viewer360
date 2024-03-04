@@ -29,6 +29,7 @@ namespace Viewer360
         static public Viewport3D vp;
         static public Point3D[] m_aFace3DPointLoc;
         static public Point3D[] m_aFace3DPointGlob;
+        static public float m_fThickness;  // Definita da server nel caso FakeWall
         static public void Init(Viewer360View viewer)
         {
             m_vCentreGlobal = new Vector3D();
@@ -40,10 +41,11 @@ namespace Viewer360
             viewer360View = viewer;
             m_aFace3DPointLoc = null;
             m_aFace3DPointGlob = null;
+            m_fThickness = -1;
             //            vp = viewport;
         }
 
-        static public void SetPlane(double dGlobalPosX, double dGlobalPosY, double dGlobalNX, double dGlobalNY, string sWallName)
+        static public void SetPlane(double dGlobalPosX, double dGlobalPosY, double dGlobalNX, double dGlobalNY, string sWallName,float fThickness)
         {
             m_bPlaneDefined = true;
             m_aFace3DPointLoc = new Point3D[4];
@@ -54,6 +56,7 @@ namespace Viewer360
             m_vNormalGlobal = new Vector3D(dGlobalNX, dGlobalNY, 0);
 //            m_iSide = iSide;
             m_sWallName = sWallName;
+            m_fThickness= fThickness;
 
             //++++++++++++++++++++++++++++++++
             // m_vNormalGlobal = new Vector3D(0, 1, 0); // AM
@@ -80,6 +83,7 @@ namespace Viewer360
             m_aFace3DPointLoc = null;
             m_aFace3DPointGlob = null;
             m_vTangGlobal = new Vector3D(2, 2, 2); // Valore nullo
+            m_fThickness = -1;
         }
 
         static public Point3D? GetIntersection(Ray3D oRay)

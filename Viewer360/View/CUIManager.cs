@@ -631,7 +631,7 @@ namespace Viewer360.View
                 double dNX = oLInfo.aPolyPointY[1] - oLInfo.aPolyPointY[0];
                 double dNY = oLInfo.aPolyPointX[1] - oLInfo.aPolyPointX[0];
                 double dLen = Math.Sqrt(dNX * dNX + dNY * dNY);
-                CProjectPlane.SetPlane(dPosX, dPosY, dNX / dLen, dNY / dLen, oLInfo.sParentElementName);
+                CProjectPlane.SetPlane(dPosX, dPosY, dNX / dLen, dNY / dLen, oLInfo.sParentElementName, CProjectPlane.m_fThickness);
 
                 Point3D[] aPoint = new Point3D[oLInfo.aPolyPointX.Count];
 
