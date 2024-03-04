@@ -64,7 +64,7 @@
             <Button x:Name="SaveButton" Content="Save change" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="SaveLabel_Click"/>
             <Button x:Name="NewLabelButton" Content="New Element" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="NewLabel_Click"/>
             <Button x:Name="DeleteLabelButton" Content="Delete" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="DeleteLabel_Click"/>
-            <Button x:Name="Project2PlaneButton" Content="Proj. to wall" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="Project2Plane_Click"/>
+            <Button x:Name="Project2PlaneButton" Content="Create" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="Project2Plane_Click"/>
             <Button x:Name="AIButton" Content="Auto detect" Margin="0,0,0,5" Style="{StaticResource StandardButtonStyle}" Click="LaunchAI_Click"/>
             <!-- Aggiungi altri pulsanti se necessario -->
         </StackPanel>

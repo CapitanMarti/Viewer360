@@ -95,6 +95,9 @@ namespace Viewer360
 
             // Calcolo il valore iniziale della matrice di rotazione originale della camera rispetto al mondo
             m_Window.viewer360_View.ComputeGlobalRotMatrix();
+
+            // Forzo un invio iniziale della camera al server
+            SharingHelper.m_bCameraAtHasChanged = true;
         }
 
 
@@ -342,12 +345,12 @@ namespace Viewer360
                 SharingHelper.m_nIdleCount--;
                 return;
             }
-            
 
             if (SharingHelper.m_oSendCategoryToServer != null)
             {
                 m_oMsgManager.SendCategoryToServer(SharingHelper.m_oSendCategoryToServer.m_iCategory, SharingHelper.m_oSendCategoryToServer.m_iCatalogObjId, (int)CUIManager.GetMode());
                 SharingHelper.m_oSendCategoryToServer = null;
+                SharingHelper.m_bCameraAtHasChanged = true;   // Forzo linvio dei dati camera aggiornati al server
 
                 SharingHelper.m_nIdleCount--;
                 return;
