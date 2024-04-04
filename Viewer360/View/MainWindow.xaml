@@ -108,6 +108,8 @@
                     <!-- Elementi della ComboBox -->
                 </ComboBox>                <TextBlock Text="  Name: " IsEnabled= "False" />
                 <TextBox  x:Name="ElementName" Width="90" Height="24" RenderTransformOrigin="0.498,0.752" />
+                <TextBlock IsEnabled= "False" Width="118" Height="15" ><Run Text=" "/><Run Text="     "/><Run Language="it-it" Text="     "/><Run Text="Always on Top"/></TextBlock>
+                <CheckBox  x:Name="CheckTopMost"  Width="20" Height="15" RenderTransformOrigin="0.498,0.752" Click="TopMost_Click"/>
             </Menu>
             <Grid Grid.ColumnSpan="12" Grid.Row="1">
                 <Grid.RowDefinitions>

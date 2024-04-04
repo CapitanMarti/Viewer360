@@ -412,5 +412,10 @@ namespace Viewer360.View
         {
             CUIManager.Project2Plane_Click();
         }
+
+        private void TopMost_Click(object sender, RoutedEventArgs e)
+        {
+            Topmost = (CheckTopMost.IsChecked==true);
+        }
     }
 }
