@@ -61,8 +61,8 @@ namespace Viewer360
 
                 sCatalogNameFull = e.Args[1];
                 sPhotoFileNameFull = e.Args[2];
-                sJasonPath = e.Args[3];
-                sSegmentPath = e.Args[4];
+                sJasonPath = e.Args[3]+@"\";
+                sSegmentPath = e.Args[4]+@"\";
                 CLabelManager.Init(System.IO.Path.GetDirectoryName(sPhotoFileNameFull), sJasonPath);
 
                 SharingHelper.SetFileAndFolderNames(sPhotoFileNameFull, sJasonPath, sSegmentPath);
