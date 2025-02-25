@@ -869,7 +869,7 @@ namespace Viewer360.View
                         m_Window.Project2PlaneButton.Foreground = Brushes.LightGray;
                     }
 
-                    m_Window.AIButton.Visibility = Visibility.Visible;
+                    // m_Window.AIButton.Visibility = Visibility.Visible;
                 }
                 else
                 {
