@@ -558,7 +558,7 @@ namespace Viewer360.View
                     }
                     SharingHelper.m_bElementDeleted = true;
                 }
-                catch (IOException ex)
+                catch (IOException)
                 {
                     return;
                 }
@@ -675,7 +675,7 @@ namespace Viewer360.View
                   
                     SharingHelper.m_bElementDeleted = true;
                 }
-                catch (IOException ex)
+                catch (IOException)
                 {
                     return;
                 }
